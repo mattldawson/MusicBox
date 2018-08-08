@@ -1,4 +1,6 @@
 module MusicBox_main
+use json_loader, only : create_cnst_info_array
+use const_props_mod, only: const_props_type
 
 implicit none
 
@@ -28,24 +30,26 @@ subroutine MusicBox_main_sub()
 !-----------------------------------------------------------
 !  these dimension parameters will be set by the cafe/configurator
 !-----------------------------------------------------------
-  integer, parameter :: nSpecies = 3    ! number prognostic constituents
-  integer, parameter :: nkRxt = 3       ! number gas phase reactions
+  integer, parameter :: nSpecies = 2    ! number prognostic constituents
+  integer, parameter :: nkRxt = 2       ! number gas phase reactions
   integer ,parameter :: ncols = 1       ! number columns in domain
-  integer ,parameter :: nlevs = 8       ! number vertical levels in each column
-  integer ,parameter :: ntimes = 3      ! number of time steps
-
+  integer ,parameter :: nlevs = 1       ! number vertical levels in each column
+  integer ,parameter :: ntimes = 3     ! number of time steps
+  integer, parameter :: njrxt =1
+  
   integer            :: i, k, n
   integer            :: errflg          ! error index from CPF
   integer            :: ierr
-  real(kind=r8), allocatable         :: vmr(:)          ! "working" concentration passed thru CPF
-  real(kind=r8), allocatable, target :: glb_vmr(:,:,:)  ! "global" concentrations
+  real(kind=r8), allocatable :: j_rateConst(:)  ! host model provides photolysis rates for now
+  real(kind=r8), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
+  real(kind=r8), allocatable :: glb_vmr(:,:,:)  ! "global" concentrations
   character(len=512) :: errmsg
 
   integer  :: icntrl(20)     ! integer control array for ODE solver
   real(r8) :: rcntrl(20)     ! real control array for ODE solver
   real(r8) :: TimeStart, TimeEnd, Time, dt
   real(r8), allocatable :: absTol(:), relTol(:)
-
+  
   type(ccpp_t), allocatable, target :: cdata(:)
 
 ! declare the types
@@ -55,11 +59,26 @@ subroutine MusicBox_main_sub()
   type(RosenbrockSolver), target :: theRosenbrockSolver
   type(MozartSolver), target     :: theMozartSolver
 
+
+  type(const_props_type), pointer :: cnst_info(:) => null()
+  integer :: ncnst
+  
+  character(len=*), parameter :: jsonfile = '/terminator-data1/home/fvitt/ccpp/inputs/tagfileoutput.195.json'
+
+  cnst_info => create_cnst_info_array( jsonfile )
+
+  ncnst = size(cnst_info)
+  do i = 1,ncnst
+     call cnst_info(i)%print()
+  enddo
+    
   allocate( theKinetics )
   allocate( ODE_obj )
 ! ODE_obj%theSolver => theHalfSolver
   ODE_obj%theSolver => theRosenbrockSolver
 ! ODE_obj%theSolver => theMozartSolver
+
+  allocate(j_rateConst(njrxt))
   
   allocate(glb_vmr(ncols,nlevs,nSpecies))
   allocate(vmr(nSpecies))
@@ -67,7 +86,7 @@ subroutine MusicBox_main_sub()
   allocate(absTol(nSpecies))
   allocate(relTol(nSpecies))
 
-  dt = 21._r8
+  dt = 1._r8
 
 !-----------------------------------------------------------
 !  set ode solver "control" variable defaults
@@ -102,8 +121,8 @@ subroutine MusicBox_main_sub()
 !-----------------------------------------------------------
 !  initialize the "global" concentration array glb_vmr
 !-----------------------------------------------------------
-  glb_vmr(:,:,1)   = 1._r8
-  glb_vmr(:,:,2:3) = 0._r8
+  glb_vmr(:,:,1) = 1._r8
+  glb_vmr(:,:,2) = 0._r8
 
   TimeStart = 0._r8
   TimeEnd   = TimeStart + real(ntimes,kind=r8)*dt
@@ -140,6 +159,7 @@ time_loop: &
     do k = 1, nlevs
       do i = 1, ncols
         vmr(:) = glb_vmr(i,k,:)
+        j_rateConst(:) = 1.e-7 
         Time = TimeStart
         call ccpp_physics_run(cdata(i), ierr=ierr)
         if (ierr/=0) then
