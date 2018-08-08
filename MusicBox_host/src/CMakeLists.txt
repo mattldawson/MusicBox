@@ -37,6 +37,7 @@ SET(mbox_source_files MusicBox.F90
             micm_type_defs.f90
 	    input_slice.F90
 	    input_data.F90
+	    environ_conditions_mod.F90
 	    const_props_mod.F90
 	    json_loader.F90
 )

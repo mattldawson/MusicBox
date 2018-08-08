@@ -27,10 +27,23 @@ module input_file
      procedure :: set_slice => input_file_slice
      procedure :: extract => input_file_extract_slice
      procedure :: get_ntimes => input_file_get_ntimes
+     procedure :: get_time => input_file_get_time
+     procedure :: get_dtime => input_file_get_dtime
   end type input_file_type
 
 contains
-
+  
+  real function input_file_get_time(this, n)
+    class(input_file_type), intent(in) :: this
+    integer, intent(in) :: n
+    input_file_get_time = this%times(n)
+  end function input_file_get_time
+  
+  real function input_file_get_dtime(this)
+    class(input_file_type), intent(in) :: this
+    input_file_get_dtime = this%times(2) - this%times(1)
+  end function input_file_get_dtime
+  
   integer function input_file_get_ntimes(this)
     class(input_file_type), intent(in) :: this
     input_file_get_ntimes = this%ntimes

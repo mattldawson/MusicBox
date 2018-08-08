@@ -5,14 +5,15 @@ module json_loader
   implicit none
   
 contains
-  function create_cnst_info_array( jsonfile ) result(cnst_info)
 
+  subroutine json_loader_read( jsonfile, cnst_info, ncnst, nrxtn, nphot )
+    
     character(len=*), intent(in) :: jsonfile
     type(const_props_type), pointer :: cnst_info(:)
-
-    integer :: ncnst
+    integer, intent(out) :: ncnst, nrxtn, nphot
+    
+    ! local vars
     type(json_file) :: json       !! the JSON structure read from the file
-
     type(json_value),pointer :: p !! a pointer for low-level manipulations
     type(json_core) :: core       !! factory for manipulating `json_value` pointers
     type(json_value),pointer :: child 
@@ -21,10 +22,10 @@ contains
     character(len=:),allocatable :: name
     
     logical :: found
-    integer :: n
+    integer :: i, n, nsections
     character(len=:),allocatable :: string
     real :: rval
-
+    
     call json%initialize()
 
     write(*,*) 'Load the file :'//jsonfile
@@ -37,37 +38,61 @@ contains
     call json%get(p) ! get root
 
     call core%get_child(p,child)
-    call core%get_child(child,child2)
-    call core%info(child2,name=name)
 
-    write(*,*)  'Read obj data : '//name
-    ncnst = core%count(child2)
+    nsections = core%count(child)
 
-    allocate( cnst_info(ncnst) )
+    !write(*,*)  'nsections : ', nsections
 
-    do n = 1,ncnst
-       call core%get_child(child2, n, child3, found)
-       if (found) then
-          call core%get(child3,'moleculename',string)
-          call cnst_info(n)%set_name(string)
-          deallocate(string)
+    do i = 1,nsections
 
-          call core%get(child3,'formula',string)
-          call cnst_info(n)%set_desc(string)
-          deallocate(string)
+       call core%get_child(child,i,child2)
+       call core%info(child2,name=name)
 
-          call core%get(child3,'molecular_weight',string)
-          read( string, * ) rval
-          deallocate(string)
-          call cnst_info(n)%set_wght(rval)
-       else
-          write(*,*) ' ERROR: Did not find child ',n
-          call abort()
-       endif
+       molecules: if (name=='molecules') then
+
+          !write(*,*)  'Read obj data : '//name
+          ncnst = core%count(child2)
+          !write(*,*)  '  ncnst : ', ncnst
+
+          allocate( cnst_info(ncnst) )
+
+          do n = 1,ncnst
+             call core%get_child(child2, n, child3, found)
+             if (found) then
+                call core%get(child3,'moleculename',string)
+                call cnst_info(n)%set_name(string)
+                deallocate(string)
+
+                call core%get(child3,'formula',string)
+                call cnst_info(n)%set_desc(string)
+                deallocate(string)
+
+                call core%get(child3,'molecular_weight',string)
+                read( string, * ) rval
+                deallocate(string)
+                call cnst_info(n)%set_wght(rval)
+             else
+                write(*,*) ' ERROR: Did not find child ',n
+                call abort()
+             endif
+          enddo
+
+       end if molecules
+       
+       photolysis: if (name=='photolysis') then
+          nphot = core%count(child2)
+          !write(*,*)  '  nphot : ', nphot
+       end if photolysis
+       
+       reactions: if (name=='reactions') then
+          nrxtn = core%count(child2)
+          !write(*,*)  '  nrxtn : ', nrxtn
+       end if reactions
+       
     enddo
 
     call json%destroy()
 
-  end function create_cnst_info_array
-  
+  end subroutine json_loader_read
+
 end module json_loader

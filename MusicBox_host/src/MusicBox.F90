@@ -1,6 +1,7 @@
 module MusicBox_main
-use json_loader, only : create_cnst_info_array
+use json_loader, only : json_loader_read
 use const_props_mod, only: const_props_type
+use environ_conditions_mod, only: environ_conditions_create, environ_conditions
 
 implicit none
 
@@ -30,12 +31,17 @@ subroutine MusicBox_main_sub()
 !-----------------------------------------------------------
 !  these dimension parameters will be set by the cafe/configurator
 !-----------------------------------------------------------
-  integer, parameter :: nSpecies = 2    ! number prognostic constituents
-  integer, parameter :: nkRxt = 2       ! number gas phase reactions
+  integer :: nSpecies = 0   ! number prognostic constituents
+  integer :: nkRxt = 0      ! number gas phase reactions
+  integer :: njrxt = 0      ! number of photochemical reactions
+  integer :: ntimes = 0     ! number of time steps
+
   integer ,parameter :: ncols = 1       ! number columns in domain
   integer ,parameter :: nlevs = 1       ! number vertical levels in each column
-  integer ,parameter :: ntimes = 3     ! number of time steps
-  integer, parameter :: njrxt =1
+  real, parameter :: env_lat = 40.
+  real, parameter :: env_lon = 255.
+  real, parameter :: env_lev = 1. ! mbar
+  
   
   integer            :: i, k, n
   integer            :: errflg          ! error index from CPF
@@ -58,19 +64,17 @@ subroutine MusicBox_main_sub()
   type(halfsolver),     target   :: theHalfSolver
   type(RosenbrockSolver), target :: theRosenbrockSolver
   type(MozartSolver), target     :: theMozartSolver
-
-
+  type(environ_conditions),pointer :: theEnvConds => null()
   type(const_props_type), pointer :: cnst_info(:) => null()
-  integer :: ncnst
+
+  character(len=16) :: cnst_name
   
-  character(len=*), parameter :: jsonfile = '/terminator-data1/home/fvitt/ccpp/inputs/tagfileoutput.195.json'
+  character(len=*), parameter :: jsonfile = '/terminator-data1/home/fvitt/MusicBox/inputs/tagfileoutput.195.json'
+  character(len=*), parameter :: env_conds_file = '/terminator-data1/home/fvitt/MusicBox/inputs/waccm_ma_chem.cam.h0.2000-01-01-00000.nc'
+  
+  call json_loader_read( jsonfile, cnst_info, nSpecies, nkrxt, njrxt )
 
-  cnst_info => create_cnst_info_array( jsonfile )
-
-  ncnst = size(cnst_info)
-  do i = 1,ncnst
-     call cnst_info(i)%print()
-  enddo
+  nkrxt = nkrxt + njrxt
     
   allocate( theKinetics )
   allocate( ODE_obj )
@@ -80,13 +84,28 @@ subroutine MusicBox_main_sub()
 
   allocate(j_rateConst(njrxt))
   
-  allocate(glb_vmr(ncols,nlevs,nSpecies))
   allocate(vmr(nSpecies))
   allocate(cdata(ncols))
   allocate(absTol(nSpecies))
   allocate(relTol(nSpecies))
 
-  dt = 1._r8
+  theEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon, lev=env_lev )
+  dt = theEnvConds%dtime()
+  ntimes = theEnvConds%ntimes()
+
+!-----------------------------------------------------------
+!  initialize the "global" concentration array glb_vmr
+!-----------------------------------------------------------
+  allocate(glb_vmr(ncols,nlevs,nSpecies))
+  do i = 1,nSpecies
+     call cnst_info(i)%print()
+     cnst_name = cnst_info(i)%get_name()
+     print*, ' cnst name : ',cnst_name
+     glb_vmr(:,:,i) = theEnvConds%getvar(cnst_name)
+     print*, ' init value : ',glb_vmr(:,:,i) 
+  enddo
+  !glb_vmr(:,:,1) = 1.e-6
+  !glb_vmr(:,:,2) = 0.
 
 !-----------------------------------------------------------
 !  set ode solver "control" variable defaults
@@ -118,12 +137,6 @@ subroutine MusicBox_main_sub()
   write(*,'(1p,10(1x,g0))') rcntrl(1:10)
   write(*,*) ' '
 
-!-----------------------------------------------------------
-!  initialize the "global" concentration array glb_vmr
-!-----------------------------------------------------------
-  glb_vmr(:,:,1) = 1._r8
-  glb_vmr(:,:,2) = 0._r8
-
   TimeStart = 0._r8
   TimeEnd   = TimeStart + real(ntimes,kind=r8)*dt
 
@@ -149,7 +162,6 @@ init_loop: &
   end do init_loop
 
 
-
 !-----------------------------------------------------------
 !  loop over time
 !-----------------------------------------------------------
@@ -159,7 +171,9 @@ time_loop: &
     do k = 1, nlevs
       do i = 1, ncols
         vmr(:) = glb_vmr(i,k,:)
-        j_rateConst(:) = 1.e-7 
+        call theEnvConds%update(n)
+        j_rateConst(:) = theEnvConds%getvar('jcl2')
+        write(*,'(a,f8.4)') ' >>>> j_rateConst: ', j_rateConst(1)
         Time = TimeStart
         call ccpp_physics_run(cdata(i), ierr=ierr)
         if (ierr/=0) then
@@ -170,7 +184,7 @@ time_loop: &
       end do
     end do
     TimeStart = real(n,kind=r8)*dt
-    write(*,'(a,1p,g0)') 'Concentration @ time = ',TimeStart
+    write(*,'(a,1p,g0)') 'Concentration @ hour = ',TimeStart/3600.
     write(*,'(1p,5(1x,g0))') vmr(:),sum(vmr(:))
   end do time_loop
 
