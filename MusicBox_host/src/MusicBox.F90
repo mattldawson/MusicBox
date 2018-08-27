@@ -33,7 +33,8 @@ subroutine MusicBox_main_sub()
 !-----------------------------------------------------------
   integer :: nSpecies = 0   ! number prognostic constituents
   integer :: nkRxt = 0      ! number gas phase reactions
-  integer :: njrxt = 0      ! number of photochemical reactions
+  integer :: njRxt = 0      ! number of photochemical reactions
+  integer :: nTotRxt = 0    ! total number of chemical reactions
   integer :: ntimes = 0     ! number of time steps
 
   integer ,parameter :: ncols = 1       ! number columns in domain
@@ -47,6 +48,7 @@ subroutine MusicBox_main_sub()
   integer            :: errflg          ! error index from CPF
   integer            :: ierr
   real(kind=r8), allocatable :: j_rateConst(:)  ! host model provides photolysis rates for now
+  real(kind=r8), allocatable :: k_rateConst(:)  ! host model provides photolysis rates for now
   real(kind=r8), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
   real(kind=r8), allocatable :: glb_vmr(:,:,:)  ! "global" concentrations
   character(len=512) :: errmsg
@@ -72,9 +74,9 @@ subroutine MusicBox_main_sub()
   character(len=*), parameter :: jsonfile = '/terminator-data1/home/fvitt/MusicBox/inputs/tagfileoutput.195.json'
   character(len=*), parameter :: env_conds_file = '/terminator-data1/home/fvitt/MusicBox/inputs/waccm_ma_chem.cam.h0.2000-01-01-00000.nc'
   
-  call json_loader_read( jsonfile, cnst_info, nSpecies, nkrxt, njrxt )
+  call json_loader_read( jsonfile, cnst_info, nSpecies, nkRxt, njRxt )
 
-  nkrxt = nkrxt + njrxt
+  nTotRxt = nkRxt + njRxt
     
   allocate( theKinetics )
   allocate( ODE_obj )
@@ -82,7 +84,8 @@ subroutine MusicBox_main_sub()
   ODE_obj%theSolver => theRosenbrockSolver
 ! ODE_obj%theSolver => theMozartSolver
 
-  allocate(j_rateConst(njrxt))
+  allocate(k_rateConst(nkRxt))
+  allocate(j_rateConst(njRxt))
   
   allocate(vmr(nSpecies))
   allocate(cdata(ncols))
@@ -161,6 +164,7 @@ init_loop: &
       end if
   end do init_loop
 
+k_rateConst(:) = 1.e-5_r8
 
 !-----------------------------------------------------------
 !  loop over time
@@ -173,7 +177,7 @@ time_loop: &
         vmr(:) = glb_vmr(i,k,:)
         call theEnvConds%update(n)
         j_rateConst(:) = theEnvConds%getvar('jcl2')
-        write(*,'(a,f8.4)') ' >>>> j_rateConst: ', j_rateConst(1)
+        call theKinetics%rateConst_print()
         Time = TimeStart
         call ccpp_physics_run(cdata(i), ierr=ierr)
         if (ierr/=0) then

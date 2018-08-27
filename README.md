@@ -13,7 +13,7 @@ build steps:
 > cd MusicBox_host
 > mkdir bin
 > cd bin
-> cmake ../src
+> cmake ../src  (or cmake -DCMAKE_BUILD_TYPE=Debug ../src)
 > make
 
 execute:

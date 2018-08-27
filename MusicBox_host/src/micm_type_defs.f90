@@ -17,6 +17,7 @@ module micm_type_defs
 !! | local_name | standard_name                                    | long_name                               | units     | rank | type        |    kind   | intent | optional |
 !! |------------|--------------------------------------------------|-----------------------------------------|---------- |------|-------------|-----------|--------|----------|
 !! | vmr        | concentration                                    | species concentration                   | mole/mole |    1 | real        | kind_phys | none   | F        |
+!! | k_rateConst| gasphase_rate_constants                          | gas phase rates constants               | s-1       |    1 | real        | kind_phys | none   | F        |
 !! | j_rateConst| photo_rate_constants                             | photochemical rates constants           | s-1       |    1 | real        | kind_phys | none   | F        |
 !! | ODE_obj    | ODE_ddt                                          | ODE derived data type                   | DDT       |    0 | Solver_type |           | none   | F        |
 !! | dt         | time_step_for_physics                            | physics time step                       | s         |    0 | real        | kind_phys | in     | F        |
@@ -37,9 +38,10 @@ module micm_type_defs
   
   type micm_data_type
 
-    real, allocatable      :: vmr(:)
-    real, allocatable      :: j_rateConst(:)
-    real                   :: dt
+    real(r8), allocatable  :: vmr(:)
+    real(r8), allocatable  :: j_rateConst(:)
+    real(r8), allocatable  :: k_rateConst(:)
+    real(r8)               :: dt
     integer                :: ncol
     integer                :: nlev
     character(len=512)     :: errmsg
