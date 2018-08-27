@@ -1,4 +1,7 @@
 module MusicBox_main
+use json_loader, only : json_loader_read
+use const_props_mod, only: const_props_type
+use environ_conditions_mod, only: environ_conditions_create, environ_conditions
 
 implicit none
 
@@ -28,24 +31,33 @@ subroutine MusicBox_main_sub()
 !-----------------------------------------------------------
 !  these dimension parameters will be set by the cafe/configurator
 !-----------------------------------------------------------
-  integer, parameter :: nSpecies = 3    ! number prognostic constituents
-  integer, parameter :: nkRxt = 3       ! number gas phase reactions
-  integer ,parameter :: ncols = 1       ! number columns in domain
-  integer ,parameter :: nlevs = 8       ! number vertical levels in each column
-  integer ,parameter :: ntimes = 3      ! number of time steps
+  integer :: nSpecies = 0   ! number prognostic constituents
+  integer :: nkRxt = 0      ! number gas phase reactions
+  integer :: njRxt = 0      ! number of photochemical reactions
+  integer :: nTotRxt = 0    ! total number of chemical reactions
+  integer :: ntimes = 0     ! number of time steps
 
+  integer ,parameter :: ncols = 1       ! number columns in domain
+  integer ,parameter :: nlevs = 1       ! number vertical levels in each column
+  real, parameter :: env_lat = 40.
+  real, parameter :: env_lon = 255.
+  real, parameter :: env_lev = 1. ! mbar
+  
+  
   integer            :: i, k, n
   integer            :: errflg          ! error index from CPF
   integer            :: ierr
-  real(kind=r8), allocatable         :: vmr(:)          ! "working" concentration passed thru CPF
-  real(kind=r8), allocatable, target :: glb_vmr(:,:,:)  ! "global" concentrations
+  real(kind=r8), allocatable :: j_rateConst(:)  ! host model provides photolysis rates for now
+  real(kind=r8), allocatable :: k_rateConst(:)  ! host model provides photolysis rates for now
+  real(kind=r8), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
+  real(kind=r8), allocatable :: glb_vmr(:,:,:)  ! "global" concentrations
   character(len=512) :: errmsg
 
   integer  :: icntrl(20)     ! integer control array for ODE solver
   real(r8) :: rcntrl(20)     ! real control array for ODE solver
   real(r8) :: TimeStart, TimeEnd, Time, dt
   real(r8), allocatable :: absTol(:), relTol(:)
-
+  
   type(ccpp_t), allocatable, target :: cdata(:)
 
 ! declare the types
@@ -54,20 +66,49 @@ subroutine MusicBox_main_sub()
   type(halfsolver),     target   :: theHalfSolver
   type(RosenbrockSolver), target :: theRosenbrockSolver
   type(MozartSolver), target     :: theMozartSolver
+  type(environ_conditions),pointer :: theEnvConds => null()
+  type(const_props_type), pointer :: cnst_info(:) => null()
 
+  character(len=16) :: cnst_name
+  
+  character(len=*), parameter :: jsonfile = '/terminator-data1/home/fvitt/MusicBox/inputs/tagfileoutput.195.json'
+  character(len=*), parameter :: env_conds_file = '/terminator-data1/home/fvitt/MusicBox/inputs/waccm_ma_chem.cam.h0.2000-01-01-00000.nc'
+  
+  call json_loader_read( jsonfile, cnst_info, nSpecies, nkRxt, njRxt )
+
+  nTotRxt = nkRxt + njRxt
+    
   allocate( theKinetics )
   allocate( ODE_obj )
 ! ODE_obj%theSolver => theHalfSolver
   ODE_obj%theSolver => theRosenbrockSolver
 ! ODE_obj%theSolver => theMozartSolver
+
+  allocate(k_rateConst(nkRxt))
+  allocate(j_rateConst(njRxt))
   
-  allocate(glb_vmr(ncols,nlevs,nSpecies))
   allocate(vmr(nSpecies))
   allocate(cdata(ncols))
   allocate(absTol(nSpecies))
   allocate(relTol(nSpecies))
 
-  dt = 21._r8
+  theEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon, lev=env_lev )
+  dt = theEnvConds%dtime()
+  ntimes = theEnvConds%ntimes()
+
+!-----------------------------------------------------------
+!  initialize the "global" concentration array glb_vmr
+!-----------------------------------------------------------
+  allocate(glb_vmr(ncols,nlevs,nSpecies))
+  do i = 1,nSpecies
+     call cnst_info(i)%print()
+     cnst_name = cnst_info(i)%get_name()
+     print*, ' cnst name : ',cnst_name
+     glb_vmr(:,:,i) = theEnvConds%getvar(cnst_name)
+     print*, ' init value : ',glb_vmr(:,:,i) 
+  enddo
+  !glb_vmr(:,:,1) = 1.e-6
+  !glb_vmr(:,:,2) = 0.
 
 !-----------------------------------------------------------
 !  set ode solver "control" variable defaults
@@ -99,12 +140,6 @@ subroutine MusicBox_main_sub()
   write(*,'(1p,10(1x,g0))') rcntrl(1:10)
   write(*,*) ' '
 
-!-----------------------------------------------------------
-!  initialize the "global" concentration array glb_vmr
-!-----------------------------------------------------------
-  glb_vmr(:,:,1)   = 1._r8
-  glb_vmr(:,:,2:3) = 0._r8
-
   TimeStart = 0._r8
   TimeEnd   = TimeStart + real(ntimes,kind=r8)*dt
 
@@ -129,7 +164,7 @@ init_loop: &
       end if
   end do init_loop
 
-
+k_rateConst(:) = 1.e-5_r8
 
 !-----------------------------------------------------------
 !  loop over time
@@ -140,6 +175,9 @@ time_loop: &
     do k = 1, nlevs
       do i = 1, ncols
         vmr(:) = glb_vmr(i,k,:)
+        call theEnvConds%update(n)
+        j_rateConst(:) = theEnvConds%getvar('jcl2')
+        call theKinetics%rateConst_print()
         Time = TimeStart
         call ccpp_physics_run(cdata(i), ierr=ierr)
         if (ierr/=0) then
@@ -150,7 +188,7 @@ time_loop: &
       end do
     end do
     TimeStart = real(n,kind=r8)*dt
-    write(*,'(a,1p,g0)') 'Concentration @ time = ',TimeStart
+    write(*,'(a,1p,g0)') 'Concentration @ hour = ',TimeStart/3600.
     write(*,'(1p,5(1x,g0))') vmr(:),sum(vmr(:))
   end do time_loop
 
