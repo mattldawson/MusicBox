@@ -10,3 +10,4 @@ export FC=/opt/local/bin/gfortran
 
 export NETCDF=/opt/local
 export LD_LIBRARY_PATH="/opt/local/lib64:/opt/local/lib"
+export JSONFORTRAN=/opt/local/lib

@@ -2,7 +2,7 @@
 The MICM box model host
 
 to add variable:
- - edit MusicBox_host/src/micm_type_defs.f90
+ - edit MusicBox_host/src/MusicBox_var_defs.f90
    . add line to host cap table
    . add variable to micm_data_type
  - add corresponding line to chemistry module cap tables

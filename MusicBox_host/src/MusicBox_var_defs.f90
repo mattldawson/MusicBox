@@ -1,19 +1,20 @@
-!> \file micm_type_defs.f90
+!> \file MusicBox_var_defs.f90
 !!  Contains type definitions for MICM variables and physics-related variables
 
-module micm_type_defs
+module MusicBox_var_defs
 
- use ODE_solver, only : baseOdeSolver
+use :: machine,           only: r8 => kind_phys
+use :: solver_var_defs,   only: Solver_type
 
  implicit none
 !-----------------------------------------------------------------------
 !-----------------------------------------------------------------------
-! The following definition sets up the variables for use within MICM
+! The following definition sets up the variables for use within MusicBox
 !-----------------------------------------------------------------------
 !-----------------------------------------------------------------------
 
 ! Filter with CPP for PGI compiler
-!> \section arg_table_micm_data_type
+!> \section arg_table_MusicBox_var_defs
 !! | local_name | standard_name                                    | long_name                               | units     | rank | type        |    kind   | intent | optional |
 !! |------------|--------------------------------------------------|-----------------------------------------|---------- |------|-------------|-----------|--------|----------|
 !! | vmr        | concentration                                    | species concentration                   | mole/mole |    1 | real        | kind_phys | none   | F        |
@@ -34,28 +35,4 @@ module micm_type_defs
 !! | Time       | Simulation_time                                  | Present simulation time                 | s         |    0 | real        | kind_phys | in     | F        |
 !!
 
-  integer, parameter :: r8 = selected_real_kind( 15 )
-  
-  type micm_data_type
-
-    real(r8), allocatable  :: vmr(:)
-    real(r8), allocatable  :: j_rateConst(:)
-    real(r8), allocatable  :: k_rateConst(:)
-    real(r8)               :: dt
-    integer                :: ncol
-    integer                :: nlev
-    character(len=512)     :: errmsg
-    integer                :: errflg
-
-    contains
-!      procedure :: create => physics_create
-!      procedure :: associate => physics_associate
-  end type micm_data_type
-
- type Solver_type
-   class(baseOdeSolver), pointer :: theSolver
- end type Solver_type
-
-contains
-
-end module micm_type_defs
+end module MusicBox_var_defs
