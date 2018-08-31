@@ -1,6 +1,7 @@
 module MusicBox_main
-use json_loader, only : json_loader_read
-use const_props_mod, only: const_props_type
+
+use json_loader,            only: json_loader_read
+use const_props_mod,        only: const_props_type
 use environ_conditions_mod, only: environ_conditions_create, environ_conditions
 
 implicit none
@@ -19,7 +20,6 @@ subroutine MusicBox_main_sub()
                ccpp_field_add
 
   use :: iso_c_binding, only: c_loc
-  use :: ODE_solver,        only: baseOdeSolver
   use :: half_solver,       only: halfsolver
   use :: Rosenbrock_Solver, only: RosenbrockSolver
   use :: Mozart_Solver,     only: MozartSolver
@@ -36,9 +36,10 @@ subroutine MusicBox_main_sub()
   integer :: njRxt = 0      ! number of photochemical reactions
   integer :: nTotRxt = 0    ! total number of chemical reactions
   integer :: ntimes = 0     ! number of time steps
-
   integer ,parameter :: ncols = 1       ! number columns in domain
   integer ,parameter :: nlevs = 1       ! number vertical levels in each column
+
+  ! Temporary hardwiring of environmental conditions
   real, parameter :: env_lat = 40.
   real, parameter :: env_lon = 255.
   real, parameter :: env_lev = 1. ! mbar

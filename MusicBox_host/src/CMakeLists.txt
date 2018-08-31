@@ -34,7 +34,7 @@ ADD_SUBDIRECTORY(${CCPP_SRC} ${CMAKE_BINARY_DIR}/ccpp-framework)
 ADD_SUBDIRECTORY(${MICM_SRC} ${CMAKE_BINARY_DIR}/MICM_chemistry)
 
 SET(mbox_source_files MusicBox.F90
-            micm_type_defs.f90
+            MusicBox_var_defs.f90
 	    input_slice.F90
 	    input_data.F90
 	    environ_conditions_mod.F90
@@ -49,7 +49,7 @@ FIND_LIBRARY(JSONFORTRAN_LIB jsonfortran)
 MESSAGE(STATUS "JSONFORTRAN_LIB: ${JSONFORTRAN_LIB}")
 
 INCLUDE_DIRECTORIES(${NETCDF_INCLUDES})
-INCLUDE_DIRECTORIES($ENV{JSONFORTRAN}/include)
+INCLUDE_DIRECTORIES($ENV{JSONFORTRAN}/../include)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp-framework/src)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/MICM_chemistry)
 
