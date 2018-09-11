@@ -14,6 +14,8 @@ build steps:
 > mkdir bin
 > cd bin
 > cmake ../src  (or cmake -DCMAKE_BUILD_TYPE=Debug ../src)
+> ln -s ../../ccpp-framework/src .  # TEMPORARY WORKAROUND
+> ln -s ../../ccpp-framework/schemes .     # TEMPORARY WORKAROUND
 > make
 
 execute:

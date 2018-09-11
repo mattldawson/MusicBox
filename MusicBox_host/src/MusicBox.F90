@@ -195,7 +195,7 @@ time_loop: &
 
 finis_loop: &
   do i=1, ncols
-      call ccpp_physics_finalize(cdata(i), ierr)
+      call ccpp_physics_finalize(cdata(i), ierr=ierr)
       if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_finalize for column ', i, '. Exiting...'
           stop
