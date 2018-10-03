@@ -9,14 +9,20 @@ to add variable:
  - declare variable and allocate memory in host model
 
 build steps:
-> ./ccpp-framework/scripts/ccpp_prebuild.py --model=MusicBox
+>>>  edit the MusicBox.F90 file and set the mdoel variable to either terminator or 3component
+> ./ccpp-framework/scripts/ccpp_prebuild.py --model=MusicBox_terminator (or --model=MusicBox_3component)
 > cd MusicBox_host
 > mkdir bin
 > cd bin
-> cmake ../src  (or cmake -DCMAKE_BUILD_TYPE=Debug ../src)
-> ln -s ../../ccpp-framework/src .  # TEMPORARY WORKAROUND
-> ln -s ../../ccpp-framework/schemes .     # TEMPORARY WORKAROUND
+> cmake --DPROJECT=terminator ../src  (or --DPROJECT=3component) (may add -DCMAKE_BUILD_TYPE=Debug for debugging)
 > make
 
 execute:
 > ./MusicBox
+
+
+NOTE:  As of 9/2018, if a --DPROJECT is not specified, will get the following error:
+OSError: [Errno 2] No such file or directory: '/home/cacraig/MusicBox-mine/MusicBox_host/bin/ccpp-framework/schemes/check/src/check-build/../../../../../src/tests'
+
+To fix it, include this line between the cmake and make steps
+> ln -s ../../ccpp-framework/src . ; > ln -s ../../ccpp-framework/schemes .     # TEMPORARY WORKAROUND

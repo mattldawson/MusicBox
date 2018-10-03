@@ -24,10 +24,10 @@ subroutine MusicBox_main_sub()
   use :: Rosenbrock_Solver, only: RosenbrockSolver
   use :: Mozart_Solver,     only: MozartSolver
 
+
 #include "ccpp_modules.inc"
 
   implicit none
-
 !-----------------------------------------------------------
 !  these dimension parameters will be set by the cafe/configurator
 !-----------------------------------------------------------
@@ -71,11 +71,25 @@ subroutine MusicBox_main_sub()
   type(const_props_type), pointer :: cnst_info(:) => null()
 
   character(len=16) :: cnst_name
-  
+
   character(len=*), parameter :: jsonfile = '/terminator-data1/home/fvitt/MusicBox/inputs/tagfileoutput.195.json'
   character(len=*), parameter :: env_conds_file = '/terminator-data1/home/fvitt/MusicBox/inputs/waccm_ma_chem.cam.h0.2000-01-01-00000.nc'
   
-  call json_loader_read( jsonfile, cnst_info, nSpecies, nkRxt, njRxt )
+  ! Model name must be 'terminator' or '3 component'
+  ! Temporary way to specify which model is being run for input purposes
+  character(len=16) :: model = 'terminator'
+
+  if (model == 'terminator') then
+     call json_loader_read( jsonfile, cnst_info, nSpecies, nkRxt, njRxt )
+  else if (model == '3component') then
+     nSpecies = 3
+     nkRxt = 3       ! number gas phase reactions
+     njRxt = 0       ! number gas phase reactions
+     ntimes = 3      ! number of time steps
+  else
+     write(0,*) ' error in model name -- stopping'
+     stop
+  end if
 
   nTotRxt = nkRxt + njRxt
     
@@ -101,15 +115,20 @@ subroutine MusicBox_main_sub()
 !  initialize the "global" concentration array glb_vmr
 !-----------------------------------------------------------
   allocate(glb_vmr(ncols,nlevs,nSpecies))
-  do i = 1,nSpecies
-     call cnst_info(i)%print()
-     cnst_name = cnst_info(i)%get_name()
-     print*, ' cnst name : ',cnst_name
-     glb_vmr(:,:,i) = theEnvConds%getvar(cnst_name)
-     print*, ' init value : ',glb_vmr(:,:,i) 
-  enddo
-  !glb_vmr(:,:,1) = 1.e-6
-  !glb_vmr(:,:,2) = 0.
+
+  if (model == 'terminator') then
+     do i = 1,nSpecies
+        call cnst_info(i)%print()
+        cnst_name = cnst_info(i)%get_name()
+        print*, ' cnst name : ',cnst_name
+        glb_vmr(:,:,i) = theEnvConds%getvar(cnst_name)
+        print*, ' init value : ',glb_vmr(:,:,i) 
+     enddo
+  else if (model == '3component') then
+     glb_vmr(:,:,1)   = 1._r8
+     glb_vmr(:,:,2:3) = 0._r8
+     dt = 21._r8
+  end if 
 
 !-----------------------------------------------------------
 !  set ode solver "control" variable defaults
