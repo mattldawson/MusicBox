@@ -2,12 +2,8 @@
 <suite name="GFS_operational_2017" lib="micmchem" ver="1.0.0">
   <group name="time_vary">
     <subcycle loop="1">
-      <scheme>k_rateConst</scheme>
-      <scheme>kinetics</scheme>
-      <scheme>chem_solve</scheme>
+      <scheme>chemistry_driver</scheme>
     </subcycle>
   </group>
-  <finalize>k_rateConst</finalize>
-  <finalize>kinetics</finalize>
-  <finalize>chem_solve</finalize>
+  <finalize>chemistry_driver</finalize>
 </suite>

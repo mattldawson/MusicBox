@@ -9,13 +9,13 @@ to add variable:
  - declare variable and allocate memory in host model
 
 build steps:
->>>  edit the MusicBox.F90 file and set the mdoel variable to either terminator or 3component
-> ./ccpp-framework/scripts/ccpp_prebuild.py --model=MusicBox_terminator (or --model=MusicBox_3component)
-> cd MusicBox_host
-> mkdir bin
-> cd bin
-> cmake --DPROJECT=terminator ../src  (or --DPROJECT=3component) (may add -DCMAKE_BUILD_TYPE=Debug for debugging)
-> make
+1) edit the MusicBox.F90 file and set the mdoel variable to either terminator or 3component
+2) ccpp-framework/scripts/ccpp_prebuild.py --model=MusicBox_terminator (or --model=MusicBox_3component)
+3) cd MusicBox_host
+4) mkdir bin
+5) cd bin
+6) cmake --DPROJECT=terminator ../src  (or --DPROJECT=3component) (may add -DCMAKE_BUILD_TYPE=Debug for debugging)
+7) make
 
 execute:
 > ./MusicBox

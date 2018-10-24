@@ -33,6 +33,8 @@ use :: solver_var_defs,   only: Solver_type
 !! | TimeStart  | chem_step_start_time                             | Chem step start time                    | s         |    0 | real        | kind_phys | in     | F        |
 !! | TimeEnd    | chem_step_end_time                               | Chem step end time                      | s         |    0 | real        | kind_phys | in     | F        |
 !! | Time       | Simulation_time                                  | Present simulation time                 | s         |    0 | real        | kind_phys | in     | F        |
+!! | nTotRxt    | Number_chemical_reactions                        |                                         | none      |    0 | integer     |           | none   | F        |
+
 !!
 
 end module MusicBox_var_defs
