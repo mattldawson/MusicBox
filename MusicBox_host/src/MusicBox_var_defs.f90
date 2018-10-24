@@ -6,6 +6,7 @@ module MusicBox_var_defs
 use :: machine,           only: r8 => kind_phys
 use :: solver_var_defs,   only: Solver_type
 
+
  implicit none
 !-----------------------------------------------------------------------
 !-----------------------------------------------------------------------
@@ -34,7 +35,7 @@ use :: solver_var_defs,   only: Solver_type
 !! | TimeEnd    | chem_step_end_time                               | Chem step end time                      | s         |    0 | real        | kind_phys | in     | F        |
 !! | Time       | Simulation_time                                  | Present simulation time                 | s         |    0 | real        | kind_phys | in     | F        |
 !! | nTotRxt    | Number_chemical_reactions                        |                                         | none      |    0 | integer     |           | none   | F        |
-
+!! | cnst_info  | chemistry_constituent_info                       | chemistry_constituent_info              | DDT       |    1 | const_props_type|       | out    | F        |
 !!
 
 end module MusicBox_var_defs

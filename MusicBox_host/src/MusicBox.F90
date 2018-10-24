@@ -1,8 +1,9 @@
 module MusicBox_main
 
-use json_loader,            only: json_loader_read
 use const_props_mod,        only: const_props_type
 use environ_conditions_mod, only: environ_conditions_create, environ_conditions
+use prepare_chemistry_mod, only: prepare_chemistry_init
+
 
 implicit none
 
@@ -77,27 +78,16 @@ subroutine MusicBox_main_sub()
   
   ! Model name must be 'terminator' or '3 component'
   ! Temporary way to specify which model is being run for input purposes
-  character(len=16) :: model = 'terminator'
+  character(len=16) :: model = '3component'
 
-  if (model == 'terminator') then
-     call json_loader_read( jsonfile, cnst_info, nSpecies, nkRxt, njRxt )
-  else if (model == '3component') then
-     nSpecies = 3
-     nkRxt = 3       ! number gas phase reactions
-     njRxt = 0       ! number gas phase reactions
-     ntimes = 3      ! number of time steps
-  else
-     write(0,*) ' error in model name -- stopping'
-     stop
-  end if
-
-  nTotRxt = nkRxt + njRxt
+! Remove this call when the CPF can allocate arrays (it will be called either by
+! the CPF or within chemistry_driver_init)
+  call prepare_chemistry_init(cnst_info, nSpecies, nkRxt, njRxt, nTotRxt)
     
+!----------------------------------------
+! These allocates will go away once the CPF is able to allocate arrays
   allocate( theKinetics )
   allocate( ODE_obj )
-! ODE_obj%theSolver => theHalfSolver
-  ODE_obj%theSolver => theRosenbrockSolver
-! ODE_obj%theSolver => theMozartSolver
 
   allocate(k_rateConst(nkRxt))
   allocate(j_rateConst(njRxt))
@@ -106,6 +96,11 @@ subroutine MusicBox_main_sub()
   allocate(cdata(ncols))
   allocate(absTol(nSpecies))
   allocate(relTol(nSpecies))
+!----------------------------------------
+
+! ODE_obj%theSolver => theHalfSolver
+  ODE_obj%theSolver => theRosenbrockSolver
+! ODE_obj%theSolver => theMozartSolver
 
   theEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon, lev=env_lev )
   dt = theEnvConds%dtime()
