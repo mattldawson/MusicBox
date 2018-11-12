@@ -43,11 +43,8 @@ SET(mbox_source_files MusicBox.F90
 #this should call the custome FindNetCDF.cmake file in /src/cmake/modules and populate the NETCDF_INCLUDES and NETCDF_LIBRARIES variables with the appropriate values
 SET(NETCDF_F90 "YES")
 FIND_PACKAGE(NetCDF)
-FIND_LIBRARY(JSONFORTRAN_LIB jsonfortran)
-MESSAGE(STATUS "JSONFORTRAN_LIB: ${JSONFORTRAN_LIB}")
 
 INCLUDE_DIRECTORIES(${NETCDF_INCLUDES})
-INCLUDE_DIRECTORIES($ENV{JSONFORTRAN}/../include)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp-framework/src)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/MICM_chemistry)
 

@@ -76,7 +76,7 @@ subroutine MusicBox_main_sub()
   character(len=*), parameter :: jsonfile = '/terminator-data1/home/fvitt/MusicBox/inputs/tagfileoutput.195.json'
   character(len=*), parameter :: env_conds_file = '/terminator-data1/home/fvitt/MusicBox/inputs/waccm_ma_chem.cam.h0.2000-01-01-00000.nc'
   
-  ! Model name must be 'terminator' or '3 component'
+  ! Model name must be 'terminator' or '3component'
   ! Temporary way to specify which model is being run for input purposes
   character(len=16) :: model = '3component'
 
