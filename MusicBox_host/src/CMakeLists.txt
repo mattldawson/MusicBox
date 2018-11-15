@@ -36,7 +36,7 @@ ADD_SUBDIRECTORY(${MICM_SRC} ${CMAKE_BINARY_DIR}/MICM_chemistry)
 SET(mbox_source_files MusicBox.F90
             MusicBox_var_defs.f90
 	    input_slice.F90
-	    input_data.F90
+	    input_file.F90
 	    environ_conditions_mod.F90
 )
 
