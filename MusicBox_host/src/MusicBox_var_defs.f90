@@ -34,7 +34,6 @@ use :: solver_var_defs,   only: Solver_type
 !! | TimeStart  | chem_step_start_time                             | Chem step start time                    | s         |    0 | real        | kind_phys | in     | F        |
 !! | TimeEnd    | chem_step_end_time                               | Chem step end time                      | s         |    0 | real        | kind_phys | in     | F        |
 !! | Time       | Simulation_time                                  | Present simulation time                 | s         |    0 | real        | kind_phys | in     | F        |
-!! | nTotRxt    | Number_chemical_reactions                        |                                         | none      |    0 | integer     |           | none   | F        |
 !! | cnst_info  | chemistry_constituent_info                       | chemistry_constituent_info              | DDT       |    1 | const_props_type|       | out    | F        |
 !! | nlevels    | num_levels_for_photolysis                        | number of column layers                 | count     |    0 | integer     |           | in     | F        |
 !! | zenith     | solar_zenith                                     | solar zenith angle                      | degrees   |    0 | real        | kind_phys | in     | F        |

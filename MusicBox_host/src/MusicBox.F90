@@ -35,7 +35,6 @@ subroutine MusicBox_main_sub()
   integer :: nSpecies = 0   ! number prognostic constituents
   integer :: nkRxt = 0      ! number gas phase reactions
   integer :: njRxt = 0      ! number of photochemical reactions
-  integer :: nTotRxt = 0    ! total number of chemical reactions
   integer :: ntimes = 0     ! number of time steps
   integer ,parameter :: ncols = 1       ! number columns in domain
   integer ,parameter :: nlevs = 1       ! number vertical levels in each column
@@ -79,8 +78,8 @@ subroutine MusicBox_main_sub()
   
   ! Model name must be 'terminator' or '3component'
   ! Temporary way to specify which model is being run for input purposes
-!  character(len=*), parameter :: model = 'terminator'
-  character(len=*), parameter :: model = '3component'
+  character(len=*), parameter :: model = 'terminator'
+!  character(len=*), parameter :: model = '3component'
 !#include "chemistry_model_name.inc"
 
   integer :: photo_lev
@@ -102,9 +101,11 @@ subroutine MusicBox_main_sub()
   write(*,*) '************** model = '//trim(model)//' ***************'
   write(*,*) '*******************************************************'
   
-! Remove this call when the CPF can allocate arrays (it will be called either by
-! the CPF or within chemistry_driver_init)
-  call prepare_chemistry_init(cnst_info, nSpecies, nkRxt, njRxt, nTotRxt)
+! Remove this call when the CPF can allocate arrays 
+! NOTE - It is called again in chemistry_driver_init which is where it will
+! permamently reside
+
+  call prepare_chemistry_init(cnst_info, nSpecies, nkRxt, njRxt)
     
 !----------------------------------------
 ! These allocates will go away once the CPF is able to allocate arrays
@@ -160,35 +161,6 @@ subroutine MusicBox_main_sub()
      glb_vmr(:,:,2:3) = 0._r8
   end if 
 
-!-----------------------------------------------------------
-!  set ode solver "control" variable defaults
-!-----------------------------------------------------------
-  absTol(:) = 1.e-9_r8
-  relTol(:) = 1.e-4_r8
-  icntrl(:) = 0
-  rcntrl(:) = 0._r8
-
-!-----------------------------------------------------------
-!  set ode solver "control" variables
-!-----------------------------------------------------------
-  select type( baseOdeSolver => ODE_obj%theSolver )
-    class is (RosenbrockSolver)
-      icntrl(1) = 1                                 ! autonomous, F depends only on Y
-      icntrl(3) = 2                                 ! ros3 solver
-      rcntrl(2) = dt                                ! Hmax
-      rcntrl(3) = .01_r8*dt                         ! Hstart
-    class is (mozartSolver)
-      icntrl(1) = 1                                 ! autonomous, F depends only on Y
-      rcntrl(2) = dt                                ! Hmax
-      rcntrl(3) = .01_r8*dt                         ! Hstart
-  end select
-
-  write(*,*) ' '
-  write(*,*) 'icntrl settings'
-  write(*,'(10i6)') icntrl(1:10)
-  write(*,*) 'rcntrl settings'
-  write(*,'(1p,10(1x,g0))') rcntrl(1:10)
-  write(*,*) ' '
 
   TimeStart = 0._r8
   
