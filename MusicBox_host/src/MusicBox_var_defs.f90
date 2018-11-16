@@ -36,6 +36,20 @@ use :: solver_var_defs,   only: Solver_type
 !! | Time       | Simulation_time                                  | Present simulation time                 | s         |    0 | real        | kind_phys | in     | F        |
 !! | nTotRxt    | Number_chemical_reactions                        |                                         | none      |    0 | integer     |           | none   | F        |
 !! | cnst_info  | chemistry_constituent_info                       | chemistry_constituent_info              | DDT       |    1 | const_props_type|       | out    | F        |
+!! | nlevels    | num_levels_for_photolysis                        | number of column layers                 | count     |    0 | integer     |           | in     | F        |
+!! | zenith     | solar_zenith                                     | solar zenith angle                      | degrees   |    0 | real        | kind_phys | in     | F        |
+!! | albedo     | surface_albedo                                   | surface albedo                          | none      |    0 | real        | kind_phys | in     | F        |
+!! | press_mid  | layer_pressure                                   | mid-point layer pressure                | Pa        |    1 | real        | kind_phys | in     | F        |
+!! | press_int  | layer_interface_pressure                         | layer interface pressure                | Pa        |    1 | real        | kind_phys | in     | F        |
+!! | alt        | layer_altitude                                   | mid-point layer altitude                | km        |    1 | real        | kind_phys | in     | F        |
+!! | temp       | temperature                                      | mid-point layer temperature             | K         |    1 | real        | kind_phys | in     | F        |
+!! | o2vmrcol   | O2_vmr_col                                       | O2 volume mixing ratio column           | mole/mole |    1 | real        | kind_phys | in     | F        |
+!! | o3vmrcol   | O3_vmr_col                                       | O3 volume mixing ratio column           | mole/mole |    1 | real        | kind_phys | in     | F        |
+!! | so2vmrcol  | SO2_vmr_col                                      | SO2 volume mixing ratio column          | mole/mole |    1 | real        | kind_phys | in     | F        |
+!! | no2vmrcol  | NO2_vmr_col                                      | NO2 volume mixing ratio column          | mole/mole |    1 | real        | kind_phys | in     | F        |
+!! | prates     | photolysis_rates_col                             | photolysis rates column                 | s-1       |    2 | real        | kind_phys | out    | F        |
+!! | o3totcol   | ozone_column_density                             | total ozone column density              | DU        |    0 | real        | kind_phys | out    | F        |
+!! | photo_lev  | level_number_for_photolysis                      | level number used to set j_rateConst    | count     |    0 | integer     |           | none   | F        |
 !!
 
 end module MusicBox_var_defs

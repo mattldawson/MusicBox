@@ -10,12 +10,18 @@ module input_file
   type, public :: input_file_type
 
      private
+     
      integer :: ncid
 
      real, allocatable :: lons(:)
      real, allocatable :: lats(:)
      real, allocatable :: levs(:)
      real, allocatable :: times(:)
+
+     real, allocatable :: hyam(:)
+     real, allocatable :: hybm(:)
+     real, allocatable :: hyai(:)
+     real, allocatable :: hybi(:)
 
      integer :: nlons
      integer :: nlats
@@ -26,12 +32,40 @@ module input_file
      procedure :: open => input_file_open
      procedure :: set_slice => input_file_slice
      procedure :: extract => input_file_extract_slice
+     procedure :: extract_srf => input_file_extract_slice3d
      procedure :: get_ntimes => input_file_get_ntimes
+     procedure :: get_nlevels => input_file_get_nlevels
      procedure :: get_time => input_file_get_time
      procedure :: get_dtime => input_file_get_dtime
+     procedure :: get_hyam=>input_file_get_hyam
+     procedure :: get_hybm=>input_file_get_hybm
+     procedure :: get_hyai=>input_file_get_hyai
+     procedure :: get_hybi=>input_file_get_hybi
   end type input_file_type
 
 contains
+
+  function input_file_get_hyam(this) result(x)
+    class(input_file_type), intent(in) :: this
+    real :: x(this%nlevs)
+    x(:) = this%hyam(:)
+  end function input_file_get_hyam
+  function input_file_get_hybm(this) result(x)
+    class(input_file_type), intent(in) :: this
+    real :: x(this%nlevs)
+    x(:) = this%hybm(:)
+  end function input_file_get_hybm
+  
+  function input_file_get_hyai(this) result(x)
+    class(input_file_type), intent(in) :: this
+    real :: x(this%nlevs+1)
+    x(:) = this%hyai(:)
+  end function input_file_get_hyai
+  function input_file_get_hybi(this) result(x)
+    class(input_file_type), intent(in) :: this
+    real :: x(this%nlevs+1)
+    x(:) = this%hybi(:)
+  end function input_file_get_hybi
   
   real function input_file_get_time(this, n)
     class(input_file_type), intent(in) :: this
@@ -49,6 +83,11 @@ contains
     input_file_get_ntimes = this%ntimes
   end function input_file_get_ntimes
 
+  integer function input_file_get_nlevels(this)
+    class(input_file_type), intent(in) :: this
+    input_file_get_nlevels = this%nlevs
+  end function input_file_get_nlevels
+
   subroutine input_file_open(this, filename )
 
     class(input_file_type), intent(inout) :: this
@@ -56,8 +95,6 @@ contains
     character(len=*), intent(in) :: filename
     
     integer :: status, dimid
-
-    print*,'input_file_open.. filename = >|'//trim(filename)//'|<'
     
     status = nf90_open(filename, nf90_nowrite, this%ncid)
     if(status /= nf90_noerr) call handle_err(status)
@@ -67,7 +104,29 @@ contains
     call set_coordinate(this%ncid, 'lev',  this%nlevs,  this%levs )
     call set_coordinate(this%ncid, 'time', this%ntimes, this%times )
 
+    call set_hybrid_coord(this%ncid, 'hyam', this%nlevs, this%hyam)
+    call set_hybrid_coord(this%ncid, 'hybm', this%nlevs, this%hybm)    
+    call set_hybrid_coord(this%ncid, 'hyai', this%nlevs+1, this%hyai)
+    call set_hybrid_coord(this%ncid, 'hybi', this%nlevs+1, this%hybi)
+    
   contains
+
+    subroutine set_hybrid_coord(fileid,coordname,ndim, coordvar)
+      integer, intent(in) :: fileid
+      character(len=*), intent(in) :: coordname
+      integer, intent(in) :: ndim
+      real, allocatable, intent(out) :: coordvar(:)
+      
+      integer :: varid
+
+      allocate(coordvar(ndim))
+
+      status = nf90_inq_varid(fileid, coordname, varid)
+      if(status /= nf90_noerr) call handle_err(status)
+      status = nf90_get_var(fileid, varid, coordvar)
+      if(status /= nf90_noerr) call handle_err(status)
+    end subroutine set_hybrid_coord
+    
 
     subroutine set_coordinate(fileid, dimname, ndim, coordvar )
 
@@ -189,13 +248,40 @@ contains
     
     status = nf90_inq_varid(this%ncid, varname, varid)
     if(status /= nf90_noerr) call handle_err(status)
-    
+
     status = nf90_get_var(this%ncid, varid, data, &
                             start = (/ slice%beglon, slice%beglat, slice%beglev, slice%begtime /),     &
                             count = (/ slice%nlons,  slice%nlats,  slice%nlevs,  slice%ntimes /))
+
     if(status /= nf90_noerr) call handle_err(status)
     
   end function input_file_extract_slice
+
+  function input_file_extract_slice3d(this, varname, slice ) result(data)
+    use input_slice, only : slice_type
+
+    class(input_file_type), intent(inout) :: this
+    
+    character(len=*), intent(in) :: varname
+    type(slice_type), intent(in) :: slice
+    
+    real, pointer :: data(:,:,:)
+
+    integer :: varid, status
+
+    allocate(data(slice%nlons,slice%nlats,slice%ntimes))
+    data = -1.e36
+    
+    status = nf90_inq_varid(this%ncid, varname, varid)
+    if(status /= nf90_noerr) call handle_err(status)
+
+    status = nf90_get_var(this%ncid, varid, data, &
+                            start = (/ slice%beglon, slice%beglat, slice%begtime /),     &
+                            count = (/ slice%nlons,  slice%nlats,  slice%ntimes /))
+
+    if(status /= nf90_noerr) call handle_err(status)
+    
+  end function input_file_extract_slice3d
 
   subroutine handle_err(status)
 

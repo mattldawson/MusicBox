@@ -41,8 +41,8 @@ subroutine MusicBox_main_sub()
   integer ,parameter :: nlevs = 1       ! number vertical levels in each column
 
   ! Temporary hardwiring of environmental conditions
-  real, parameter :: env_lat = 40.
-  real, parameter :: env_lon = 255.
+  real, parameter :: env_lat = -40.
+  real, parameter :: env_lon = 180.
   real, parameter :: env_lev = 1. ! mbar
   
   
@@ -69,17 +69,39 @@ subroutine MusicBox_main_sub()
   type(RosenbrockSolver), target :: theRosenbrockSolver
   type(MozartSolver), target     :: theMozartSolver
   type(environ_conditions),pointer :: theEnvConds => null()
+  type(environ_conditions),pointer :: colEnvConds => null()
   type(const_props_type), pointer :: cnst_info(:) => null()
 
   character(len=16) :: cnst_name
 
-  character(len=*), parameter :: jsonfile = '/terminator-data1/home/fvitt/MusicBox/inputs/tagfileoutput.195.json'
-  character(len=*), parameter :: env_conds_file = '/terminator-data1/home/fvitt/MusicBox/inputs/waccm_ma_chem.cam.h0.2000-01-01-00000.nc'
+!  character(len=*), parameter :: env_conds_file = '/terminator-data1/fvitt/micm_inputs/waccm_ma_chem.cam.h0.2000-01-01-00000.nc'
+  character(len=*), parameter :: env_conds_file = '/terminator-data1/fvitt/micm_inputs/FW2000climo.f09_f09_mg17.cam6_0_030.n01.cam.h2.0001-01-01-00000.nc'
   
   ! Model name must be 'terminator' or '3component'
   ! Temporary way to specify which model is being run for input purposes
-  character(len=16) :: model = '3component'
+!  character(len=*), parameter :: model = 'terminator'
+  character(len=*), parameter :: model = '3component'
+!#include "chemistry_model_name.inc"
 
+  integer :: photo_lev
+  integer :: nlevels
+  real(r8) :: zenith
+  real(r8) :: albedo
+  real(r8) :: o3totcol
+  real(r8), allocatable :: alt(:)
+  real(r8), allocatable :: press_mid(:)
+  real(r8), allocatable :: press_int(:)
+  real(r8), allocatable :: temp(:)
+  real(r8), allocatable :: o2vmrcol(:)
+  real(r8), allocatable :: o3vmrcol(:)
+  real(r8), allocatable :: so2vmrcol(:)
+  real(r8), allocatable :: no2vmrcol(:)
+  real(r8), allocatable :: prates(:,:)
+
+  write(*,*) '*******************************************************'
+  write(*,*) '************** model = '//trim(model)//' ***************'
+  write(*,*) '*******************************************************'
+  
 ! Remove this call when the CPF can allocate arrays (it will be called either by
 ! the CPF or within chemistry_driver_init)
   call prepare_chemistry_init(cnst_info, nSpecies, nkRxt, njRxt, nTotRxt)
@@ -102,9 +124,23 @@ subroutine MusicBox_main_sub()
   ODE_obj%theSolver => theRosenbrockSolver
 ! ODE_obj%theSolver => theMozartSolver
 
+  colEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon )
   theEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon, lev=env_lev )
   dt = theEnvConds%dtime()
   ntimes = theEnvConds%ntimes()
+  nlevels = colEnvConds%nlevels()
+  photo_lev = theEnvConds%levnum()
+  
+  allocate(alt(nlevels))
+  allocate( press_mid(nlevels))
+  allocate( press_int(nlevels))
+  allocate( temp(nlevels))
+  allocate( o2vmrcol(nlevels))
+  allocate( o3vmrcol(nlevels))
+  allocate( so2vmrcol(nlevels))
+  allocate( no2vmrcol(nlevels))
+  allocate( prates(nlevels,113))
+  o3totcol = -9999.
 
 !-----------------------------------------------------------
 !  initialize the "global" concentration array glb_vmr
@@ -122,7 +158,6 @@ subroutine MusicBox_main_sub()
   else if (model == '3component') then
      glb_vmr(:,:,1)   = 1._r8
      glb_vmr(:,:,2:3) = 0._r8
-     dt = 21._r8
   end if 
 
 !-----------------------------------------------------------
@@ -156,16 +191,15 @@ subroutine MusicBox_main_sub()
   write(*,*) ' '
 
   TimeStart = 0._r8
-  TimeEnd   = TimeStart + real(ntimes,kind=r8)*dt
-
+  
 init_loop: &
   do i = 1, ncols
-      call ccpp_init( '../suites/suite_MusicBox_test_simple1.xml', cdata(i), ierr)
+      call ccpp_init( '../suites/suite_MusicBox_'//trim(model)//'.xml', cdata(i), ierr)
+
       if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_init for column ', i, '. Exiting...'
           stop
       end if
-
 
     !use ccpp_fields.inc to call ccpp_field_add for all variables to be exposed to CCPP (this is auto-generated from /src/ccpp/scripts/ccpp_prebuild.py - the script parses tables in MusicBox_type_defs.f90)
 
@@ -189,10 +223,23 @@ time_loop: &
       do i = 1, ncols
         vmr(:) = glb_vmr(i,k,:)
         call theEnvConds%update(n)
-        j_rateConst(:) = theEnvConds%getvar('jcl2')
-        call theKinetics%rateConst_print()
+        call colEnvConds%update(n)
+        zenith = colEnvConds%getsrf('SZA')
+        albedo = colEnvConds%getsrf('ASDIR')
+        press_mid(:nlevels) = colEnvConds%press_mid(nlevels)
+        press_int(:nlevels) = colEnvConds%press_int(nlevels)
+        alt(:nlevels) = colEnvConds%getcol('Z3',nlevels)
+        temp(:nlevels) = colEnvConds%getcol('T',nlevels)
+        o2vmrcol(:nlevels) = colEnvConds%getcol('O2',nlevels)
+        o3vmrcol(:nlevels) = colEnvConds%getcol('O3',nlevels)
+        so2vmrcol(:nlevels) = colEnvConds%getcol('SO2',nlevels)
+        no2vmrcol(:nlevels) = colEnvConds%getcol('NO2',nlevels)
         Time = TimeStart
         call ccpp_physics_run(cdata(i), ierr=ierr)
+        if (model == 'terminator') then
+           write(*,'(2(a,f6.2))') 'solar zenith (degrees): ',zenith,' ...total ozone (DU): ', o3totcol
+        end if
+!        call theKinetics%rateConst_print()
         if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, '. Exiting...'
           stop
