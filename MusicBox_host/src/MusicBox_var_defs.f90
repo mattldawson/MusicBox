@@ -4,8 +4,6 @@
 module MusicBox_var_defs
 
 use :: machine,           only: r8 => kind_phys
-use :: solver_var_defs,   only: Solver_type
-
 
  implicit none
 !-----------------------------------------------------------------------

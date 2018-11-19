@@ -70,8 +70,8 @@ subroutine MusicBox_main_sub()
   
   ! Model name must be 'terminator' or '3component'
   ! Temporary way to specify which model is being run for input purposes
-!  character(len=*), parameter :: model = 'terminator'
-  character(len=*), parameter :: model = '3component'
+  character(len=*), parameter :: model = 'terminator'
+!  character(len=*), parameter :: model = '3component'
 !#include "chemistry_model_name.inc"
 
   integer :: photo_lev
