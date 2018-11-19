@@ -21,10 +21,6 @@ subroutine MusicBox_main_sub()
                ccpp_field_add
 
   use :: iso_c_binding, only: c_loc
-  use :: half_solver,       only: halfsolver
-  use :: Rosenbrock_Solver, only: RosenbrockSolver
-  use :: Mozart_Solver,     only: MozartSolver
-
 
 #include "ccpp_modules.inc"
 
@@ -62,11 +58,7 @@ subroutine MusicBox_main_sub()
   type(ccpp_t), allocatable, target :: cdata(:)
 
 ! declare the types
-  type(Solver_type),    pointer  :: ODE_obj
   type(kinetics_type),  pointer  :: theKinetics
-  type(halfsolver),     target   :: theHalfSolver
-  type(RosenbrockSolver), target :: theRosenbrockSolver
-  type(MozartSolver), target     :: theMozartSolver
   type(environ_conditions),pointer :: theEnvConds => null()
   type(environ_conditions),pointer :: colEnvConds => null()
   type(const_props_type), pointer :: cnst_info(:) => null()
@@ -78,8 +70,8 @@ subroutine MusicBox_main_sub()
   
   ! Model name must be 'terminator' or '3component'
   ! Temporary way to specify which model is being run for input purposes
-  character(len=*), parameter :: model = 'terminator'
-!  character(len=*), parameter :: model = '3component'
+!  character(len=*), parameter :: model = 'terminator'
+  character(len=*), parameter :: model = '3component'
 !#include "chemistry_model_name.inc"
 
   integer :: photo_lev
@@ -110,7 +102,6 @@ subroutine MusicBox_main_sub()
 !----------------------------------------
 ! These allocates will go away once the CPF is able to allocate arrays
   allocate( theKinetics )
-  allocate( ODE_obj )
 
   allocate(k_rateConst(nkRxt))
   allocate(j_rateConst(njRxt))
@@ -120,10 +111,6 @@ subroutine MusicBox_main_sub()
   allocate(absTol(nSpecies))
   allocate(relTol(nSpecies))
 !----------------------------------------
-
-! ODE_obj%theSolver => theHalfSolver
-  ODE_obj%theSolver => theRosenbrockSolver
-! ODE_obj%theSolver => theMozartSolver
 
   colEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon )
   theEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon, lev=env_lev )
