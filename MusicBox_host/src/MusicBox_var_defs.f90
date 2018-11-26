@@ -4,8 +4,6 @@
 module MusicBox_var_defs
 
 use :: machine,           only: r8 => kind_phys
-use :: solver_var_defs,   only: Solver_type
-
 
  implicit none
 !-----------------------------------------------------------------------
@@ -21,7 +19,6 @@ use :: solver_var_defs,   only: Solver_type
 !! | vmr        | concentration                                    | species concentration                   | mole/mole |    1 | real        | kind_phys | none   | F        |
 !! | k_rateConst| gasphase_rate_constants                          | gas phase rates constants               | s-1       |    1 | real        | kind_phys | none   | F        |
 !! | j_rateConst| photo_rate_constants                             | photochemical rates constants           | s-1       |    1 | real        | kind_phys | none   | F        |
-!! | ODE_obj    | ODE_ddt                                          | ODE derived data type                   | DDT       |    0 | Solver_type |           | none   | F        |
 !! | dt         | time_step_for_physics                            | physics time step                       | s         |    0 | real        | kind_phys | in     | F        |
 !! | ncol       | horizontal_loop_extent                           | horizontal dimension                    | count     |    0 | integer     |           | in     | F        |
 !! | nlev       | adjusted_vertical_layer_dimension_for_radiation  | number of vertical layers for radiation | count     |    0 | integer     |           | in     | F        |
@@ -34,7 +31,6 @@ use :: solver_var_defs,   only: Solver_type
 !! | TimeStart  | chem_step_start_time                             | Chem step start time                    | s         |    0 | real        | kind_phys | in     | F        |
 !! | TimeEnd    | chem_step_end_time                               | Chem step end time                      | s         |    0 | real        | kind_phys | in     | F        |
 !! | Time       | Simulation_time                                  | Present simulation time                 | s         |    0 | real        | kind_phys | in     | F        |
-!! | nTotRxt    | Number_chemical_reactions                        |                                         | none      |    0 | integer     |           | none   | F        |
 !! | cnst_info  | chemistry_constituent_info                       | chemistry_constituent_info              | DDT       |    1 | const_props_type|       | out    | F        |
 !! | nlevels    | num_levels_for_photolysis                        | number of column layers                 | count     |    0 | integer     |           | in     | F        |
 !! | zenith     | solar_zenith                                     | solar zenith angle                      | degrees   |    0 | real        | kind_phys | in     | F        |
