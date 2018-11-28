@@ -1,12 +1,12 @@
 module environ_conditions_mod
-use :: machine, only: rk => kind_phys
 
 !---------------------------------------------------------------------
 ! This module retrieves the enviromental conditions from a named file
 !---------------------------------------------------------------------
 
-  use input_file, only: input_file_type
-  use input_slice, only : slice_type
+  use machine,     only: rk => kind_phys
+  use input_file,  only: input_file_type
+  use input_slice, only: slice_type
 
   implicit none
 

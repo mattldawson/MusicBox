@@ -38,6 +38,7 @@ SET(mbox_source_files MusicBox.F90
 	    input_slice.F90
 	    input_file.F90
 	    environ_conditions_mod.F90
+	    output_file.F90
 )
 
 #this should call the custome FindNetCDF.cmake file in /src/cmake/modules and populate the NETCDF_INCLUDES and NETCDF_LIBRARIES variables with the appropriate values
