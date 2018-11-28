@@ -10,7 +10,7 @@ module input_file
   type, public :: input_file_type
 
      private
-     
+
      integer :: ncid
 
      real, allocatable :: lons(:)
