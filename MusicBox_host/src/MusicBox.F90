@@ -91,6 +91,7 @@ subroutine MusicBox_main_sub()
   real(r8), allocatable :: so2vmrcol(:)
   real(r8), allocatable :: no2vmrcol(:)
   real(r8), allocatable :: prates(:,:)
+  real(r8) :: density, mbar, box_temp, box_press
 
   write(*,*) '*******************************************************'
   write(*,*) '************** model = '//trim(model)//' ***************'
@@ -108,6 +109,8 @@ subroutine MusicBox_main_sub()
      call outfile%add('Zenith','solar zenith angle','degrees')
      call outfile%add('O3totcol','integrated ozone column (dobson units)','DU')
      call outfile%add('JCL2','Cl2 photolysis rate','sec^-1')
+     call outfile%add('Density','total number density','molecules/cm3')
+     call outfile%add('Mbar','mean molar mass','g/mole')
   end if
 
   call outfile%add('VMRTOT','sum of all species','molec/molec')
@@ -215,14 +218,19 @@ time_loop: &
            o3vmrcol(:nlevels) = colEnvConds%getcol('O3',nlevels)
            so2vmrcol(:nlevels) = colEnvConds%getcol('SO2',nlevels)
            no2vmrcol(:nlevels) = colEnvConds%getcol('NO2',nlevels)
+           box_temp = temp(photo_lev)
+           box_press = press_mid(photo_lev)
            call outfile%out( 'Zenith', zenith )
         end if
         Time = TimeStart
         call ccpp_physics_run(cdata(i), ierr=ierr)
         if (model == 'terminator') then
            write(*,'(2(a,f6.2))') 'solar zenith (degrees): ',zenith,' ...total ozone (DU): ', o3totcol
+           write(*,'(a,f6.2,e12.4)') ' mbar, total density :', mbar, density
            call outfile%out( 'O3totcol', o3totcol )
            call outfile%out( 'JCL2', j_rateConst(1) )
+           call outfile%out( 'Density', density )
+           call outfile%out( 'Mbar', mbar )
         end if
 !        call theKinetics%rateConst_print()
         if (ierr/=0) then
