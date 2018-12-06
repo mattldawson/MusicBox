@@ -38,7 +38,7 @@ use :: machine,           only: r8 => kind_phys
 !! | press_mid  | layer_pressure                                   | mid-point layer pressure                | Pa        |    1 | real        | kind_phys | in     | F        |
 !! | press_int  | layer_interface_pressure                         | layer interface pressure                | Pa        |    1 | real        | kind_phys | in     | F        |
 !! | alt        | layer_altitude                                   | mid-point layer altitude                | km        |    1 | real        | kind_phys | in     | F        |
-!! | temp       | temperature                                      | mid-point layer temperature             | K         |    1 | real        | kind_phys | in     | F        |
+!! | temp       | layer_temperature                                | mid-point layer temperature             | K         |    1 | real        | kind_phys | in     | F        |
 !! | o2vmrcol   | O2_vmr_col                                       | O2 volume mixing ratio column           | mole/mole |    1 | real        | kind_phys | in     | F        |
 !! | o3vmrcol   | O3_vmr_col                                       | O3 volume mixing ratio column           | mole/mole |    1 | real        | kind_phys | in     | F        |
 !! | so2vmrcol  | SO2_vmr_col                                      | SO2 volume mixing ratio column          | mole/mole |    1 | real        | kind_phys | in     | F        |
@@ -46,6 +46,10 @@ use :: machine,           only: r8 => kind_phys
 !! | prates     | photolysis_rates_col                             | photolysis rates column                 | s-1       |    2 | real        | kind_phys | out    | F        |
 !! | o3totcol   | ozone_column_density                             | total ozone column density              | DU        |    0 | real        | kind_phys | out    | F        |
 !! | photo_lev  | level_number_for_photolysis                      | level number used to set j_rateConst    | count     |    0 | integer     |           | none   | F        |
+!! | box_press  | pressure                                         | ambient pressure                        | Pa        | 0    | real        | kind_phys | in     | F        |
+!! | box_temp   | temperature                                      | ambient temperature                     | K         | 0    | real        | kind_phys | in     | F        |
+!! | density    | total_number_density                             | total number density                | molecules/cm3 | 0    | real        | kind_phys | out    | F        |
+!! | mbar       | mean_molec_mass                                  | mean molecular mass                     | g/mole    | 0    | real        | kind_phys | out    | F        |
 !!
 
 end module MusicBox_var_defs
