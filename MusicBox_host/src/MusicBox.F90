@@ -44,7 +44,7 @@ subroutine MusicBox_main_sub()
   integer            :: i, k, n
   integer            :: errflg          ! error index from CPF
   integer            :: ierr
-  real(kind=r8), allocatable :: j_rateConst(:)  ! host model provides photolysis rates for now
+  real(kind=r8), allocatable :: j_rateConst(:)  ! host model provides photolysis rates for now 
   real(kind=r8), allocatable :: k_rateConst(:)  ! host model provides photolysis rates for now
   real(kind=r8), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
   real(kind=r8), allocatable :: glb_vmr(:,:,:)  ! "global" concentrations
@@ -64,17 +64,13 @@ subroutine MusicBox_main_sub()
   type(const_props_type), pointer :: cnst_info(:) => null()
 
   character(len=16) :: cnst_name
+  character(len=20) :: model_name
 
-!  character(len=*), parameter :: env_conds_file = '/terminator-data1/fvitt/micm_inputs/waccm_ma_chem.cam.h0.2000-01-01-00000.nc'
-  character(len=*), parameter :: env_conds_file = '/terminator-data1/fvitt/micm_inputs/FW2000climo.f09_f09_mg17.cam6_0_030.n01.cam.h2.0001-01-01-00000.nc'
+  character(len=*), parameter :: env_conds_file = '../data/env_conditions.nc'
 
   character(len=*), parameter :: outfile_name = 'test_output.nc'
   type(output_file_type) :: outfile
 
-  ! Model name must be 'terminator' or '3component'
-  ! Temporary way to specify which model is being run for input purposes
-  character(len=*), parameter :: model = 'terminator'
-!  character(len=*), parameter :: model = '3component'
 !#include "chemistry_model_name.inc"
 
   integer :: photo_lev
@@ -93,19 +89,19 @@ subroutine MusicBox_main_sub()
   real(r8), allocatable :: prates(:,:)
   real(r8) :: density, mbar, box_temp, box_press
 
-  write(*,*) '*******************************************************'
-  write(*,*) '************** model = '//trim(model)//' ***************'
-  write(*,*) '*******************************************************'
-  
 ! Remove this call when the CPF can allocate arrays 
 ! NOTE - It is called again in chemistry_driver_init which is where it will
 ! permamently reside
 
-  call prepare_chemistry_init(cnst_info, nSpecies, nkRxt, njRxt)
+  call prepare_chemistry_init(cnst_info, model_name, nSpecies, nkRxt, njRxt)
     
+  write(*,*) '*******************************************************'
+  write(*,*) '************** model = '//trim(model_name)//' ***************'
+  write(*,*) '*******************************************************'
+  
   call outfile%create(outfile_name)
   call outfile%add(cnst_info)
-  if (model == 'terminator') then
+  if (model_name == 'terminator') then
      call outfile%add('Zenith','solar zenith angle','degrees')
      call outfile%add('O3totcol','integrated ozone column (dobson units)','DU')
      call outfile%add('JCL2','Cl2 photolysis rate','sec^-1')
@@ -134,7 +130,7 @@ subroutine MusicBox_main_sub()
   dt = theEnvConds%dtime()
   ntimes = theEnvConds%ntimes()
 
-  if (model=='terminator') then
+  if (model_name=='terminator') then
      colEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon )
      nlevels = colEnvConds%nlevels()
      photo_lev = theEnvConds%levnum()
@@ -156,7 +152,7 @@ subroutine MusicBox_main_sub()
 !-----------------------------------------------------------
   allocate(glb_vmr(ncols,nlevs,nSpecies))
 
-  if (model == 'terminator') then
+  if (model_name == 'terminator') then
      do i = 1,nSpecies
         call cnst_info(i)%print()
         cnst_name = cnst_info(i)%get_name()
@@ -164,7 +160,7 @@ subroutine MusicBox_main_sub()
         glb_vmr(:,:,i) = theEnvConds%getvar(cnst_name)
         print*, ' init value : ',glb_vmr(:,:,i) 
      enddo
-  else if (model == '3component') then
+  else if (model_name == '3component') then
      glb_vmr(:,:,1)   = 1._r8
      glb_vmr(:,:,2:3) = 0._r8
   end if 
@@ -174,7 +170,7 @@ subroutine MusicBox_main_sub()
   
 init_loop: &
   do i = 1, ncols
-      call ccpp_init( '../suites/suite_MusicBox_'//trim(model)//'.xml', cdata(i), ierr)
+      call ccpp_init( '../suites/suite_MusicBox_'//trim(model_name)//'.xml', cdata(i), ierr)
 
       if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_init for column ', i, '. Exiting...'
@@ -199,7 +195,7 @@ init_loop: &
 time_loop: &
   do n = 1, ntimes
     call outfile%advance(TimeStart)
-    if (model=='terminator') then
+    if (model_name=='terminator') then
        call colEnvConds%update(n)
     endif
     call theEnvConds%update(n)
@@ -207,7 +203,7 @@ time_loop: &
     do k = 1, nlevs
       do i = 1, ncols
         vmr(:) = glb_vmr(i,k,:)
-        if (model == 'terminator') then
+        if (model_name == 'terminator') then
            zenith = colEnvConds%getsrf('SZA')
            albedo = colEnvConds%getsrf('ASDIR')
            press_mid(:nlevels) = colEnvConds%press_mid(nlevels)
@@ -224,7 +220,7 @@ time_loop: &
         end if
         Time = TimeStart
         call ccpp_physics_run(cdata(i), ierr=ierr)
-        if (model == 'terminator') then
+        if (model_name == 'terminator') then
            write(*,'(2(a,f6.2))') 'solar zenith (degrees): ',zenith,' ...total ozone (DU): ', o3totcol
            write(*,'(a,f6.2,e12.4)') ' mbar, total density :', mbar, density
            call outfile%out( 'O3totcol', o3totcol )
