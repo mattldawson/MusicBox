@@ -66,8 +66,7 @@ subroutine MusicBox_main_sub()
   character(len=16) :: cnst_name
   character(len=20) :: model_name
 
-!  character(len=*), parameter :: env_conds_file = '/terminator-data1/fvitt/micm_inputs/waccm_ma_chem.cam.h0.2000-01-01-00000.nc'
-  character(len=*), parameter :: env_conds_file = '/terminator-data1/fvitt/micm_inputs/FW2000climo.f09_f09_mg17.cam6_0_030.n01.cam.h2.0001-01-01-00000.nc'
+  character(len=*), parameter :: env_conds_file = '../data/env_conditions.nc'
 
   character(len=*), parameter :: outfile_name = 'test_output.nc'
   type(output_file_type) :: outfile
