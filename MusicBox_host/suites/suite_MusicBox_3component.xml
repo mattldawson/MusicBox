@@ -3,9 +3,9 @@
   <group name="time_vary">
     <subcycle loop="1">
       <scheme>k_rateConst</scheme>
-      <scheme>chemistry_driver</scheme>
+      <scheme>chemistry_driver_ros</scheme>
     </subcycle>
   </group>
   <finalize>k_rateConst</finalize>
-  <finalize>chemistry_driver</finalize>
+  <finalize>chemistry_driver_ros</finalize>
 </suite>
