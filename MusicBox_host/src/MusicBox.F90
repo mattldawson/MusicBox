@@ -48,17 +48,14 @@ subroutine MusicBox_main_sub()
   real(kind=r8), allocatable :: k_rateConst(:)  ! host model provides photolysis rates for now
   real(kind=r8), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
   real(kind=r8), allocatable :: glb_vmr(:,:,:)  ! "global" concentrations
+  real(kind=r8), allocatable :: wghts(:)
   character(len=512) :: errmsg
 
-  integer  :: icntrl(20)     ! integer control array for ODE solver
-  real(r8) :: rcntrl(20)     ! real control array for ODE solver
   real(r8) :: TimeStart, TimeEnd, Time, dt
-  real(r8), allocatable :: absTol(:), relTol(:)
   
   type(ccpp_t), allocatable, target :: cdata(:)
 
 ! declare the types
-  type(kinetics_type),  pointer  :: theKinetics
   type(environ_conditions),pointer :: theEnvConds => null()
   type(environ_conditions),pointer :: colEnvConds => null()
   type(const_props_type), pointer :: cnst_info(:) => null()
@@ -70,8 +67,6 @@ subroutine MusicBox_main_sub()
 
   character(len=*), parameter :: outfile_name = 'test_output.nc'
   type(output_file_type) :: outfile
-
-!#include "chemistry_model_name.inc"
 
   integer :: photo_lev
   integer :: nlevels
@@ -107,23 +102,22 @@ subroutine MusicBox_main_sub()
      call outfile%add('JCL2','Cl2 photolysis rate','sec^-1')
      call outfile%add('Density','total number density','molecules/cm3')
      call outfile%add('Mbar','mean molar mass','g/mole')
+     call outfile%add('CL_TOT','Total Chlorine','molec/molec')
   end if
-
-  call outfile%add('VMRTOT','sum of all species','molec/molec')
+  if (model_name == '3component') then
+     call outfile%add('VMRTOT','sum of all species','molec/molec')
+  end if
 
   call outfile%define() ! cannot add more fields after this call
   
 !----------------------------------------
 ! These allocates will go away once the CPF is able to allocate arrays
-  allocate( theKinetics )
 
   allocate(k_rateConst(nkRxt))
   allocate(j_rateConst(njRxt))
   
   allocate(vmr(nSpecies))
   allocate(cdata(ncols))
-  allocate(absTol(nSpecies))
-  allocate(relTol(nSpecies))
 !----------------------------------------
 
   theEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon, lev=env_lev )
@@ -153,12 +147,17 @@ subroutine MusicBox_main_sub()
   allocate(glb_vmr(ncols,nlevs,nSpecies))
 
   if (model_name == 'terminator') then
+     allocate(wghts(nSpecies))
+     wghts(:) = 1._r8
      do i = 1,nSpecies
         call cnst_info(i)%print()
         cnst_name = cnst_info(i)%get_name()
         print*, ' cnst name : ',cnst_name
         glb_vmr(:,:,i) = theEnvConds%getvar(cnst_name)
         print*, ' init value : ',glb_vmr(:,:,i) 
+        if (cnst_name == 'CL2') then
+           wghts(i) = 2._r8
+        end if
      enddo
   else if (model_name == '3component') then
      glb_vmr(:,:,1)   = 1._r8
@@ -177,7 +176,8 @@ init_loop: &
           stop
       end if
 
-    !use ccpp_fields.inc to call ccpp_field_add for all variables to be exposed to CCPP (this is auto-generated from /src/ccpp/scripts/ccpp_prebuild.py - the script parses tables in MusicBox_type_defs.f90)
+ ! use ccpp_fields.inc to call ccpp_field_add for all variables to be exposed to CCPP (this is
+ ! auto-generated from /src/ccpp/scripts/ccpp_prebuild.py - the script parses tables in MusicBox_type_defs.f90)
 
 #  include "ccpp_fields.inc"
 
@@ -228,7 +228,6 @@ time_loop: &
            call outfile%out( 'Density', density )
            call outfile%out( 'Mbar', mbar )
         end if
-!        call theKinetics%rateConst_print()
         if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, '. Exiting...'
           stop
@@ -240,7 +239,12 @@ time_loop: &
     TimeStart = real(n,kind=r8)*dt
     write(*,'(a,1p,g0)') 'Concentration @ hour = ',TimeStart/3600.
     write(*,'(1p,5(1x,g0))') vmr(:),sum(vmr(:))
-    call outfile%out('VMRTOT', sum(vmr(:)))
+    if (model_name == 'terminator') then
+       call outfile%out('CL_TOT', sum(vmr(:)*wghts(:) ))
+    end if     
+    if (model_name == '3component') then
+       call outfile%out('VMRTOT', sum(vmr(:)))
+    end if
   end do time_loop
 
 finis_loop: &

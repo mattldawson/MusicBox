@@ -3,7 +3,8 @@
 
 module MusicBox_var_defs
 
-use :: machine,           only: r8 => kind_phys
+ use machine,         only: r8 => kind_phys
+ use const_props_mod, only: const_props_type
 
  implicit none
 !-----------------------------------------------------------------------
@@ -24,10 +25,6 @@ use :: machine,           only: r8 => kind_phys
 !! | nlev       | adjusted_vertical_layer_dimension_for_radiation  | number of vertical layers for radiation | count     |    0 | integer     |           | in     | F        |
 !! | errmsg     | error_message                                    | CCPP error message                      | none      |    0 | character   | len=*     | out    | F        | 
 !! | errflg     | error_flag                                       | CCPP error flag                         | flag      |    0 | integer     |           | out    | F        |
-!! | icntrl     | ODE_icontrol                                     | ODE integer controls                    | flag      |    1 | integer     |           | in     | F        |
-!! | rcntrl     | ODE_rcontrol                                     | ODE real controls                       | none      |    1 | real        | kind_phys | in     | F        |
-!! | AbsTol     | abs_trunc_error                                  | ODE absolute step truncation error      | none      |    1 | real        | kind_phys | in     | F        |
-!! | RelTol     | rel_trunc_error                                  | ODE relative step truncation error      | none      |    1 | real        | kind_phys | in     | F        |
 !! | TimeStart  | chem_step_start_time                             | Chem step start time                    | s         |    0 | real        | kind_phys | in     | F        |
 !! | TimeEnd    | chem_step_end_time                               | Chem step end time                      | s         |    0 | real        | kind_phys | in     | F        |
 !! | Time       | Simulation_time                                  | Present simulation time                 | s         |    0 | real        | kind_phys | in     | F        |
