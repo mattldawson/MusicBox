@@ -10,7 +10,7 @@ to add variable:
 
 build steps:
 1) cp /terminator-data1/fvitt/micm_inputs/FW2000climo.f09_f09_mg17.cam6_0_030.n01.cam.h2.0001-01-01-00000.nc MusicBox_host/data/env_conditions.nc
-2) ccpp-framework/scripts/ccpp_prebuild.py --model=MusicBox_terminator (or --model=MusicBox_3component or --model=MusicBox_user-defined )
+2) ccpp-framework/scripts/ccpp_prebuild.py --model=MusicBox
 3) cd MusicBox_host
 > source etc/CENTOS_setup.sh
 4) mkdir bin
