@@ -7,7 +7,7 @@ include(CMakeForceCompiler)
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
 #MESSAGE("The NETCDF env. variable is $ENV{NETCDF}")
-SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF} $ENV{JSONFORTRAN})
+SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
 
 SET(CCPP_SRC ${CMAKE_SOURCE_DIR}/../../ccpp-framework)
 SET(MICM_SRC ${CMAKE_SOURCE_DIR}/../../MICM_chemistry)
@@ -123,7 +123,7 @@ else(OPENMP)
 endif()
 
 ADD_EXECUTABLE(MusicBox ${mbox_source_files})
-TARGET_LINK_LIBRARIES(MusicBox micmchem ccpp ${NETCDF_LIBRARIES} ${JSONFORTRAN_LIB})
+TARGET_LINK_LIBRARIES(MusicBox micmchem ccpp ${NETCDF_LIBRARIES})
 #set_target_properties(MusicBox PROPERTIES
 #                               COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
 #                               LINK_FLAGS "${CMAKE_Fortran_FLAGS}")
