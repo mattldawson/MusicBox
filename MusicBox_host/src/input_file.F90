@@ -94,7 +94,7 @@ contains
 
     character(len=*), intent(in) :: filename
     
-    integer :: status, dimid
+    integer :: status
     
     status = nf90_open(filename, nf90_nowrite, this%ncid)
     if(status /= nf90_noerr) call handle_err(status)

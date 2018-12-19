@@ -41,13 +41,11 @@ subroutine MusicBox_main_sub()
   real, parameter :: env_lev = 1. ! mbar
   
   integer            :: i,n
-  integer            :: errflg          ! error index from CPF
   integer            :: ierr
   real(kind=r8), allocatable :: j_rateConst(:)  ! host model provides photolysis rates for now 
   real(kind=r8), allocatable :: k_rateConst(:)  ! host model provides photolysis rates for now
   real(kind=r8), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
   real(kind=r8), allocatable :: wghts(:)
-  character(len=512) :: errmsg
 
   real(r8) :: TimeStart, TimeEnd, Time, dt
   
@@ -145,7 +143,7 @@ subroutine MusicBox_main_sub()
      call cnst_info(n)%print()
      cnst_name = cnst_info(n)%get_name()
      vmr(n) = theEnvConds%getvar(cnst_name)
-     write(*,fmt="(' cnst name : ',a20,' init value : ',e12.6)") cnst_name, vmr(n)
+     write(*,fmt="(' cnst name : ',a20,' init value : ',e13.6)") cnst_name, vmr(n)
      if (allocated(wghts) .and. cnst_name == 'CL2') then
         wghts(n) = 2._r8
      end if
