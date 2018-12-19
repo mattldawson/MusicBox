@@ -32,22 +32,20 @@ subroutine MusicBox_main_sub()
   integer :: nkRxt = 0      ! number gas phase reactions
   integer :: njRxt = 0      ! number of photochemical reactions
   integer :: ntimes = 0     ! number of time steps
-  integer ,parameter :: ncols = 1       ! number columns in domain
-  integer ,parameter :: nlevs = 1       ! number vertical levels in each column
+
+  integer ,parameter :: ncols = 1 ! number columns in domain
 
   ! Temporary hardwiring of environmental conditions
   real, parameter :: env_lat = -40.
   real, parameter :: env_lon = 180.
   real, parameter :: env_lev = 1. ! mbar
   
-  
-  integer            :: i, k, n
+  integer            :: i,n
   integer            :: errflg          ! error index from CPF
   integer            :: ierr
   real(kind=r8), allocatable :: j_rateConst(:)  ! host model provides photolysis rates for now 
   real(kind=r8), allocatable :: k_rateConst(:)  ! host model provides photolysis rates for now
   real(kind=r8), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
-  real(kind=r8), allocatable :: glb_vmr(:,:,:)  ! "global" concentrations
   real(kind=r8), allocatable :: wghts(:)
   character(len=512) :: errmsg
 
@@ -96,12 +94,12 @@ subroutine MusicBox_main_sub()
   
   call outfile%create(outfile_name)
   call outfile%add(cnst_info)
+  call outfile%add('Zenith','solar zenith angle','degrees')
+  call outfile%add('O3totcol','integrated ozone column (dobson units)','DU')
+  call outfile%add('Density','total number density','molecules/cm3')
+  call outfile%add('Mbar','mean molar mass','g/mole')
   if (model_name == 'terminator') then
-     call outfile%add('Zenith','solar zenith angle','degrees')
-     call outfile%add('O3totcol','integrated ozone column (dobson units)','DU')
      call outfile%add('JCL2','Cl2 photolysis rate','sec^-1')
-     call outfile%add('Density','total number density','molecules/cm3')
-     call outfile%add('Mbar','mean molar mass','g/mole')
      call outfile%add('CL_TOT','Total Chlorine','molec/molec')
   end if
   if (model_name == '3component') then
@@ -117,57 +115,46 @@ subroutine MusicBox_main_sub()
   allocate(j_rateConst(njRxt))
   
   allocate(vmr(nSpecies))
-  allocate(cdata(ncols))
+  allocate(cdata(ncols)) ! ccpp requires column dimension 
 !----------------------------------------
 
   theEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon, lev=env_lev )
   dt = theEnvConds%dtime()
   ntimes = theEnvConds%ntimes()
 
-  if (model_name=='terminator') then
-     colEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon )
-     nlevels = colEnvConds%nlevels()
-     photo_lev = theEnvConds%levnum()
+  colEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon )
+  nlevels = colEnvConds%nlevels()
+  photo_lev = theEnvConds%levnum()
 
-     allocate(alt(nlevels))
-     allocate( press_mid(nlevels))
-     allocate( press_int(nlevels))
-     allocate( temp(nlevels))
-     allocate( o2vmrcol(nlevels))
-     allocate( o3vmrcol(nlevels))
-     allocate( so2vmrcol(nlevels))
-     allocate( no2vmrcol(nlevels))
-     allocate( prates(nlevels,113))
-     o3totcol = -9999.
-  end if
-
-!-----------------------------------------------------------
-!  initialize the "global" concentration array glb_vmr
-!-----------------------------------------------------------
-  allocate(glb_vmr(ncols,nlevs,nSpecies))
+  allocate(alt(nlevels))
+  allocate(press_mid(nlevels))
+  allocate(press_int(nlevels))
+  allocate(temp(nlevels))
+  allocate(o2vmrcol(nlevels))
+  allocate(o3vmrcol(nlevels))
+  allocate(so2vmrcol(nlevels))
+  allocate(no2vmrcol(nlevels))
+  allocate(prates(nlevels,113))
 
   if (model_name == 'terminator') then
      allocate(wghts(nSpecies))
      wghts(:) = 1._r8
-     do i = 1,nSpecies
-        call cnst_info(i)%print()
-        cnst_name = cnst_info(i)%get_name()
-        print*, ' cnst name : ',cnst_name
-        glb_vmr(:,:,i) = theEnvConds%getvar(cnst_name)
-        print*, ' init value : ',glb_vmr(:,:,i) 
-        if (cnst_name == 'CL2') then
-           wghts(i) = 2._r8
-        end if
-     enddo
-  else if (model_name == '3component') then
-     glb_vmr(:,:,1)   = 1._r8
-     glb_vmr(:,:,2:3) = 0._r8
-  end if 
+  endif
+
+  do n = 1,nSpecies
+     call cnst_info(n)%print()
+     cnst_name = cnst_info(n)%get_name()
+     vmr(n) = theEnvConds%getvar(cnst_name)
+     write(*,fmt="(' cnst name : ',a20,' init value : ',e12.6)") cnst_name, vmr(n)
+     if (allocated(wghts) .and. cnst_name == 'CL2') then
+        wghts(n) = 2._r8
+     end if
+  enddo
 
 
   TimeStart = 0._r8
   
-init_loop: &
+init_loop: & ! ccpp requires a loop over columns
   do i = 1, ncols
       call ccpp_init( '../suites/suite_MusicBox_'//trim(model_name)//'.xml', cdata(i), ierr)
 
@@ -178,7 +165,7 @@ init_loop: &
 
  ! use ccpp_fields.inc to call ccpp_field_add for all variables to be exposed to CCPP (this is
  ! auto-generated from /src/ccpp/scripts/ccpp_prebuild.py - the script parses tables in MusicBox_type_defs.f90)
-
+ ! this requires column index i
 #  include "ccpp_fields.inc"
 
       !initialize each column's physics
@@ -195,53 +182,43 @@ init_loop: &
 time_loop: &
   do n = 1, ntimes
     call outfile%advance(TimeStart)
-    if (model_name=='terminator') then
-       call colEnvConds%update(n)
-    endif
+    call colEnvConds%update(n)
     call theEnvConds%update(n)
     TimeEnd = TimeStart + dt
-    do k = 1, nlevs
-      do i = 1, ncols
-        vmr(:) = glb_vmr(i,k,:)
-        if (model_name == 'terminator') then
-           zenith = colEnvConds%getsrf('SZA')
-           albedo = colEnvConds%getsrf('ASDIR')
-           press_mid(:nlevels) = colEnvConds%press_mid(nlevels)
-           press_int(:nlevels) = colEnvConds%press_int(nlevels)
-           alt(:nlevels) = colEnvConds%getcol('Z3',nlevels)
-           temp(:nlevels) = colEnvConds%getcol('T',nlevels)
-           o2vmrcol(:nlevels) = colEnvConds%getcol('O2',nlevels)
-           o3vmrcol(:nlevels) = colEnvConds%getcol('O3',nlevels)
-           so2vmrcol(:nlevels) = colEnvConds%getcol('SO2',nlevels)
-           no2vmrcol(:nlevels) = colEnvConds%getcol('NO2',nlevels)
-           box_temp = temp(photo_lev)
-           box_press = press_mid(photo_lev)
-           call outfile%out( 'Zenith', zenith )
-        end if
-        Time = TimeStart
-        call ccpp_physics_run(cdata(i), ierr=ierr)
-        if (model_name == 'terminator') then
-           write(*,'(2(a,f6.2))') 'solar zenith (degrees): ',zenith,' ...total ozone (DU): ', o3totcol
-           write(*,'(a,f6.2,e12.4)') ' mbar, total density :', mbar, density
-           call outfile%out( 'O3totcol', o3totcol )
-           call outfile%out( 'JCL2', j_rateConst(1) )
-           call outfile%out( 'Density', density )
-           call outfile%out( 'Mbar', mbar )
-        end if
-        if (ierr/=0) then
+    do i = 1, ncols
+       zenith = colEnvConds%getsrf('SZA')
+       albedo = colEnvConds%getsrf('ASDIR')
+       press_mid(:nlevels) = colEnvConds%press_mid(nlevels)
+       press_int(:nlevels) = colEnvConds%press_int(nlevels)
+       alt(:nlevels) = colEnvConds%getcol('Z3',nlevels)
+       temp(:nlevels) = colEnvConds%getcol('T',nlevels)
+       o2vmrcol(:nlevels) = colEnvConds%getcol('O2',nlevels)
+       o3vmrcol(:nlevels) = colEnvConds%getcol('O3',nlevels)
+       so2vmrcol(:nlevels) = colEnvConds%getcol('SO2',nlevels)
+       no2vmrcol(:nlevels) = colEnvConds%getcol('NO2',nlevels)
+       box_temp = temp(photo_lev)
+       box_press = press_mid(photo_lev)
+       call outfile%out( 'Zenith', zenith )
+       Time = TimeStart
+       call ccpp_physics_run(cdata(i), ierr=ierr)
+       write(*,'(2(a,f6.2))') 'solar zenith (degrees): ',zenith,' ...total ozone (DU): ', o3totcol
+       write(*,'(a,f6.2,e12.4)') ' mbar, total density :', mbar, density
+       call outfile%out( 'O3totcol', o3totcol )
+       call outfile%out( 'Density', density )
+       call outfile%out( 'Mbar', mbar )
+       if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, '. Exiting...'
           stop
-        end if
-        call outfile%out( cnst_info, vmr )
-        glb_vmr(i,k,:) = vmr(:)
-      end do
+       end if
+       call outfile%out( cnst_info, vmr )
     end do
     TimeStart = real(n,kind=r8)*dt
     write(*,'(a,1p,g0)') 'Concentration @ hour = ',TimeStart/3600.
     write(*,'(1p,5(1x,g0))') vmr(:),sum(vmr(:))
     if (model_name == 'terminator') then
        call outfile%out('CL_TOT', sum(vmr(:)*wghts(:) ))
-    end if     
+       call outfile%out( 'JCL2', j_rateConst(1) )
+    end if
     if (model_name == '3component') then
        call outfile%out('VMRTOT', sum(vmr(:)))
     end if
@@ -262,6 +239,22 @@ finis_loop: &
   end do finis_loop
 
   call outfile%close()
+
+  deallocate(k_rateConst)
+  deallocate(j_rateConst)
+  deallocate(vmr)
+  deallocate(cdata)
+  deallocate(alt)
+  deallocate(press_mid)
+  deallocate(press_int)
+  deallocate(temp)
+  deallocate(o2vmrcol)
+  deallocate(o3vmrcol)
+  deallocate(so2vmrcol)
+  deallocate(no2vmrcol)
+  deallocate(prates)
+  if (allocated(wghts)) deallocate(wghts)
+  
 end subroutine MusicBox_main_sub
 
 end module MusicBox_main
