@@ -151,6 +151,7 @@ subroutine MusicBox_main_sub()
 
 
   TimeStart = 0._r8
+  TimeEnd = TimeStart + dt
   
 init_loop: & ! ccpp requires a loop over columns
   do i = 1, ncols
