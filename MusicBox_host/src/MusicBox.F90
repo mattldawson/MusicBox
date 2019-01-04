@@ -4,6 +4,7 @@ use const_props_mod,        only: const_props_type
 use environ_conditions_mod, only: environ_conditions_create, environ_conditions
 use prepare_chemistry_mod,  only: prepare_chemistry_init
 use output_file,            only: output_file_type
+use machine,     only: r8 => kind_phys
 
 implicit none
 
@@ -167,7 +168,14 @@ subroutine MusicBox_main_sub()
   do n = 1,nSpecies
      call cnst_info(n)%print()
      cnst_name = cnst_info(n)%get_name()
-     vmr(n) = theEnvConds%getvar(cnst_name)
+     if (cnst_name == 'N2') then
+        vmr(n) = theEnvConds%getvar(cnst_name,default_value=0.79_r8)
+     else if (cnst_name == 'O2') then
+        vmr(n) = theEnvConds%getvar(cnst_name,default_value=0.21_r8)
+     else
+        vmr(n) = theEnvConds%getvar(cnst_name,default_value=0.00_r8)
+     end if
+
      write(*,fmt="(' cnst name : ',a20,' init value : ',e13.6)") cnst_name, vmr(n)
      if (allocated(wghts) .and. cnst_name == 'CL2') then
         wghts(n) = 2._r8

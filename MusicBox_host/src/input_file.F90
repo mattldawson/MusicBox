@@ -1,5 +1,7 @@
 module input_file
 
+  use machine,only: rk => kind_phys
+
   use netcdf, only: nf90_open, nf90_nowrite, nf90_noerr, nf90_inq_dimid, nf90_inquire_dimension
   use netcdf, only: nf90_inq_varid, nf90_get_var
   
@@ -231,30 +233,35 @@ contains
   
   end function input_file_slice
 
-  function input_file_extract_slice(this, varname, slice ) result(data)
+  function input_file_extract_slice(this, varname, slice, default_value) result(data)
     use input_slice, only : slice_type
 
     class(input_file_type), intent(inout) :: this
     
     character(len=*), intent(in) :: varname
     type(slice_type), intent(in) :: slice
+    real(rk), optional, intent(in) :: default_value
     
-    real, pointer :: data(:,:,:,:)
+    real(rk), pointer :: data(:,:,:,:)
 
     integer :: varid, status
 
     allocate(data(slice%nlons,slice%nlats,slice%nlevs,slice%ntimes))
-    data = -1.e36
+    data = -1.e36_rk
     
     status = nf90_inq_varid(this%ncid, varname, varid)
-    if(status /= nf90_noerr) call handle_err(status)
-
-    status = nf90_get_var(this%ncid, varid, data, &
-                            start = (/ slice%beglon, slice%beglat, slice%beglev, slice%begtime /),     &
-                            count = (/ slice%nlons,  slice%nlats,  slice%nlevs,  slice%ntimes /))
-
-    if(status /= nf90_noerr) call handle_err(status)
     
+    if (status == nf90_noerr) then
+       status = nf90_get_var(this%ncid, varid, data, &
+            start = (/ slice%beglon, slice%beglat, slice%beglev, slice%begtime /),     &
+            count = (/ slice%nlons,  slice%nlats,  slice%nlevs,  slice%ntimes /))
+       if(status /= nf90_noerr) call handle_err(status)
+    elseif (present(default_value)) then
+       data = default_value
+    else
+       call handle_err(status)
+    end if
+
   end function input_file_extract_slice
 
   function input_file_extract_slice3d(this, varname, slice ) result(data)

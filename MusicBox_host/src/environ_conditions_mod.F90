@@ -58,14 +58,16 @@ contains
     this%slice%begtime = record_num
   end subroutine environ_conditions_update
 
-  function environ_conditions_getvar(this, var ) result(thevalue)
+  function environ_conditions_getvar(this, var, default_value) result(thevalue)
     class(environ_conditions), intent(inout) :: this
     character(len=*), intent(in) :: var
+    real(rk), optional, intent(in) :: default_value
+
     real(rk) :: thevalue
 
-    real, pointer :: data(:,:,:,:)
+    real(rk), pointer :: data(:,:,:,:)
     
-    data => this%inputfile%extract(var, this%slice )
+    data => this%inputfile%extract(var, this%slice, default_value)
     thevalue = data(1,1,1,1)
 
   end function environ_conditions_getvar
@@ -76,7 +78,7 @@ contains
     integer,intent(in) :: nlev
     real(rk) :: thecol(nlev)
 
-    real, pointer :: data(:,:,:,:)
+    real(rk), pointer :: data(:,:,:,:)
     
     data => this%inputfile%extract(var, this%slice )
     thecol(:) = data(1,1,:,1)
