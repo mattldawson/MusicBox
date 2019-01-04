@@ -76,9 +76,9 @@ subroutine MusicBox_main_sub()
   ! run-time options
   character(len=120) :: env_conds_file = '../data/env_conditions.nc'
   character(len=120) :: outfile_name = 'test_output.nc'
-  real :: env_lat = -40.
-  real :: env_lon = 180.
-  real :: env_lev = 1. ! mbar
+  real :: env_lat = -999999.
+  real :: env_lon = -999999.
+  real :: env_lev = -999999. ! mbar
 
   character(len=*), parameter :: nml_options = '../MusicBox_options'
   ! read namelist run-time options
@@ -87,7 +87,24 @@ subroutine MusicBox_main_sub()
   open(unit=10,file=nml_options)
   read(unit=10,nml=options)
   close(10)
-  
+
+  ! error checking
+  if (env_lat<-90. .or.  env_lat>90.) then
+     write(*,*) 'Invalid namelist setting: env_lat = ',env_lat
+     write(*,*) 'Must be set between -90 and 90 degrees north'
+     stop
+  end if
+  if (env_lon<0. .or.  env_lon>360.) then
+     write(*,*) 'Invalid namelist setting: env_lon = ',env_lon
+     write(*,*) 'Must be set between 0 and 360 degrees east'
+     stop
+  end if
+  if (env_lev<0) then
+      write(*,*) 'Invalid namelist setting: env_lev = ',env_lev
+     write(*,*) 'Must be set to a positive pressure level (hPa)'
+    stop
+  end if
+
 ! Remove this call when the CPF can allocate arrays 
 ! NOTE - It is called again in chemistry_driver_init which is where it will
 ! permamently reside
