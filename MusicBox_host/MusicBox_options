@@ -11,5 +11,5 @@
  env_conds_file = '../data/env_conditions.nc'
 
  ! output file path
- outfile_name = '../my_terminator_output_1000.nc'
+ outfile_name = '../MusicBox_output.nc'
 /
