@@ -35,10 +35,6 @@ subroutine MusicBox_main_sub()
 
   integer ,parameter :: ncols = 1 ! number columns in domain
 
-  ! Temporary hardwiring of environmental conditions
-  real, parameter :: env_lat = -40.
-  real, parameter :: env_lon = 180.
-  real, parameter :: env_lev = 1. ! mbar
   
   integer            :: i,n
   integer            :: ierr
@@ -59,9 +55,6 @@ subroutine MusicBox_main_sub()
   character(len=16) :: cnst_name
   character(len=20) :: model_name
 
-  character(len=*), parameter :: env_conds_file = '../data/env_conditions.nc'
-
-  character(len=*), parameter :: outfile_name = 'test_output.nc'
   type(output_file_type) :: outfile
 
   integer :: photo_lev
@@ -80,6 +73,21 @@ subroutine MusicBox_main_sub()
   real(r8), allocatable :: prates(:,:)
   real(r8) :: density, mbar, box_temp, box_press
 
+  ! run-time options
+  character(len=120) :: env_conds_file = '../data/env_conditions.nc'
+  character(len=120) :: outfile_name = 'test_output.nc'
+  real :: env_lat = -40.
+  real :: env_lon = 180.
+  real :: env_lev = 1. ! mbar
+
+  character(len=*), parameter :: nml_options = '../MusicBox_options'
+  ! read namelist run-time options
+  namelist /options/ outfile_name, env_conds_file
+  namelist /options/ env_lat, env_lon, env_lev
+  open(unit=10,file=nml_options)
+  read(unit=10,nml=options)
+  close(10)
+  
 ! Remove this call when the CPF can allocate arrays 
 ! NOTE - It is called again in chemistry_driver_init which is where it will
 ! permamently reside
