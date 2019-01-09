@@ -85,7 +85,7 @@ contains
   
   function input_file_get_times(this) result(x)
     class(input_file_type), intent(in) :: this
-    real :: x(this%ntimes)
+    real(rk) :: x(this%ntimes)
     x(:) = this%times(:)
   end function input_file_get_times
   

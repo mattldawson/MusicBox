@@ -4,7 +4,6 @@ use const_props_mod,        only: const_props_type
 use environ_conditions_mod, only: environ_conditions_create, environ_conditions
 use prepare_chemistry_mod,  only: prepare_chemistry_init
 use output_file,            only: output_file_type
-use machine,     only: r8 => kind_phys
 
 implicit none
 
@@ -80,12 +79,13 @@ subroutine MusicBox_main_sub()
   ! run-time options
   character(len=120) :: env_conds_file = '../data/env_conditions.nc'
   character(len=120) :: outfile_name = 'test_output.nc'
-  real :: env_lat = -999999.
-  real :: env_lon = -999999.
-  real :: env_lev = -999999. ! mbar
-  real :: user_begin_time = -999999. ! seconds
-  real :: user_end_time = -999999.
-  real :: user_dtime = -999999.
+  real, parameter :: NOT_SET = -huge(1.0)
+  real :: env_lat = NOT_SET
+  real :: env_lon = NOT_SET
+  real :: env_lev = NOT_SET ! mbar
+  real :: user_begin_time = NOT_SET ! seconds
+  real :: user_end_time = NOT_SET
+  real :: user_dtime = NOT_SET
   
   character(len=*), parameter :: nml_options = '../MusicBox_options'
   ! read namelist run-time options
@@ -157,16 +157,22 @@ subroutine MusicBox_main_sub()
      dt = theEnvConds%dtime()
   end if
 
-  if (user_begin_time>0. .and. user_end_time>0.) then
-     sim_beg_time = user_begin_time
-     sim_end_time = user_end_time
-  else
+  if (user_begin_time == NOT_SET .or. user_end_time == NOT_SET) then
      file_ntimes= theEnvConds%ntimes()
      allocate(file_times(file_ntimes))
      file_times = theEnvConds%get_times()
+  end if
+  if (user_begin_time /= NOT_SET) then
+     sim_beg_time = user_begin_time
+  else
      sim_beg_time = file_times(1)
+  end if
+  if (user_end_time /= NOT_SET) then
+     sim_end_time = user_end_time
+  else
      sim_end_time = file_times(file_ntimes)
   end if
+
   ntimes = 1+int((sim_end_time-sim_beg_time)/dt)
 
   colEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon )
@@ -308,7 +314,8 @@ finis_loop: &
   deallocate(no2vmrcol)
   deallocate(prates)
   if (allocated(wghts)) deallocate(wghts)
-  
+  if (allocated(file_times)) deallocate(file_times)
+
 end subroutine MusicBox_main_sub
 
 end module MusicBox_main

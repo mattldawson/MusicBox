@@ -64,6 +64,9 @@ contains
     if (index(units,'days')>0) then
        ! convert to seconds
        env_cond%times = 24._rk*3600._rk* env_cond%inputfile%get_times()
+    else
+       write(*,*) 'ERROR: Do not recognize time units in file: '//trim(infilepath)
+       call abort()
     end if
  
   end function environ_conditions_create
