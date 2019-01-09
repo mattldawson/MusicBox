@@ -72,7 +72,10 @@ subroutine MusicBox_main_sub()
   real(r8), allocatable :: so2vmrcol(:)
   real(r8), allocatable :: no2vmrcol(:)
   real(r8), allocatable :: prates(:,:)
+  real(r8), allocatable :: file_times(:)
   real(r8) :: density, mbar, box_temp, box_press
+  integer :: file_ntimes
+  real(r8) :: sim_beg_time, sim_end_time
 
   ! run-time options
   character(len=120) :: env_conds_file = '../data/env_conditions.nc'
@@ -80,11 +83,16 @@ subroutine MusicBox_main_sub()
   real :: env_lat = -999999.
   real :: env_lon = -999999.
   real :: env_lev = -999999. ! mbar
-
+  real :: user_begin_time = -999999. ! seconds
+  real :: user_end_time = -999999.
+  real :: user_dtime = -999999.
+  
   character(len=*), parameter :: nml_options = '../MusicBox_options'
   ! read namelist run-time options
   namelist /options/ outfile_name, env_conds_file
   namelist /options/ env_lat, env_lon, env_lev
+  namelist /options/ user_begin_time, user_end_time, user_dtime
+  
   open(unit=10,file=nml_options)
   read(unit=10,nml=options)
   close(10)
@@ -143,8 +151,23 @@ subroutine MusicBox_main_sub()
 !----------------------------------------
 
   theEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon, lev=env_lev )
-  dt = theEnvConds%dtime()
-  ntimes = theEnvConds%ntimes()
+  if (user_dtime>0.) then
+     dt = user_dtime
+  else
+     dt = theEnvConds%dtime()
+  end if
+
+  if (user_begin_time>0. .and. user_end_time>0.) then
+     sim_beg_time = user_begin_time
+     sim_end_time = user_end_time
+  else
+     file_ntimes= theEnvConds%ntimes()
+     allocate(file_times(file_ntimes))
+     file_times = theEnvConds%get_times()
+     sim_beg_time = file_times(1)
+     sim_end_time = file_times(file_ntimes)
+  end if
+  ntimes = 1+int((sim_end_time-sim_beg_time)/dt)
 
   colEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon )
   nlevels = colEnvConds%nlevels()
@@ -214,8 +237,7 @@ init_loop: & ! ccpp requires a loop over columns
 time_loop: &
   do n = 1, ntimes
     call outfile%advance(TimeStart)
-    call colEnvConds%update(n)
-    call theEnvConds%update(n)
+    call colEnvConds%update(TimeStart)
     TimeEnd = TimeStart + dt
     do i = 1, ncols
        zenith = colEnvConds%getsrf('SZA')

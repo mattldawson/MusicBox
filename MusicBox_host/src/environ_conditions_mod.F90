@@ -14,6 +14,9 @@ module environ_conditions_mod
      private
      type(input_file_type) :: inputfile
      type(slice_type) :: slice
+     real(rk) :: wghts(2) = 0._rk
+     integer :: num_times
+     real, allocatable :: times(:)
    contains
      procedure :: getvar => environ_conditions_getvar
      procedure :: getcol => environ_conditions_getcol
@@ -22,22 +25,27 @@ module environ_conditions_mod
      procedure :: press_int => environ_conditions_press_int
      procedure :: dtime => environ_conditions_dtime
      procedure :: ntimes => environ_conditions_ntimes
+     procedure :: get_times => environ_conditions_times
      procedure :: nlevels => environ_conditions_nlevels
      procedure :: levnum => environ_conditions_levnum
-     procedure :: update => environ_conditions_update     
+     procedure :: environ_conditions_update_ndx
+     procedure :: environ_conditions_update_flt
+     generic   :: update => environ_conditions_update_ndx, environ_conditions_update_flt
   end type environ_conditions
   
 contains
 
 
   function environ_conditions_create( infilepath, lat, lon, lev ) result(env_cond)
-
+    use input_file, only: MAX_ATT_LEN
+    
     character(len=*), intent(in) :: infilepath
     real, intent(in) ::  lat, lon
     real, intent(in), optional :: lev
     
     type(environ_conditions), pointer :: env_cond
-
+    character(len=MAX_ATT_LEN) :: units
+    
     allocate(env_cond)
     
     call env_cond%inputfile%open( infilepath )
@@ -49,14 +57,52 @@ contains
      
     env_cond%slice%ntimes = 1
 
+    env_cond%num_times = env_cond%inputfile%get_ntimes()
+    allocate(env_cond%times(env_cond%num_times))
+
+    units = env_cond%inputfile%get_units('time')
+    if (index(units,'days')>0) then
+       ! convert to seconds
+       env_cond%times = 24._rk*3600._rk* env_cond%inputfile%get_times()
+    end if
+ 
   end function environ_conditions_create
 
-  subroutine environ_conditions_update(this, record_num )
+  subroutine environ_conditions_update_ndx(this, record_num)
     class(environ_conditions), intent(inout) :: this
     integer, intent(in) :: record_num
     
     this%slice%begtime = record_num
-  end subroutine environ_conditions_update
+  end subroutine environ_conditions_update_ndx
+
+  subroutine environ_conditions_update_flt(this, time)
+    class(environ_conditions), intent(inout) :: this
+    real(rk), intent(in) :: time
+
+    integer :: ndx
+
+    if (time<=this%times(1)) then
+       this%slice%begtime = 1
+       this%slice%ntimes = 1
+       this%wghts = 0._rk
+    elseif (time>=this%times(this%num_times)) then
+       this%slice%begtime = this%num_times
+       this%slice%ntimes = 1      
+       this%wghts = 0._rk
+    else
+       findtime: do ndx = 1,this%num_times-1
+          if (this%times(ndx)>=time) then
+             exit findtime
+          end if
+       end do findtime
+       ndx=ndx-1
+       this%slice%begtime = ndx
+       this%slice%ntimes = 2
+       this%wghts(2) = (time - this%times(ndx))/(this%times(ndx+1)-this%times(ndx))
+       this%wghts(1) = 1._rk-this%wghts(2)
+    end if
+    
+  end subroutine environ_conditions_update_flt
 
   function environ_conditions_getvar(this, var, default_value) result(thevalue)
     class(environ_conditions), intent(inout) :: this
@@ -68,7 +114,12 @@ contains
     real(rk), pointer :: data(:,:,:,:)
     
     data => this%inputfile%extract(var, this%slice, default_value)
-    thevalue = data(1,1,1,1)
+    if (this%slice%ntimes == 2) then
+       thevalue = this%wghts(1)*data(1,1,1,1) + this%wghts(2)*data(1,1,1,2)
+    else
+       thevalue = data(1,1,1,1)
+    end if
+    
 
   end function environ_conditions_getvar
   
@@ -81,7 +132,11 @@ contains
     real(rk), pointer :: data(:,:,:,:)
     
     data => this%inputfile%extract(var, this%slice )
-    thecol(:) = data(1,1,:,1)
+    if (this%slice%ntimes == 2) then
+       thecol(:) = this%wghts(1)*data(1,1,:,1) + this%wghts(2)*data(1,1,:,2)
+    else
+       thecol(:) = data(1,1,:,1)
+    end if
 
   end function environ_conditions_getcol
   
@@ -93,8 +148,12 @@ contains
     real, pointer :: data(:,:,:)
     
     data => this%inputfile%extract_srf(var, this%slice )
-    theval = data(1,1,1)
-
+    if (this%slice%ntimes == 2) then
+       theval = this%wghts(1)*data(1,1,1) + this%wghts(2)*data(1,1,2)
+    else
+       theval = data(1,1,1)
+    end if
+ 
   end function environ_conditions_getsrf
   
   function environ_conditions_press_mid(this,nlev) result(press_mid)
@@ -106,7 +165,11 @@ contains
     real :: ps
     
     data_srf=>this%inputfile%extract_srf('PS',this%slice)
-    ps = data_srf(1,1,1)
+    if (this%slice%ntimes == 2) then
+       ps = this%wghts(1)*data_srf(1,1,1) + this%wghts(2)*data_srf(1,1,2)
+    else
+       ps = data_srf(1,1,1)
+    end if
 
     press_mid(:) = 1.e5*this%inputfile%get_hyam() + ps*this%inputfile%get_hybm()
 
@@ -121,7 +184,11 @@ contains
     real :: ps
     
     data_srf=>this%inputfile%extract_srf('PS',this%slice)
-    ps = data_srf(1,1,1)
+    if (this%slice%ntimes == 2) then
+       ps = this%wghts(1)*data_srf(1,1,1) + this%wghts(2)*data_srf(1,1,2)
+    else
+       ps = data_srf(1,1,1)
+    end if
 
     press_int(:) = 1.e5*this%inputfile%get_hyai() + ps*this%inputfile%get_hybi()
 
@@ -131,9 +198,16 @@ contains
     class(environ_conditions), intent(in) :: this
 
     integer :: ntimes
-    ntimes = this%inputfile%get_ntimes()
+    ntimes = this%num_times
     
   end function environ_conditions_ntimes
+  function environ_conditions_times(this) result(times)
+    class(environ_conditions), intent(in) :: this
+
+    real(rk) :: times(this%num_times)
+    times(:) = this%times(:)
+    
+  end function environ_conditions_times
   
   function environ_conditions_nlevels(this) result(nlevs)
     class(environ_conditions), intent(in) :: this
