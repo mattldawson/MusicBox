@@ -1,12 +1,15 @@
 module input_file
 
+  use machine,only: rk => kind_phys
+
   use netcdf, only: nf90_open, nf90_nowrite, nf90_noerr, nf90_inq_dimid, nf90_inquire_dimension
-  use netcdf, only: nf90_inq_varid, nf90_get_var
+  use netcdf, only: nf90_inq_varid, nf90_get_var, nf90_inquire_attribute, nf90_get_att
   
   implicit none
 
   private
 
+  integer, public, parameter :: MAX_ATT_LEN=128
   type, public :: input_file_type
 
      private
@@ -37,10 +40,12 @@ module input_file
      procedure :: get_nlevels => input_file_get_nlevels
      procedure :: get_time => input_file_get_time
      procedure :: get_dtime => input_file_get_dtime
+     procedure :: get_times => input_file_get_times
      procedure :: get_hyam=>input_file_get_hyam
      procedure :: get_hybm=>input_file_get_hybm
      procedure :: get_hyai=>input_file_get_hyai
      procedure :: get_hybi=>input_file_get_hybi
+     procedure :: get_units=>input_file_get_units
   end type input_file_type
 
 contains
@@ -77,6 +82,12 @@ contains
     class(input_file_type), intent(in) :: this
     input_file_get_dtime = this%times(2) - this%times(1)
   end function input_file_get_dtime
+  
+  function input_file_get_times(this) result(x)
+    class(input_file_type), intent(in) :: this
+    real(rk) :: x(this%ntimes)
+    x(:) = this%times(:)
+  end function input_file_get_times
   
   integer function input_file_get_ntimes(this)
     class(input_file_type), intent(in) :: this
@@ -231,30 +242,58 @@ contains
   
   end function input_file_slice
 
-  function input_file_extract_slice(this, varname, slice ) result(data)
+  function input_file_get_units(this, varname) result(units)
+    class(input_file_type), intent(inout) :: this
+
+    character(len=*), intent(in) :: varname
+
+    character(len=MAX_ATT_LEN) :: units
+
+    integer :: status, varid, length
+    
+    status = nf90_inq_varid(this%ncid, varname, varid)
+    if(status /= nf90_noerr) call handle_err(status)
+    status = nf90_inquire_attribute(this%ncid, varid, "units", len = length)
+    if(status /= nf90_noerr) call handle_err(status)
+    if (length>MAX_ATT_LEN) then
+       write(*,*) 'ERROR: input_file_get_units: units length too long on var '//trim(varname)//'... Length = ',length
+       stop
+    end if
+    
+    status = nf90_get_att(this%ncid, varid, "units", units)
+    if(status /= nf90_noerr) call handle_err(status)
+   
+  end function input_file_get_units
+
+  function input_file_extract_slice(this, varname, slice, default_value) result(data)
     use input_slice, only : slice_type
 
     class(input_file_type), intent(inout) :: this
     
     character(len=*), intent(in) :: varname
     type(slice_type), intent(in) :: slice
+    real(rk), optional, intent(in) :: default_value
     
-    real, pointer :: data(:,:,:,:)
+    real(rk), pointer :: data(:,:,:,:)
 
     integer :: varid, status
 
     allocate(data(slice%nlons,slice%nlats,slice%nlevs,slice%ntimes))
-    data = -1.e36
+    data = -1.e36_rk
     
     status = nf90_inq_varid(this%ncid, varname, varid)
-    if(status /= nf90_noerr) call handle_err(status)
-
-    status = nf90_get_var(this%ncid, varid, data, &
-                            start = (/ slice%beglon, slice%beglat, slice%beglev, slice%begtime /),     &
-                            count = (/ slice%nlons,  slice%nlats,  slice%nlevs,  slice%ntimes /))
-
-    if(status /= nf90_noerr) call handle_err(status)
     
+    if (status == nf90_noerr) then
+       status = nf90_get_var(this%ncid, varid, data, &
+            start = (/ slice%beglon, slice%beglat, slice%beglev, slice%begtime /),     &
+            count = (/ slice%nlons,  slice%nlats,  slice%nlevs,  slice%ntimes /))
+       if(status /= nf90_noerr) call handle_err(status)
+    elseif (present(default_value)) then
+       data = default_value
+    else
+       call handle_err(status)
+    end if
+
   end function input_file_extract_slice
 
   function input_file_extract_slice3d(this, varname, slice ) result(data)

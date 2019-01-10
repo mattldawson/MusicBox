@@ -71,19 +71,28 @@ subroutine MusicBox_main_sub()
   real(r8), allocatable :: so2vmrcol(:)
   real(r8), allocatable :: no2vmrcol(:)
   real(r8), allocatable :: prates(:,:)
+  real(r8), allocatable :: file_times(:)
   real(r8) :: density, mbar, box_temp, box_press
+  integer :: file_ntimes
+  real(r8) :: sim_beg_time, sim_end_time
 
   ! run-time options
   character(len=120) :: env_conds_file = '../data/env_conditions.nc'
   character(len=120) :: outfile_name = 'test_output.nc'
-  real :: env_lat = -999999.
-  real :: env_lon = -999999.
-  real :: env_lev = -999999. ! mbar
-
+  real, parameter :: NOT_SET = -huge(1.0)
+  real :: env_lat = NOT_SET
+  real :: env_lon = NOT_SET
+  real :: env_lev = NOT_SET ! mbar
+  real :: user_begin_time = NOT_SET ! seconds
+  real :: user_end_time = NOT_SET
+  real :: user_dtime = NOT_SET
+  
   character(len=*), parameter :: nml_options = '../MusicBox_options'
   ! read namelist run-time options
   namelist /options/ outfile_name, env_conds_file
   namelist /options/ env_lat, env_lon, env_lev
+  namelist /options/ user_begin_time, user_end_time, user_dtime
+  
   open(unit=10,file=nml_options)
   read(unit=10,nml=options)
   close(10)
@@ -142,8 +151,29 @@ subroutine MusicBox_main_sub()
 !----------------------------------------
 
   theEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon, lev=env_lev )
-  dt = theEnvConds%dtime()
-  ntimes = theEnvConds%ntimes()
+  if (user_dtime>0.) then
+     dt = user_dtime
+  else
+     dt = theEnvConds%dtime()
+  end if
+
+  if (user_begin_time == NOT_SET .or. user_end_time == NOT_SET) then
+     file_ntimes= theEnvConds%ntimes()
+     allocate(file_times(file_ntimes))
+     file_times = theEnvConds%get_times()
+  end if
+  if (user_begin_time /= NOT_SET) then
+     sim_beg_time = user_begin_time
+  else
+     sim_beg_time = file_times(1)
+  end if
+  if (user_end_time /= NOT_SET) then
+     sim_end_time = user_end_time
+  else
+     sim_end_time = file_times(file_ntimes)
+  end if
+
+  ntimes = 1+int((sim_end_time-sim_beg_time)/dt)
 
   colEnvConds => environ_conditions_create( env_conds_file, lat=env_lat, lon=env_lon )
   nlevels = colEnvConds%nlevels()
@@ -167,7 +197,14 @@ subroutine MusicBox_main_sub()
   do n = 1,nSpecies
      call cnst_info(n)%print()
      cnst_name = cnst_info(n)%get_name()
-     vmr(n) = theEnvConds%getvar(cnst_name)
+     if (cnst_name == 'N2') then
+        vmr(n) = theEnvConds%getvar(cnst_name,default_value=0.79_r8)
+     else if (cnst_name == 'O2') then
+        vmr(n) = theEnvConds%getvar(cnst_name,default_value=0.21_r8)
+     else
+        vmr(n) = theEnvConds%getvar(cnst_name,default_value=0.00_r8)
+     end if
+
      write(*,fmt="(' cnst name : ',a20,' init value : ',e13.6)") cnst_name, vmr(n)
      if (allocated(wghts) .and. cnst_name == 'CL2') then
         wghts(n) = 2._r8
@@ -206,8 +243,7 @@ init_loop: & ! ccpp requires a loop over columns
 time_loop: &
   do n = 1, ntimes
     call outfile%advance(TimeStart)
-    call colEnvConds%update(n)
-    call theEnvConds%update(n)
+    call colEnvConds%update(TimeStart)
     TimeEnd = TimeStart + dt
     do i = 1, ncols
        zenith = colEnvConds%getsrf('SZA')
@@ -278,7 +314,8 @@ finis_loop: &
   deallocate(no2vmrcol)
   deallocate(prates)
   if (allocated(wghts)) deallocate(wghts)
-  
+  if (allocated(file_times)) deallocate(file_times)
+
 end subroutine MusicBox_main_sub
 
 end module MusicBox_main
