@@ -47,6 +47,7 @@ module MusicBox_var_defs
 !! | photo_lev  | level_number_for_photolysis                      | level number used to set j_rateConst    | count     |    0 | integer     |           | none   | F        |
 !! | box_press  | pressure                                         | ambient pressure                        | Pa        | 0    | real        | kind_phys | in     | F        |
 !! | box_temp   | temperature                                      | ambient temperature                     | K         | 0    | real        | kind_phys | in     | F        |
+!! | box_h2o    | water_vapor                                      | water vapor                             | mole/mole | 0    | real        | kind_phys | in     | F        |
 !! | density    | total_number_density                             | total number density                | molecules/cm3 | 0    | real        | kind_phys | out    | F        |
 !! | mbar       | mean_molec_mass                                  | mean molecular mass                     | g/mole    | 0    | real        | kind_phys | out    | F        |
 !!

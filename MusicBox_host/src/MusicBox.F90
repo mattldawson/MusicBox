@@ -52,8 +52,8 @@ subroutine MusicBox_main_sub()
   type(environ_conditions),pointer :: colEnvConds => null()
   type(const_props_type), pointer :: cnst_info(:) => null()
 
-  character(len=16) :: cnst_name
-  character(len=80) :: model_name
+  character(len=16)  :: cnst_name
+  character(len=255) :: model_name
 
   type(output_file_type) :: outfile
 
@@ -70,11 +70,10 @@ subroutine MusicBox_main_sub()
   real(r8), allocatable :: o3vmrcol(:)
   real(r8), allocatable :: so2vmrcol(:)
   real(r8), allocatable :: no2vmrcol(:)
-  real(r8), allocatable :: h2ovmrcol(:)
   real(r8), allocatable :: prates(:,:)
   real(r8), allocatable :: file_times(:)
   real(r8) :: rh
-  real(r8) :: density, mbar, box_temp, box_press
+  real(r8) :: density, mbar, box_temp, box_press, box_h2o
   integer :: file_ntimes
   real(r8) :: sim_beg_time, sim_end_time
 
@@ -192,7 +191,6 @@ subroutine MusicBox_main_sub()
   allocate(o3vmrcol(nlevels))
   allocate(so2vmrcol(nlevels))
   allocate(no2vmrcol(nlevels))
-  allocate(h2ovmrcol(nlevels))
   allocate(prates(nlevels,113))
 
   if (model_name == 'terminator') then
@@ -262,8 +260,8 @@ time_loop: &
        o3vmrcol(:nlevels) = colEnvConds%getcol('O3',nlevels)
        so2vmrcol(:nlevels) = colEnvConds%getcol('SO2',nlevels)
        no2vmrcol(:nlevels) = colEnvConds%getcol('NO2',nlevels)
-       h2ovmrcol(:nlevels) = colEnvConds%getcol('H2O',nlevels)
-       box_temp = temp(photo_lev)
+       box_h2o   = theEnvConds%getvar('H2O')
+       box_temp  = temp(photo_lev)
        box_press = press_mid(photo_lev)
        call outfile%out( 'Zenith', zenith )
        Time = TimeStart
@@ -319,7 +317,6 @@ finis_loop: &
   deallocate(o3vmrcol)
   deallocate(so2vmrcol)
   deallocate(no2vmrcol)
-  deallocate(h2ovmrcol)
   deallocate(prates)
   if (allocated(wghts)) deallocate(wghts)
   if (allocated(file_times)) deallocate(file_times)
