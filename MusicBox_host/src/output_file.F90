@@ -13,7 +13,7 @@ module output_file
 
   private
   
-  integer, parameter :: MAXVARS=100
+  integer, parameter :: MAXVARS=500
   
   type, public :: output_file_type
      private

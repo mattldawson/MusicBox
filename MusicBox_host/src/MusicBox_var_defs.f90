@@ -40,11 +40,14 @@ module MusicBox_var_defs
 !! | o3vmrcol   | O3_vmr_col                                       | O3 volume mixing ratio column           | mole/mole |    1 | real        | kind_phys | in     | F        |
 !! | so2vmrcol  | SO2_vmr_col                                      | SO2 volume mixing ratio column          | mole/mole |    1 | real        | kind_phys | in     | F        |
 !! | no2vmrcol  | NO2_vmr_col                                      | NO2 volume mixing ratio column          | mole/mole |    1 | real        | kind_phys | in     | F        |
+!! | h2ovmrcol  | H2O_vmr_col                                      | H2O volume mixing ratio column          | mole/mole |    1 | real        | kind_phys | in     | F        |
+!! | rh         | relative humidity                                | relative humidity                       | percent   |    0 | real        | kind_phys | in     | F        |
 !! | prates     | photolysis_rates_col                             | photolysis rates column                 | s-1       |    2 | real        | kind_phys | out    | F        |
 !! | o3totcol   | ozone_column_density                             | total ozone column density              | DU        |    0 | real        | kind_phys | out    | F        |
 !! | photo_lev  | level_number_for_photolysis                      | level number used to set j_rateConst    | count     |    0 | integer     |           | none   | F        |
 !! | box_press  | pressure                                         | ambient pressure                        | Pa        | 0    | real        | kind_phys | in     | F        |
 !! | box_temp   | temperature                                      | ambient temperature                     | K         | 0    | real        | kind_phys | in     | F        |
+!! | box_h2o    | water_vapor                                      | water vapor                             | mole/mole | 0    | real        | kind_phys | in     | F        |
 !! | density    | total_number_density                             | total number density                | molecules/cm3 | 0    | real        | kind_phys | out    | F        |
 !! | mbar       | mean_molec_mass                                  | mean molecular mass                     | g/mole    | 0    | real        | kind_phys | out    | F        |
 !!
