@@ -223,7 +223,7 @@ subroutine MusicBox_main_sub()
   
 init_loop: & ! ccpp requires a loop over columns
   do i = 1, ncols
-      call ccpp_init( '../suites/suite_MusicBox_'//trim(model_name)//'.xml', cdata(i), ierr)
+      call ccpp_init( '../suites/'//trim(model_name)//'.xml', cdata(i), ierr)
 
       if (ierr/=0) then
           write(*,'(a,i0,a)') 'An error occurred in ccpp_init for column ', i, '. Exiting...'
