@@ -4,6 +4,7 @@ use const_props_mod,        only: const_props_type
 use environ_conditions_mod, only: environ_conditions_create, environ_conditions
 use prepare_chemistry_mod,  only: prepare_chemistry_init
 use output_file,            only: output_file_type
+use relhum_mod,             only: relhum_mod_init, relhum_mod_run, relhum_mod_final
 
 implicit none
 
@@ -72,7 +73,7 @@ subroutine MusicBox_main_sub()
   real(r8), allocatable :: no2vmrcol(:)
   real(r8), allocatable :: prates(:,:)
   real(r8), allocatable :: file_times(:)
-  real(r8) :: rh
+  real(r8) :: relhum ! relative humidity
   real(r8) :: density, mbar, box_temp, box_press, box_h2o
   integer :: file_ntimes
   real(r8) :: sim_beg_time, sim_end_time
@@ -94,9 +95,6 @@ subroutine MusicBox_main_sub()
   namelist /options/ env_lat, env_lon, env_lev
   namelist /options/ user_begin_time, user_end_time, user_dtime
   
-  ! Hardwire the relative humidity
-  rh = 0.6_r8
-
   open(unit=10,file=nml_options)
   read(unit=10,nml=options)
   close(10)
@@ -141,6 +139,7 @@ subroutine MusicBox_main_sub()
   if (model_name == '3component') then
      call outfile%add('VMRTOT','sum of all species','molec/molec')
   end if
+  call outfile%add('RelHum','relative humidity','')
 
   call outfile%define() ! cannot add more fields after this call
   
@@ -241,6 +240,8 @@ init_loop: & ! ccpp requires a loop over columns
       end if
   end do init_loop
 
+  call relhum_mod_init()
+
 !-----------------------------------------------------------
 !  loop over time
 !-----------------------------------------------------------
@@ -263,6 +264,8 @@ time_loop: &
        box_h2o   = theEnvConds%getvar('H2O')
        box_temp  = temp(photo_lev)
        box_press = press_mid(photo_lev)
+       call relhum_mod_run( box_temp, box_press, box_h2o, relhum )
+       call outfile%out( 'RelHum', relhum )
        call outfile%out( 'Zenith', zenith )
        Time = TimeStart
        call ccpp_physics_run(cdata(i), ierr=ierr)
@@ -320,6 +323,8 @@ finis_loop: &
   deallocate(prates)
   if (allocated(wghts)) deallocate(wghts)
   if (allocated(file_times)) deallocate(file_times)
+
+  call relhum_mod_final()
 
 end subroutine MusicBox_main_sub
 

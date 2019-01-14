@@ -9,21 +9,17 @@ to add variable:
  - declare variable and allocate memory in host model
 
 build steps:
-1) cp /terminator-data1/fvitt/micm_inputs/MusicBox_env_cond_c181212.nc MusicBox_host/data/env_conditions.nc
-2) ccpp-framework/scripts/ccpp_prebuild.py --model=MusicBox
-3) cd MusicBox_host
+> cp /terminator-data1/fvitt/micm_inputs/MusicBox_env_cond_1col_c190109.nc MusicBox_host/data/env_conditions.nc
+> ccpp-framework/scripts/ccpp_prebuild.py --model=MusicBox
+> cd distribute_include_files.py /path/$CHEM_NAME.json
+> cd ..
+> cd MusicBox_host
 > source etc/CENTOS_setup.sh
-4) mkdir bin
-5) cd bin
-6) cmake -DPROJECT=terminator ../src  (or -DPROJECT=3component or -DPROJECT=user-defined) (may add -DCMAKE_BUILD_TYPE=Debug for debugging)
-7) make
+> mkdir bin
+> cd bin
+> cmake -DPROJECT=$CHEM_NAME ../src  (or -DPROJECT=3component or -DPROJECT=terminator) (may add -DCMAKE_BUILD_TYPE=Debug for debugging)
+> make
 
 execute:
 > ./MusicBox
 
-
-NOTE:  As of 9/2018, if a -DPROJECT is not specified, will get the following error:
-OSError: [Errno 2] No such file or directory: '/home/cacraig/MusicBox-mine/MusicBox_host/bin/ccpp-framework/schemes/check/src/check-build/../../../../../src/tests'
-
-To fix it, include this line between the cmake and make steps
-> ln -s ../../ccpp-framework/src . ; ln -s ../../ccpp-framework/schemes .     # TEMPORARY WORKAROUND

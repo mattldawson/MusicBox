@@ -35,10 +35,14 @@ ADD_SUBDIRECTORY(${MICM_SRC} ${CMAKE_BINARY_DIR}/MICM_chemistry)
 
 SET(mbox_source_files MusicBox.F90
             MusicBox_var_defs.f90
-	    input_slice.F90
-	    input_file.F90
-	    environ_conditions_mod.F90
-	    output_file.F90
+            input_slice.F90
+            input_file.F90
+            environ_conditions_mod.F90
+            output_file.F90
+            relhum/relhum_mod.F90
+            relhum/shr_const_mod.F90
+            relhum/wv_sat_methods.F90
+            relhum/wv_saturation.F90
 )
 
 #this should call the custome FindNetCDF.cmake file in /src/cmake/modules and populate the NETCDF_INCLUDES and NETCDF_LIBRARIES variables with the appropriate values
