@@ -23,7 +23,7 @@ module wv_saturation
 !                                                                    !
 !--------------------------------------------------------------------!
 
-use shr_kind_mod, only: r8 => shr_kind_r8
+use machine, only: r8 => kind_phys
 
 use shr_const_mod, only: &
        shr_const_mwwv, shr_const_mwdair, & !
