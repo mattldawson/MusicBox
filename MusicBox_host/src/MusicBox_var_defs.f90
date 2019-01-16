@@ -41,7 +41,7 @@ module MusicBox_var_defs
 !! | so2vmrcol  | SO2_vmr_col                                      | SO2 volume mixing ratio column          | mole/mole |    1 | real        | kind_phys | in     | F        |
 !! | no2vmrcol  | NO2_vmr_col                                      | NO2 volume mixing ratio column          | mole/mole |    1 | real        | kind_phys | in     | F        |
 !! | h2ovmrcol  | H2O_vmr_col                                      | H2O volume mixing ratio column          | mole/mole |    1 | real        | kind_phys | in     | F        |
-!! | rh         | relative humidity                                | relative humidity                       | percent   |    0 | real        | kind_phys | in     | F        |
+!! | relhum     | relative humidity                                | relative humidity                       | percent   |    0 | real        | kind_phys | in     | F        |
 !! | prates     | photolysis_rates_col                             | photolysis rates column                 | s-1       |    2 | real        | kind_phys | out    | F        |
 !! | o3totcol   | ozone_column_density                             | total ozone column density              | DU        |    0 | real        | kind_phys | out    | F        |
 !! | photo_lev  | level_number_for_photolysis                      | level number used to set j_rateConst    | count     |    0 | integer     |           | none   | F        |
