@@ -1,12 +1,7 @@
 # MusicBox
-The MICM box model host
+A Box (point) Chemistry kinetic solver using the CCPP framework and MICM
 
-to add variable:
- - edit MusicBox_host/src/MusicBox_var_defs.f90
-   . add line to host cap table
-   . add variable to micm_data_type
- - add corresponding line to chemistry module cap tables
- - declare variable and allocate memory in host model
+Please see https://wiki.ucar.edu/display/MusicBox/Quick+Start for details
 
 build steps:
 > cp /terminator-data1/fvitt/micm_inputs/MusicBox_env_cond_1col_c190109.nc MusicBox_host/data/env_conditions.nc
@@ -22,4 +17,3 @@ build steps:
 
 execute:
 > ./MusicBox
-
