@@ -6,7 +6,8 @@ Please see https://wiki.ucar.edu/display/MusicBox/Quick+Start for details
 build steps:
 > cp /terminator-data1/fvitt/micm_inputs/MusicBox_env_cond_1col_c190109.nc MusicBox_host/data/env_conditions.nc
 > ccpp-framework/scripts/ccpp_prebuild.py --model=MusicBox
-> cd distribute_include_files.py /path/$CHEM_NAME.json
+> cd MICM_chemistry
+> distribute_include_files.py /path/$CHEM_NAME.json
 > cd ..
 > cd MusicBox_host
 > source etc/CENTOS_setup.sh

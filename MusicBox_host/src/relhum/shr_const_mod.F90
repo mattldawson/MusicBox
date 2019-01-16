@@ -5,9 +5,7 @@
 
 MODULE shr_const_mod
 
-   use shr_kind_mod
-
-   integer(SHR_KIND_IN),parameter,private :: R8 = SHR_KIND_R8 ! rename for local readability only
+   use machine, only: r8 => kind_phys
 
    !----------------------------------------------------------------------------
    ! physical constants (all data public)

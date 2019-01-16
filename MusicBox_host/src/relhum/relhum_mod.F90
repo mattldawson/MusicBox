@@ -1,5 +1,5 @@
 module relhum_mod
-  use shr_kind_mod, only: r8 => shr_kind_r8
+  use machine, only: r8 => kind_phys
   use wv_saturation, only: wv_sat_init, wv_sat_final, qsat
 
 contains
