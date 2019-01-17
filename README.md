@@ -4,15 +4,19 @@ A Box (point) Chemistry kinetic solver using the CCPP framework and MICM
 Please see https://wiki.ucar.edu/display/MusicBox/Quick+Start for details
 
 build steps:
-> wget  ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_c190109.nc MusicBox_host/data/env_conditions.nc
- -- or --
-> wget  ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_1col_c190109.nc MusicBox_host/data/env_conditions.nc
 > cd MICM_chemistry
-> distribute_include_files.py /path/$CHEM_NAME.json
+> ./distribute_include_files.py /path/$CHEM_NAME.json
 > cd ..
+
+> cd MusicBox_host/data 
+> wget  ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_c190109.nc; mv MusicBox_env_cond_c190109.nc env_conditions.nc
+ -- or --
+> wget  ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_1col_c190109.nc; mv MusicBox_env_cond_1col_c190109.nc env_conditions.nc
+> cd ../../
+
 > ccpp-framework/scripts/ccpp_prebuild.py --model=MusicBox
 > cd MusicBox_host
-> source etc/CENTOS_setup.sh
+> source etc/CENTOS_setup.sh -- or -- source etc/Cheyenne_setup_intel.sh
 > rm -rf bin
 > mkdir bin
 > cd bin
