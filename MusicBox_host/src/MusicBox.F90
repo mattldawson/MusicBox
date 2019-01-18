@@ -270,7 +270,7 @@ time_loop: &
        Time = TimeStart
        call ccpp_physics_run(cdata(i), ierr=ierr)
        write(*,'(2(a,f6.2))') 'solar zenith (degrees): ',zenith,' ...total ozone (DU): ', o3totcol
-       write(*,'(a,f6.2,e12.4)') ' mbar, total density :', mbar, density
+       write(*,'(a, e12.4, f6.2, f6.2)') ' total density, pressure, temperature :', density, box_press, box_temp
        call outfile%out( 'O3totcol', o3totcol )
        call outfile%out( 'Density', density )
        call outfile%out( 'Mbar', mbar )
