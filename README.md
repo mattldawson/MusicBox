@@ -17,7 +17,7 @@ git input data:
  wget ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_1col_c190109.nc; mv MusicBox_env_cond_1col_c190109.nc env_conditions.nc
  cd ../../
  -- or --
- wget ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_1col_c190109.nc; mv MusicBox_env_cond_1col_c190109.nc env_conditions.nc
+ wget ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_1col_5days_repeated_c190118.nc; mv MusicBox_env_cond_1col_5days_repeated_c190118.nc env_conditions.nc
  cd ../../
 ```
 build steps:
