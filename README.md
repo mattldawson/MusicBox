@@ -4,9 +4,9 @@ A Box (point) Chemistry kinetic solver using the CCPP framework and MICM
 Please see https://wiki.ucar.edu/display/MusicBox/Quick+Start for details
 
 build steps:
- - cd MICM_chemistry
- - ./distribute_include_files.py /path/$CHEM_NAME.json
- - cd ..
+ + cd MICM_chemistry
+ + ./distribute_include_files.py /path/$CHEM_NAME.json
+ + cd ..
 
  - cd MusicBox_host/data 
  - wget  ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_c190109.nc; mv MusicBox_env_cond_c190109.nc env_conditions.nc
