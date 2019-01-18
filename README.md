@@ -9,7 +9,7 @@ get the MusicBox source code:
  cd MusicBox
  manage_externals/checkout_externals
 ```    
-git input data:
+get input data:
 ```
  cd MusicBox_host/data 
  wget ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_c190109.nc; mv MusicBox_env_cond_c190109.nc env_conditions.nc
