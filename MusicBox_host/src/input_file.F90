@@ -1,6 +1,6 @@
 module input_file
 
-  use machine,only: rk => kind_phys
+  USE ccpp_kinds, ONLY: rk => kind_phys
 
   use netcdf, only: nf90_open, nf90_nowrite, nf90_noerr, nf90_inq_dimid, nf90_inquire_dimension
   use netcdf, only: nf90_inq_varid, nf90_get_var, nf90_inquire_attribute, nf90_get_att

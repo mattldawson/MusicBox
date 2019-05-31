@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<suite name="MusicBox_suite" version="1.0">
+  <group name="physics">
+    <scheme>get_environ_cond</scheme>
+    <scheme>hello_scheme</scheme>
+  </group>
+</suite>

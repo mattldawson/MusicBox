@@ -2,7 +2,8 @@
 ! for writing time series output to netcdf
 !----------------------------------------------------------------------------------------------
 module output_file
-  use machine,only: rk => kind_phys
+  USE ccpp_kinds, ONLY: rk => kind_phys
+
   use netcdf, only: nf90_create, NF90_CLOBBER, nf90_def_dim, NF90_UNLIMITED, nf90_def_var
   use netcdf, only: nf90_close, nf90_put_var, nf90_enddef, NF90_DOUBLE, nf90_put_att
   use netcdf, only: nf90_noerr, nf90_strerror

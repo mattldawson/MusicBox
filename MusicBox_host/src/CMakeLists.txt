@@ -1,21 +1,54 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-PROJECT(musicbox)
+PROJECT(MusicBox)
 ENABLE_LANGUAGE(Fortran)
 
 include(CMakeForceCompiler)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
-
-#MESSAGE("The NETCDF env. variable is $ENV{NETCDF}")
 SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
 
-SET(CCPP_SRC ${CMAKE_SOURCE_DIR}/../../ccpp-framework)
-SET(MICM_SRC ${CMAKE_SOURCE_DIR}/../../MICM_chemistry)
+#-----------------------------------------------------------------------------
+#
+# Create list of SCHEME_FILES, HOST_FILES, and SUITE_FILES
+# Paths should be relative to CMAKE_SOURCE_DIR (this file's directory)
+#
+#-----------------------------------------------------------------------------
+LIST (APPEND SCHEME_FILES "MusicBox_scheme_files.txt" "../../MICM_chemistry/src/MICM_scheme_files.txt")
+LIST(APPEND HOST_FILES  "hello_world_mod")
+LIST(APPEND SUITE_FILES "MusicBox_suite.xml")
+# HOST is the name of the executable we will build.
+SET(HOST "${CMAKE_PROJECT_NAME}")
+# HOST_PROGRAM is the name of the program source files (Fortran and metadata)
+SET(HOST_PROGRAM "MusicBox")
+
+#-----------------------------------------------------------------------------
+#
+# Set where the CCPP Framework lives
+#
+#-----------------------------------------------------------------------------
+get_filename_component(MUSICBOX_ROOT "${CMAKE_SOURCE_DIR}" DIRECTORY)
+set(CCPP_ROOT "${MUSICBOX_ROOT}/../ccpp-framework")
+
+#-----------------------------------------------------------------------------
+##############################################################################
+#
+# End of project-specific input
+#
+##############################################################################
+#-----------------------------------------------------------------------------
+
+# By default, no verbose output
+SET(VERBOSITY 0 CACHE STRING "Verbosity level of output (default: 0)")
+# By default, generated caps go in ccpp subdir
+SET(CCPP_CAP_FILES "${CMAKE_BINARY_DIR}/ccpp" CACHE
+  STRING "Location of CCPP-generated cap files")
+
+SET(CCPP_FRAMEWORK ${CCPP_ROOT}/scripts)
 
 # Use rpaths on MacOSX
 set(CMAKE_MACOSX_RPATH 1)
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     #message(STATUS "Setting build type to 'Debug' as none was specified.")
@@ -30,29 +63,7 @@ endif()
 
 ADD_COMPILE_OPTIONS(-O0)
 
-ADD_SUBDIRECTORY(${CCPP_SRC} ${CMAKE_BINARY_DIR}/ccpp-framework)
-ADD_SUBDIRECTORY(${MICM_SRC} ${CMAKE_BINARY_DIR}/MICM_chemistry)
-
-SET(mbox_source_files MusicBox.F90
-            MusicBox_var_defs.f90
-            input_slice.F90
-            input_file.F90
-            environ_conditions_mod.F90
-            output_file.F90
-            relhum/relhum_mod.F90
-            relhum/shr_const_mod.F90
-            relhum/wv_sat_methods.F90
-            relhum/wv_saturation.F90
-)
-
-#this should call the custome FindNetCDF.cmake file in /src/cmake/modules and populate the NETCDF_INCLUDES and NETCDF_LIBRARIES variables with the appropriate values
-SET(NETCDF_F90 "YES")
-FIND_PACKAGE(NetCDF)
-
-INCLUDE_DIRECTORIES(${NETCDF_INCLUDES})
-INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/ccpp-framework/src)
-INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/MICM_chemistry)
-
+ADD_EXECUTABLE(${HOST} ${HOST_PROGRAM}.F90)
 if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 #  gfortran
 #  MESSAGE("gfortran being used.")
@@ -63,7 +74,6 @@ if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   ADD_COMPILE_OPTIONS(-ggdb)
   ADD_COMPILE_OPTIONS(-ffree-line-length-none)
   ADD_COMPILE_OPTIONS(-cpp)
-  #set(f_flags -fcheck=all -fbacktrace -ffpe-trap=zero -finit-real=nan -ggdb -ffree-line-length-none -g -cpp)
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
 #  ifort
 #  MESSAGE("ifort being used.")
@@ -73,7 +83,6 @@ elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
   ADD_COMPILE_OPTIONS(-traceback)
   ADD_COMPILE_OPTIONS(-debug extended)
   ADD_COMPILE_OPTIONS(-fpp)
-  #set(f_flags -g -fpe0 -warn -traceback -debug extended -fpp)
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "PGI")
 #  pgf90
 #  MESSAGE("pgf90 being used.")
@@ -83,37 +92,15 @@ elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "PGI")
   ADD_COMPILE_OPTIONS(-Mfree)
   ADD_COMPILE_OPTIONS(-Mfptrap)
   ADD_COMPILE_OPTIONS(-Mpreprocess)
-  #set(f_flags -g -Mipa=noconst -traceback -Mfree -Mfptrap -Mpreprocess)
 else (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   message (FATAL_ERROR "This program has only been compiled with gfortran, pgf90 and ifort. If another compiler is needed, the appropriate flags must be added in ${CMAKE_SOURCE_DIR}/CMakeLists.txt")
 endif (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 
-#if(${CMAKE_VERSION} LESS 3.3)
-#  string (REPLACE ";" " " f_flags_str "${f_flags}")
-#  set(CMAKE_Fortran_FLAGS "${f_flags_str}")
-#  message (STATUS "CMAKE_Fortran_FLAGS: ${CMAKE_Fortran_FLAGS}")
-#else(${CMAKE_VERSION} LESS 3.3)
-#  add_compile_options("$<$<COMPILE_LANGUAGE:Fortran>:${f_flags}>")
-#endif (${CMAKE_VERSION} LESS 3.3)
-
-#------------------------------------------------------------------------------
-# The Fortran compiler/linker flag inserted by cmake to create shared libraries
-# with the Intel compiler is deprecated (-i_dynamic), correct here.
-# CMAKE_Fortran_COMPILER_ID = {"Intel", "PGI", "GNU", "Clang", "MSVC", ...}
-if ("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
-    string(REPLACE "-i_dynamic" "-shared-intel"
-           CMAKE_SHARED_LIBRARY_CREATE_Fortran_FLAGS
-           "${CMAKE_SHARED_LIBRARY_CREATE_Fortran_FLAGS}")
-    string(REPLACE "-i_dynamic" "-shared-intel"
-           CMAKE_SHARED_LIBRARY_LINK_Fortran_FLAGS
-           "${CMAKE_SHARED_LIBRARY_LINK_Fortran_FLAGS}")
-endif()
-
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # CMake Modules
 # Set the CMake module path
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../ccpp-framework/cmake")
-#------------------------------------------------------------------------------
+list(APPEND CMAKE_MODULE_PATH "${CCPP_FRAMEWORK}/cmake")
+#-----------------------------------------------------------------------------
 # Set OpenMP flags for C/C++/Fortran
 if (OPENMP)
   include(detect_openmp)
@@ -126,9 +113,72 @@ else(OPENMP)
   message (STATUS "Disable OpenMP support for C/C++/Fortran compiler")
 endif()
 
-ADD_EXECUTABLE(MusicBox ${mbox_source_files})
-TARGET_LINK_LIBRARIES(MusicBox micmchem ccpp ${NETCDF_LIBRARIES})
-#set_target_properties(MusicBox PROPERTIES
-#                               COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
-#                               LINK_FLAGS "${CMAKE_Fortran_FLAGS}")
+# Create metadata and source file lists
+FOREACH (FILE ${SCHEME_FILES})
+  FILE(STRINGS ${FILE} FILENAMES)
+  LIST(APPEND SCHEME_FILENAMES ${FILENAMES})
+ENDFOREACH(FILE)
+string(REPLACE ";" "," SCHEME_METADATA "${SCHEME_FILES}")
 
+FOREACH(FILE ${SCHEME_FILENAMES})
+  # target_sources prefers absolute pathnames
+  string(REPLACE ".meta" ".F90" TEMP "${FILE}")
+  get_filename_component(ABS_PATH "${TEMP}" ABSOLUTE)
+  target_sources(${HOST} PUBLIC ${ABS_PATH})
+ENDFOREACH(FILE)
+
+FOREACH(FILE ${HOST_FILES})
+  LIST(APPEND HOST_METADATA "${FILE}.meta")
+  # target_sources prefers absolute pathnames
+  get_filename_component(ABS_PATH "${FILE}.F90" ABSOLUTE)
+  LIST(APPEND HOST_SOURCE   "${ABS_PATH}")
+ENDFOREACH(FILE)
+target_sources(${HOST} PUBLIC ${HOST_SOURCE})
+string(REPLACE ";" ".meta," HOST_METADATA "${HOST_FILES}")
+set(HOST_METADATA "${HOST_PROGRAM}.meta,${HOST_METADATA}.meta")
+
+string(REPLACE ";" "," SUITE_XML "${SUITE_FILES}")
+
+# Run ccpp_capgen
+set(CAPGEN_CMD "${CCPP_FRAMEWORK}/ccpp_capgen.py")
+list(APPEND CAPGEN_CMD "--host-files")
+list(APPEND CAPGEN_CMD "${HOST_METADATA}")
+list(APPEND CAPGEN_CMD "--scheme-files")
+list(APPEND CAPGEN_CMD "${SCHEME_METADATA}")
+list(APPEND CAPGEN_CMD "--suites")
+list(APPEND CAPGEN_CMD "${SUITE_XML}")
+list(APPEND CAPGEN_CMD "--output-root")
+list(APPEND CAPGEN_CMD "${CCPP_CAP_FILES}")
+list(APPEND CAPGEN_CMD "--generate-host-cap")
+list(APPEND CAPGEN_CMD "--host-name")
+list(APPEND CAPGEN_CMD "${HOST}")
+while (VERBOSITY GREATER 0)
+  list(APPEND CAPGEN_CMD "--verbose")
+  MATH(EXPR VERBOSITY "${VERBOSITY} - 1")
+endwhile ()
+string(REPLACE ";" " " CAPGEN_STRING "${CAPGEN_CMD}")
+MESSAGE(STATUS "Running: ${CAPGEN_STRING}")
+EXECUTE_PROCESS(COMMAND ${CAPGEN_CMD} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE CAPGEN_OUT ERROR_VARIABLE CAPGEN_OUT RESULT_VARIABLE RES)
+MESSAGE(STATUS "${CAPGEN_OUT}")
+if (RES EQUAL 0)
+  MESSAGE(STATUS "CCPP cap generation completed")
+else(RES EQUAL 0)
+  MESSAGE(FATAL_ERROR "CCPP cap generation FAILED: result = ${RES}")
+endif(RES EQUAL 0)
+
+# Read the list of files from capfiles.txt and set to CCPP_CAPS
+file(STRINGS ${CCPP_CAP_FILES}/capfiles.txt CCPP_CAPS)
+target_sources(${HOST} PUBLIC ${CCPP_CAPS})
+
+SET(NETCDF_F90 "YES")
+FIND_PACKAGE(NetCDF)
+
+INCLUDE_DIRECTORIES(${NETCDF_INCLUDES})
+INCLUDE_DIRECTORIES(${CCPP_CAP_FILES})
+
+TARGET_LINK_LIBRARIES(MusicBox ${NETCDF_LIBRARIES})
+
+set_target_properties(${HOST} PROPERTIES
+                              COMPILE_FLAGS "${CMAKE_Fortran_FLAGS}"
+                              LINK_FLAGS "${CMAKE_Fortran_FLAGS}")
