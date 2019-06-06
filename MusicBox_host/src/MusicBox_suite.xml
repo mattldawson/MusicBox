@@ -2,7 +2,10 @@
 
 <suite name="MusicBox_suite" version="1.0">
   <group name="physics">
+    <scheme>prepare_chemistry</scheme>
     <scheme>get_environ_cond</scheme>
+    <scheme>mass_quantities_util</scheme>
     <scheme>hello_scheme</scheme>
+    <scheme>k_rateConst</scheme>
   </group>
 </suite>
