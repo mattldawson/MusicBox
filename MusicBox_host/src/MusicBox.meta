@@ -21,25 +21,25 @@
   units = seconds
   dimensions = (number_of_model_times)
   type = real
-  kind = r8
+  kind = kind_phys
   intent = out
   allocatable = True
-[press]
+[box_press]
   standard_name = pressure
   long_name = ambient pressure
   units = Pa
   dimensions = ()
   type = real
-  kind = r8
+  kind = kind_phys
   intent = out
   optional = F
-[temp]
+[box_temp]
   standard_name = temperature
   long_name = ambient temperature
   units = K
   dimensions = ()
   type = real
-  kind = r8
+  kind = kind_phys
   intent = out
   optional = F
 [nSpecies]
@@ -53,7 +53,7 @@
   units = mole/mole
   dimensions = (number_of_chemical_constituents)
   type = real
-  kind = r8
+  kind = kind_phys
   intent = out
 [relhum]
   standard_name = relative_humidity
@@ -61,7 +61,7 @@
   units = percent
   dimensions = ()
   type = real
-  kind = r8
+  kind = kind_phys
   intent = out
 [box_h2o]
   standard_name = water_vapor
@@ -69,7 +69,7 @@
   units = mole/mole
   dimensions = ()
   type = real
-  kind = r8
+  kind = kind_phys
   intent = out
 [ errmsg ]
   standard_name = ccpp_error_message

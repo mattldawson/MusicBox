@@ -2,7 +2,8 @@
 ! for writing time series output to netcdf
 !----------------------------------------------------------------------------------------------
 module output_file
-  USE ccpp_kinds, ONLY: rk => kind_phys
+!  USE ccpp_kinds, ONLY: rk => kind_phys
+  USE ccpp_kinds, ONLY: kind_phys
 
   use netcdf, only: nf90_create, NF90_CLOBBER, nf90_def_dim, NF90_UNLIMITED, nf90_def_var
   use netcdf, only: nf90_close, nf90_put_var, nf90_enddef, NF90_DOUBLE, nf90_put_att
@@ -110,7 +111,7 @@ contains
 !--------------------------------------------------------------------------------
   subroutine output_file_adv(this, time)
     class(output_file_type), intent(inout) :: this
-    real(rk), intent(in) :: time
+    real(kind_phys), intent(in) :: time
 
     this%rec_num = this%rec_num+1
     call check( nf90_put_var(this%ncid, this%time_varid, (/ time /), &
@@ -124,7 +125,7 @@ contains
   subroutine output_file_out_cnsts( this, cnsts_props, vmr )
     class(output_file_type), intent(inout) :: this
     class(const_props_type), intent(in) :: cnsts_props(:)
-    real(rk), intent(in) :: vmr(:)
+    real(kind_phys), intent(in) :: vmr(:)
     
     integer :: ncnst, n
     
@@ -142,7 +143,7 @@ contains
  subroutine output_file_out_var( this, varname, val )
     class(output_file_type), intent(inout) :: this
     character(len=*), intent(in) :: varname
-    real(rk), intent(in) :: val
+    real(kind_phys), intent(in) :: val
 
     call check( nf90_put_var(this%ncid, this%varindx(varname), (/ val /), &
                 start = (/ this%rec_num /), count = (/ 1 /)) )

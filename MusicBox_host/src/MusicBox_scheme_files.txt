@@ -4,3 +4,7 @@ environ_conditions_mod.F90
 input_file.F90
 output_file.F90
 input_slice.F90
+relhum/wv_saturation.F90
+relhum/shr_const_mod.F90
+relhum/wv_sat_methods.F90
+relhum/relhum_mod.F90

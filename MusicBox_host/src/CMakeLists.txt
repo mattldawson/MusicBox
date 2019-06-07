@@ -7,33 +7,49 @@ include(CMakeForceCompiler)
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
 
-#------------------------------------------------------------------------------
-#
-# Set where the CCPP Framework lives
-#
-#------------------------------------------------------------------------------
-get_filename_component(MUSICBOX_ROOT "${CMAKE_SOURCE_DIR}" DIRECTORY)
-set(CCPP_ROOT "${MUSICBOX_ROOT}/../ccpp-framework")
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 #
 # Create list of SCHEME_FILES, HOST_FILES, and SUITE_FILES
 # Paths should be relative to CMAKE_SOURCE_DIR (this file's directory)
 #
-#-------------------------------------------------------------------------------
-LIST(APPEND SCHEME_FILES "MusicBox_scheme_files.txt" "../../MICM_chemistry/src/MICM_scheme_files.txt")
+#-----------------------------------------------------------------------------
+LIST (APPEND SCHEME_FILES "MusicBox_scheme_files.txt" "../../MICM_chemistry/src/MICM_scheme_files.txt")
 LIST(APPEND HOST_FILES  "hello_world_mod")
 LIST(APPEND SUITE_FILES "MusicBox_suite.xml")
 # HOST is the name of the executable we will build.
-# We assume there are files ${HOST}.meta and ${HOST}.F90 in CMAKE_SOURCE_DIR
 SET(HOST "${CMAKE_PROJECT_NAME}")
+# HOST_PROGRAM is the name of the program source files (Fortran and metadata)
+SET(HOST_PROGRAM "MusicBox")
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+#
+# Set where the CCPP Framework lives
+#
+#-----------------------------------------------------------------------------
+get_filename_component(MUSICBOX_ROOT "${CMAKE_SOURCE_DIR}" DIRECTORY)
+set(CCPP_ROOT "${MUSICBOX_ROOT}/../ccpp-framework")
+
+#-----------------------------------------------------------------------------
+#
+# Set non-CCPP files
+#
+#-----------------------------------------------------------------------------
+set(NONCCPP_FILES 
+    ../../MICM_chemistry/src/json_lib/json_file_module.F90
+    ../../MICM_chemistry/src/json_lib/json_kinds.F90
+    ../../MICM_chemistry/src/json_lib/json_module.F90
+    ../../MICM_chemistry/src/json_lib/json_parameters.F90
+    ../../MICM_chemistry/src/json_lib/json_string_utilities.F90
+    ../../MICM_chemistry/src/json_lib/json_value_module.F90
+)
+
+#-----------------------------------------------------------------------------
 ##############################################################################
 #
 # End of project-specific input
 #
 ##############################################################################
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 # By default, no verbose output
 SET(VERBOSITY 0 CACHE STRING "Verbosity level of output (default: 0)")
@@ -46,7 +62,7 @@ SET(CCPP_FRAMEWORK ${CCPP_ROOT}/scripts)
 # Use rpaths on MacOSX
 set(CMAKE_MACOSX_RPATH 1)
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     #message(STATUS "Setting build type to 'Debug' as none was specified.")
@@ -61,6 +77,7 @@ endif()
 
 ADD_COMPILE_OPTIONS(-O0)
 
+ADD_EXECUTABLE(${HOST} ${HOST_PROGRAM}.F90)
 if (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 #  gfortran
 #  MESSAGE("gfortran being used.")
@@ -93,11 +110,11 @@ else (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   message (FATAL_ERROR "This program has only been compiled with gfortran, pgf90 and ifort. If another compiler is needed, the appropriate flags must be added in ${CMAKE_SOURCE_DIR}/CMakeLists.txt")
 endif (${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # CMake Modules
 # Set the CMake module path
 list(APPEND CMAKE_MODULE_PATH "${CCPP_FRAMEWORK}/cmake")
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Set OpenMP flags for C/C++/Fortran
 if (OPENMP)
   include(detect_openmp)
@@ -111,19 +128,17 @@ else(OPENMP)
 endif()
 
 # Create metadata and source file lists
-FOREACH(FILE ${SCHEME_FILES})
+FOREACH (FILE ${SCHEME_FILES})
   FILE(STRINGS ${FILE} FILENAMES)
   LIST(APPEND SCHEME_FILENAMES ${FILENAMES})
 ENDFOREACH(FILE)
 string(REPLACE ";" "," SCHEME_METADATA "${SCHEME_FILES}")
-MESSAGE(STATUS "FILENAMES= ${FILENAMES}")
 
 FOREACH(FILE ${SCHEME_FILENAMES})
   # target_sources prefers absolute pathnames
   string(REPLACE ".meta" ".F90" TEMP "${FILE}")
   get_filename_component(ABS_PATH "${TEMP}" ABSOLUTE)
-  list(APPEND LIBRARY_LIST ${ABS_PATH})
-  MESSAGE(STATUS "ABS_PATH= ${ABS_PATH}")
+  target_sources(${HOST} PUBLIC ${ABS_PATH})
 ENDFOREACH(FILE)
 
 FOREACH(FILE ${HOST_FILES})
@@ -132,9 +147,9 @@ FOREACH(FILE ${HOST_FILES})
   get_filename_component(ABS_PATH "${FILE}.F90" ABSOLUTE)
   LIST(APPEND HOST_SOURCE   "${ABS_PATH}")
 ENDFOREACH(FILE)
-list(APPEND LIBRARY_LIST ${HOST_SOURCE})
+target_sources(${HOST} PUBLIC ${HOST_SOURCE})
 string(REPLACE ";" ".meta," HOST_METADATA "${HOST_FILES}")
-set(HOST_METADATA "${HOST_METADATA}.meta,${HOST}.meta")
+set(HOST_METADATA "${HOST_PROGRAM}.meta,${HOST_METADATA}.meta")
 
 string(REPLACE ";" "," SUITE_XML "${SUITE_FILES}")
 
@@ -149,6 +164,8 @@ list(APPEND CAPGEN_CMD "${SUITE_XML}")
 list(APPEND CAPGEN_CMD "--output-root")
 list(APPEND CAPGEN_CMD "${CCPP_CAP_FILES}")
 list(APPEND CAPGEN_CMD "--generate-host-cap")
+list(APPEND CAPGEN_CMD "--host-name")
+list(APPEND CAPGEN_CMD "${HOST}")
 while (VERBOSITY GREATER 0)
   list(APPEND CAPGEN_CMD "--verbose")
   MATH(EXPR VERBOSITY "${VERBOSITY} - 1")
@@ -166,13 +183,12 @@ endif(RES EQUAL 0)
 
 # Read the list of files from capfiles.txt and set to CCPP_CAPS
 file(STRINGS ${CCPP_CAP_FILES}/capfiles.txt CCPP_CAPS)
-list(APPEND LIBRARY_LIST ${CCPP_CAPS})
-add_library(TESTLIB OBJECT  ${LIBRARY_LIST})
-ADD_EXECUTABLE(${HOST} ${HOST}.F90 $<TARGET_OBJECTS:TESTLIB>)
+target_sources(${HOST} PUBLIC ${CCPP_CAPS} ${NONCCPP_FILES})
 
 SET(NETCDF_F90 "YES")
 FIND_PACKAGE(NetCDF)
 
+INCLUDE_DIRECTORIES(../../MICM_chemistry/src/json_lib)
 INCLUDE_DIRECTORIES(${NETCDF_INCLUDES})
 INCLUDE_DIRECTORIES(${CCPP_CAP_FILES})
 

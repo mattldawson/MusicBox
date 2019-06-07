@@ -1,6 +1,7 @@
 module MusicBox_main
 
-  use ccpp_kinds, only: r8 => kind_phys
+!  use ccpp_kinds, only: r8 => kind_phys
+  use ccpp_kinds, only: kind_phys
 
 use const_props_mod,        only: const_props_type
 use environ_conditions_mod, only: environ_conditions_create, environ_conditions
@@ -9,6 +10,8 @@ use output_file,            only: output_file_type
 use relhum_mod,             only: relhum_mod_init, relhum_mod_run, relhum_mod_final
 
 implicit none
+
+public MusicBox_sub
 
 contains
 
@@ -28,6 +31,13 @@ subroutine MusicBox_sub()
   use :: iso_c_binding, only: c_loc
 
   implicit none
+
+    integer                         :: col_start, col_end
+    integer                         :: index
+    character(len=128), allocatable :: part_names(:)
+    character(len=512)              :: errmsg
+    integer                         :: errflg
+
 !-----------------------------------------------------------
 !  these dimension parameters will be set by the cafe/configurator
 !-----------------------------------------------------------
@@ -37,18 +47,18 @@ subroutine MusicBox_sub()
   integer :: ntimes = 0     ! number of time steps
 
   integer ,parameter :: ncols = 1 ! number columns in domain
-  integer,parameter  :: nbox=4    ! Need to read this in from namelist and then allocate arrays
+  integer,parameter  :: nbox=1    ! Need to read this in from namelist and then allocate arrays
 
   
   integer            :: i,n
   integer            :: ierr
-  real(kind=r8), allocatable :: j_rateConst(:)  ! host model provides photolysis rates for now 
-  real(kind=r8), allocatable :: k_rateConst(:)  ! host model provides photolysis rates for now
-  real(kind=r8), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
-  real(kind=r8), allocatable :: vmrboxes(:,:)   ! vmr for all boxes
-  real(kind=r8), allocatable :: wghts(:)
+  real(kind=kind_phys), allocatable :: j_rateConst(:)  ! host model provides photolysis rates for now 
+  real(kind=kind_phys), allocatable :: k_rateConst(:)  ! host model provides photolysis rates for now
+  real(kind=kind_phys), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
+  real(kind=kind_phys), allocatable :: vmrboxes(:,:)   ! vmr for all boxes
+  real(kind=kind_phys), allocatable :: wghts(:)
 
-  real(r8) :: TimeStart, TimeEnd, Time, dt
+  real(kind_phys) :: TimeStart, TimeEnd, Time, dt
   
 
 !  type :: environ_conditions_array_type
@@ -67,24 +77,24 @@ subroutine MusicBox_sub()
 
   integer :: photo_lev
   integer :: nlevels
-  real(r8) :: zenith
-  real(r8) :: albedo
-  real(r8) :: o3totcol
-  real(r8), allocatable :: alt(:)
-  real(r8), allocatable :: press_mid(:)
-  real(r8), allocatable :: press_int(:)
-  real(r8), allocatable :: temp(:)
-  real(r8), allocatable :: o2vmrcol(:)
-  real(r8), allocatable :: o3vmrcol(:)
-  real(r8), allocatable :: so2vmrcol(:)
-  real(r8), allocatable :: no2vmrcol(:)
-  real(r8), allocatable :: prates(:,:)
-  real(r8), allocatable :: file_times(:)
-  real(r8) :: relhum ! relative humidity
-  real(r8) :: density, mbar, box_temp, box_press, box_h2o
+  real(kind_phys) :: zenith
+  real(kind_phys) :: albedo
+  real(kind_phys) :: o3totcol
+  real(kind_phys), allocatable :: alt(:)
+  real(kind_phys), allocatable :: press_mid(:)
+  real(kind_phys), allocatable :: press_int(:)
+  real(kind_phys), allocatable :: temp(:)
+  real(kind_phys), allocatable :: o2vmrcol(:)
+  real(kind_phys), allocatable :: o3vmrcol(:)
+  real(kind_phys), allocatable :: so2vmrcol(:)
+  real(kind_phys), allocatable :: no2vmrcol(:)
+  real(kind_phys), allocatable :: prates(:,:)
+  real(kind_phys), allocatable :: file_times(:)
+  real(kind_phys) :: relhum ! relative humidity
+  real(kind_phys) :: density, mbar, box_temp, box_press, box_h2o
   integer :: file_ntimes
   integer :: ibox
-  real(r8) :: sim_beg_time, sim_end_time
+  real(kind_phys) :: sim_beg_time, sim_end_time
 
   ! run-time options
   character(len=120) :: env_conds_file = '../data/env_conditions.nc'
@@ -126,7 +136,8 @@ subroutine MusicBox_sub()
 
 
     ! Use the suite information to setup the run
-    call MusicBox_ccpp_physics_initialize('MusicBox_suite', ntimes, file_times, errmsg, errflg)
+    call MusicBox_ccpp_physics_initialize('MusicBox_suite', ntimes, file_times, box_press, box_temp,       &
+        nSpecies, vmr, relhum, box_h2o,errmsg, errflg)
     if (errflg /= 0) then
       write(6, *) trim(errmsg)
       stop
@@ -168,7 +179,6 @@ subroutine MusicBox_sub()
   allocate(vmr(nSpecies))
   allocate(theEnvConds(nbox))
   allocate(colEnvConds(nbox))
-  allocate(cdata(ncols)) ! ccpp requires column dimension 
 !----------------------------------------
 
   do ibox=1,nbox
@@ -217,7 +227,7 @@ subroutine MusicBox_sub()
 
   if (model_name == 'terminator') then
      allocate(wghts(nSpecies))
-     wghts(:) = 1._r8
+     wghts(:) = 1._kind_phys
   endif
 
   do n = 1,nSpecies
@@ -225,30 +235,30 @@ subroutine MusicBox_sub()
      call cnst_info(n)%print()
      cnst_name = cnst_info(n)%get_name()
      if (cnst_name == 'N2') then
-        vmrboxes(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.79_r8)
+        vmrboxes(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.79_kind_phys)
      else if (cnst_name == 'O2') then
-        vmrboxes(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.21_r8)
+        vmrboxes(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.21_kind_phys)
      else
-        vmrboxes(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.00_r8)
+        vmrboxes(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.00_kind_phys)
      end if
 
      write(*,fmt="(' cnst name : ',a20,' init value : ',e13.6)") cnst_name, vmrboxes(n,ibox)
      if (allocated(wghts) .and. cnst_name == 'CL2') then
-        wghts(n) = 2._r8
+        wghts(n) = 2._kind_phys
      end if
   enddo
   enddo
 
 
     ! Initialize the timestep
-    call MusicBox_ccpp_physics_timestep_initial('MusicBox_suite', ntimes,
-file_times, errmsg, errflg)
+    call MusicBox_ccpp_physics_timestep_initial('MusicBox_suite', ntimes, file_times, box_press, box_temp,       &
+        nSpecies, vmr, relhum, box_h2o, errmsg, errflg)
     if (errflg /= 0) then
       write(6, *) trim(errmsg)
       stop
     end if
 
-  TimeStart = 0._r8
+  TimeStart = 0._kind_phys
   TimeEnd = TimeStart + dt
   
 !init_loop: & ! ccpp requires a loop over columns
@@ -307,7 +317,8 @@ time_loop: &
 !       call ccpp_physics_run(cdata(i), ierr=ierr)
      col_start=1
      col_end=1
-     call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, ntimes, file_times, errmsg, errflg)
+     call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, ntimes, file_times, box_press, box_temp, &
+        nSpecies, vmr, relhum, box_h2o, errmsg, errflg)
       if (errflg /= 0) then
         write(6, *) trim(errmsg)
         call ccpp_physics_suite_part_list('MusicBox_suite', part_names, errmsg, errflg)
@@ -330,7 +341,7 @@ time_loop: &
        end if
         call outfile%out( cnst_info, vmrboxes(:,ibox) )
     end do
-    TimeStart = real(n,kind=r8)*dt
+    TimeStart = real(n,kind=kind_phys)*dt
     write(*,'(a,1p,g0)') 'Concentration @ hour = ',TimeStart/3600.
     write(*,'(1p,5(1x,g0))') vmrboxes(:,ibox),sum(vmrboxes(:,ibox))
     if (model_name == 'terminator') then
@@ -344,9 +355,11 @@ time_loop: &
     end do
   end do time_loop
 
-    call MusicBox_ccpp_physics_timestep_final('MusicBox_suite',  ntimes, file_times, errmsg, errflg)
+    call MusicBox_ccpp_physics_timestep_final('MusicBox_suite',  ntimes, file_times, box_press, box_temp,       &
+        nSpecies, vmr, relhum, box_h2o,errmsg, errflg)
 
-    call MusicBox_ccpp_physics_finalize('MusicBox_suite',  ntimes, file_times, errmsg, errflg)
+    call MusicBox_ccpp_physics_finalize('MusicBox_suite',  ntimes, file_times, box_press, box_temp,       &
+        nSpecies, vmr, relhum, box_h2o,errmsg, errflg)
     if (errflg /= 0) then
       write(6, *) trim(errmsg)
       write(6,'(a)') 'An error occurred in ccpp_timestep_final, Exiting...'
@@ -359,7 +372,7 @@ time_loop: &
   deallocate(j_rateConst)
   deallocate(vmr)
   deallocate(vmrboxes)
-  deallocate(cdata)
+!  deallocate(cdata)
   deallocate(alt)
   deallocate(press_mid)
   deallocate(press_int)
@@ -384,5 +397,5 @@ end module MusicBox_main
 !! subroutine \ref MusicBox_main_sub above.
 program MusicBox
   use MusicBox_main
-  call MusicBox_main_sub()  
+  call MusicBox_sub()  
 end program MusicBox

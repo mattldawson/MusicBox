@@ -1,5 +1,5 @@
 module relhum_mod
-  use machine, only: r8 => kind_phys
+  use ccpp_kinds, only: r8 => kind_phys
   use wv_saturation, only: wv_sat_init, wv_sat_final, qsat
 
 contains

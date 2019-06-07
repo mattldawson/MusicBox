@@ -23,7 +23,7 @@ module wv_saturation
 !                                                                    !
 !--------------------------------------------------------------------!
 
-use machine, only: r8 => kind_phys
+use ccpp_kinds, only: r8 => kind_phys
 
 use shr_const_mod, only: &
        shr_const_mwwv, shr_const_mwdair, & !
