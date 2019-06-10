@@ -71,6 +71,11 @@
   type = real
   kind = kind_phys
   intent = out
+[cnst_info] 
+  standard_name = chemistry_constituent_info
+  long_name = chemistry_constituent_info
+  dimensions = (number_of_chemical_constituents)
+  ddt_type = const_props_type
 [ errmsg ]
   standard_name = ccpp_error_message
   long_name = Error message for error handling in CCPP

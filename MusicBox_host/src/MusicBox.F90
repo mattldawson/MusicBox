@@ -137,7 +137,7 @@ subroutine MusicBox_sub()
 
     ! Use the suite information to setup the run
     call MusicBox_ccpp_physics_initialize('MusicBox_suite', ntimes, file_times, box_press, box_temp,       &
-        nSpecies, vmr, relhum, box_h2o,errmsg, errflg)
+        nSpecies, vmr, relhum, box_h2o,cnst_info,errmsg, errflg)
     if (errflg /= 0) then
       write(6, *) trim(errmsg)
       stop
@@ -252,7 +252,7 @@ subroutine MusicBox_sub()
 
     ! Initialize the timestep
     call MusicBox_ccpp_physics_timestep_initial('MusicBox_suite', ntimes, file_times, box_press, box_temp,       &
-        nSpecies, vmr, relhum, box_h2o, errmsg, errflg)
+        nSpecies, vmr, relhum, box_h2o, cnst_info,errmsg, errflg)
     if (errflg /= 0) then
       write(6, *) trim(errmsg)
       stop
@@ -318,7 +318,7 @@ time_loop: &
      col_start=1
      col_end=1
      call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, ntimes, file_times, box_press, box_temp, &
-        nSpecies, vmr, relhum, box_h2o, errmsg, errflg)
+        nSpecies, vmr, relhum, box_h2o, cnst_info,errmsg, errflg)
       if (errflg /= 0) then
         write(6, *) trim(errmsg)
         call ccpp_physics_suite_part_list('MusicBox_suite', part_names, errmsg, errflg)
@@ -356,10 +356,10 @@ time_loop: &
   end do time_loop
 
     call MusicBox_ccpp_physics_timestep_final('MusicBox_suite',  ntimes, file_times, box_press, box_temp,       &
-        nSpecies, vmr, relhum, box_h2o,errmsg, errflg)
+        nSpecies, vmr, relhum, box_h2o,cnst_info,errmsg, errflg)
 
     call MusicBox_ccpp_physics_finalize('MusicBox_suite',  ntimes, file_times, box_press, box_temp,       &
-        nSpecies, vmr, relhum, box_h2o,errmsg, errflg)
+        nSpecies, vmr, relhum, box_h2o,cnst_info,errmsg, errflg)
     if (errflg /= 0) then
       write(6, *) trim(errmsg)
       write(6,'(a)') 'An error occurred in ccpp_timestep_final, Exiting...'
