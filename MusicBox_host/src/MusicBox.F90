@@ -4,8 +4,9 @@ module MusicBox_main
   use ccpp_kinds, only: kind_phys
 
 use const_props_mod,        only: const_props_type
+use json_loader,            only: json_loader_read
 use environ_conditions_mod, only: environ_conditions_create, environ_conditions
-! use prepare_chemistry_mod,  only: prepare_chemistry_init
+!!!! use prepare_chemistry_mod,  only: prepare_chemistry_init
 use output_file,            only: output_file_type
 use relhum_mod,             only: relhum_mod_init, relhum_mod_run, relhum_mod_final
 
@@ -68,7 +69,7 @@ subroutine MusicBox_sub()
 ! declare the types
   type(environ_conditions),allocatable :: theEnvConds(:)
   type(environ_conditions),allocatable :: colEnvConds(:) 
-  type(const_props_type), pointer :: cnst_info(:) => null()
+  type(const_props_type), allocatable :: cnst_info(:)
 
   character(len=16)  :: cnst_name
   character(len=255) :: model_name
@@ -108,6 +109,8 @@ subroutine MusicBox_sub()
   real :: user_dtime = NOT_SET
   
   character(len=*), parameter :: nml_options = '../MusicBox_options'
+  character(len=120) :: jsonfile
+
   ! read namelist run-time options
   namelist /options/ outfile_name, env_conds_file
   namelist /options/ env_lat, env_lon, env_lev
@@ -137,7 +140,7 @@ subroutine MusicBox_sub()
 
     ! Use the suite information to setup the run
     call MusicBox_ccpp_physics_initialize('MusicBox_suite', ntimes, file_times, box_press, box_temp,       &
-        nSpecies, vmr, relhum, box_h2o,cnst_info,errmsg, errflg)
+        nSpecies, vmr, relhum, box_h2o,photo_lev,TimeStart,TimeEnd,errmsg, errflg)
     if (errflg /= 0) then
       write(6, *) trim(errmsg)
       stop
@@ -146,7 +149,14 @@ subroutine MusicBox_sub()
 ! Remove this call when the CPF can allocate arrays 
 ! NOTE - It is called again in chemistry_driver_init which is where it will
 ! permamently reside
-!!!!!??????  call prepare_chemistry_init(cnst_info, model_name, nSpecies, nkRxt, njRxt)
+!!!!!!!  call prepare_chemistry_init(cnst_info, model_name, nSpecies, nkRxt, njRxt)
+
+  model_name = 'Chapman_v3_1547831703456'
+
+  jsonfile = '../../../MICM_chemistry/generated/'//trim(model_name)//'/molec_info.json'
+  call json_loader_read( jsonfile, cnst_info, nSpecies, nkRxt, njRxt )
+
+
     
   write(*,*) '*******************************************************'
   write(*,*) '************** model = '//trim(model_name)//' ***************'
@@ -192,7 +202,7 @@ subroutine MusicBox_sub()
 
   if (user_begin_time == NOT_SET .or. user_end_time == NOT_SET) then
      file_ntimes= theEnvConds(1)%ntimes()
-     allocate(file_times(file_ntimes))
+!     allocate(file_times(file_ntimes))
      file_times = theEnvConds(1)%get_times()
   end if
   if (user_begin_time /= NOT_SET) then
@@ -252,7 +262,7 @@ subroutine MusicBox_sub()
 
     ! Initialize the timestep
     call MusicBox_ccpp_physics_timestep_initial('MusicBox_suite', ntimes, file_times, box_press, box_temp,       &
-        nSpecies, vmr, relhum, box_h2o, cnst_info,errmsg, errflg)
+        nSpecies, vmr, relhum, box_h2o, photo_lev,TimeStart,TimeEnd,errmsg, errflg)
     if (errflg /= 0) then
       write(6, *) trim(errmsg)
       stop
@@ -289,8 +299,7 @@ subroutine MusicBox_sub()
 !  loop over time
 !-----------------------------------------------------------
 time_loop: &
-!  do ibox=1,nbox
-  do ibox=1,2
+  do ibox=1,nbox
   do n = 1, ntimes
     call outfile%advance(TimeStart)
     call colEnvConds(ibox)%update(TimeStart)
@@ -318,7 +327,7 @@ time_loop: &
      col_start=1
      col_end=1
      call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, ntimes, file_times, box_press, box_temp, &
-        nSpecies, vmr, relhum, box_h2o, cnst_info,errmsg, errflg)
+        nSpecies, vmr, relhum, box_h2o, photo_lev,TimeStart,TimeEnd,errmsg, errflg)
       if (errflg /= 0) then
         write(6, *) trim(errmsg)
         call ccpp_physics_suite_part_list('MusicBox_suite', part_names, errmsg, errflg)
@@ -356,10 +365,10 @@ time_loop: &
   end do time_loop
 
     call MusicBox_ccpp_physics_timestep_final('MusicBox_suite',  ntimes, file_times, box_press, box_temp,       &
-        nSpecies, vmr, relhum, box_h2o,cnst_info,errmsg, errflg)
+        nSpecies, vmr, relhum, box_h2o,photo_lev,TimeStart,TimeEnd,errmsg, errflg)
 
     call MusicBox_ccpp_physics_finalize('MusicBox_suite',  ntimes, file_times, box_press, box_temp,       &
-        nSpecies, vmr, relhum, box_h2o,cnst_info,errmsg, errflg)
+        nSpecies, vmr, relhum, box_h2o,photo_lev,TimeStart,TimeEnd,errmsg, errflg)
     if (errflg /= 0) then
       write(6, *) trim(errmsg)
       write(6,'(a)') 'An error occurred in ccpp_timestep_final, Exiting...'
