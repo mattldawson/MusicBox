@@ -14,7 +14,7 @@ SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
 #
 #-----------------------------------------------------------------------------
 LIST (APPEND SCHEME_FILES  "../../MICM_chemistry/src/MICM_scheme_files.txt" "MusicBox_scheme_files.txt" )
-LIST(APPEND HOST_FILES  "hello_world_mod" "../../MICM_chemistry/src/const_props_mod" )
+LIST(APPEND HOST_FILES  "../../MICM_chemistry/src/const_props_mod" "hello_world_mod")
 LIST(APPEND SUITE_FILES "MusicBox_suite.xml")
 # HOST is the name of the executable we will build.
 SET(HOST "${CMAKE_PROJECT_NAME}")
@@ -149,7 +149,7 @@ FOREACH(FILE ${HOST_FILES})
 ENDFOREACH(FILE)
 target_sources(${HOST} PUBLIC ${HOST_SOURCE})
 string(REPLACE ";" ".meta," HOST_METADATA "${HOST_FILES}")
-set(HOST_METADATA "${HOST_PROGRAM}.meta,${HOST_METADATA}.meta")
+set(HOST_METADATA "${HOST_METADATA}.meta,${HOST_PROGRAM}.meta")
 
 string(REPLACE ";" "," SUITE_XML "${SUITE_FILES}")
 
