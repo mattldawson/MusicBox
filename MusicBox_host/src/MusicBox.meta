@@ -217,6 +217,20 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[density]
+  standard_name = total_number_density
+  long_name = total number density
+  units = molecules/cm3
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[mbar]
+  standard_name = mean_molec_mass
+  long_name = mean molecular mass
+  units = g/mole
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [ errmsg ]
   standard_name = ccpp_error_message
   long_name = Error message for error handling in CCPP
