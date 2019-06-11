@@ -11,6 +11,21 @@
   type = integer
   units = count
   dimensions = ()
+[ Musicpver ]
+  standard_name = vertical_layer_dimension
+  units = count
+  type = integer
+  dimensions = ()
+[ Musicpverp ]
+  standard_name = vertical_level_dimension
+  type = integer
+  units = count
+  dimensions = ()
+[ nbox]
+  standard_name = horizontal_dimension
+  units = count
+  type = integer
+  dimensions = ()
 [ ntimes ]
   standard_name = number_of_model_times
   type = integer
@@ -69,7 +84,6 @@
   dimensions = (number_of_chemical_constituents)
   type = real
   kind = kind_phys
-  intent = out
 [relhum]
   standard_name = relative_humidity
   long_name = relative humidity
@@ -154,28 +168,28 @@
   dimensions = (vertical_layer_dimension)
   type = real
   kind = kind_phys
-[o2vmr]
+[o2vmrcol]
   standard_name = o2_vmr_col
   long_name = O2 volume mixing ratio column
   units = mole/mole
   dimensions = (vertical_layer_dimension)
   type = real
   kind = kind_phys
-[o3vmr]
+[o3vmrcol]
   standard_name = o3_vmr_col
   long_name = O3 volume mixing ratio column
   units = mole/mole
   dimensions = (vertical_layer_dimension)
   type = real
   kind = kind_phys
-[so2vmr]
+[so2vmrcol]
   standard_name = so2_vmr_col
   long_name = SO2 volume mixing ratio column
   units = mole/mole
   dimensions = (vertical_layer_dimension)
   type = real
   kind = kind_phys
-[no2vmr]
+[no2vmrcol]
   standard_name = no2_vmr_col
   long_name = NO2 volume mixing ratio column
   units = mole/mole
@@ -193,6 +207,13 @@
   standard_name = ozone_column_density
   long_name = total ozone column density
   units = DU
+  dimensions = ()
+  type = real
+  kind = kind_phys
+[dt]
+  standard_name = time_step_for_physics
+  long_name = time_step_for_physics
+  units = s
   dimensions = ()
   type = real
   kind = kind_phys

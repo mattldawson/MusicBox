@@ -34,6 +34,7 @@ subroutine MusicBox_sub()
   implicit none
 
     integer                         :: col_start, col_end
+    integer                         :: Musicpver, Musicpverp
     integer                         :: index
     character(len=128), allocatable :: part_names(:)
     character(len=512)              :: errmsg
@@ -47,8 +48,10 @@ subroutine MusicBox_sub()
   integer :: njRxt = 0      ! number of photochemical reactions
   integer :: ntimes = 0     ! number of time steps
 
-  integer ,parameter :: ncols = 1 ! number columns in domain
-  integer,parameter  :: nbox=1    ! Need to read this in from namelist and then allocate arrays
+  integer  :: ncols = 1 ! number columns in domain
+  integer,parameter  :: nbox_param=1    ! Need to read this in from namelist and then allocate arrays
+  
+  integer :: nbox
 
   
   integer            :: i,n
@@ -101,9 +104,9 @@ subroutine MusicBox_sub()
   character(len=120) :: env_conds_file = '../data/env_conditions.nc'
   character(len=120) :: outfile_name = 'test_output.nc'
   real, parameter :: NOT_SET = -huge(1.0)
-  real :: env_lat(nbox) = NOT_SET
-  real :: env_lon(nbox) = NOT_SET
-  real :: env_lev(nbox) = NOT_SET ! mbar
+  real :: env_lat(nbox_param) = NOT_SET
+  real :: env_lon(nbox_param) = NOT_SET
+  real :: env_lev(nbox_param) = NOT_SET ! mbar
   real :: user_begin_time = NOT_SET ! seconds
   real :: user_end_time = NOT_SET
   real :: user_dtime = NOT_SET
@@ -111,11 +114,15 @@ subroutine MusicBox_sub()
   character(len=*), parameter :: nml_options = '../MusicBox_options'
   character(len=120) :: jsonfile
 
+  integer :: ntuvRates
+
   ! read namelist run-time options
   namelist /options/ outfile_name, env_conds_file
   namelist /options/ env_lat, env_lon, env_lev
   namelist /options/ user_begin_time, user_end_time, user_dtime
   
+  nbox = nbox_param
+
   open(unit=10,file=nml_options)
   read(unit=10,nml=options)
   close(10)
@@ -138,13 +145,6 @@ subroutine MusicBox_sub()
   end if
 
 
-    ! Use the suite information to setup the run
-    call MusicBox_ccpp_physics_initialize('MusicBox_suite', ntimes, file_times, box_press, box_temp,       &
-        nSpecies, vmr, relhum, box_h2o,photo_lev,TimeStart,TimeEnd,njRxt,errmsg, errflg)
-    if (errflg /= 0) then
-      write(6, *) trim(errmsg)
-      stop
-    end if
 
 ! Remove this call when the CPF can allocate arrays 
 ! NOTE - It is called again in chemistry_driver_init which is where it will
@@ -217,24 +217,25 @@ subroutine MusicBox_sub()
   end if
 
 !  ntimes = 1+int((sim_end_time-sim_beg_time)/dt)
-  ntimes = 10
 
   do ibox=1,nbox
      colEnvConds(ibox)= environ_conditions_create( env_conds_file, lat=env_lat(ibox), lon=env_lon(ibox) )
   end do
   nlevels = colEnvConds(1)%nlevels()
+  Musicpver = nlevels
+  Musicpverp = nlevels +1
   photo_lev = theEnvConds(1)%levnum()
 
   allocate(alt(nlevels))
-  allocate(press_mid(nlevels))
-  allocate(press_int(nlevels))
-  allocate(temp(nlevels))
-  allocate(o2vmrcol(nlevels))
-  allocate(o3vmrcol(nlevels))
-  allocate(so2vmrcol(nlevels))
-  allocate(no2vmrcol(nlevels))
+  allocate(press_mid(Musicpver))
+  allocate(press_int(Musicpverp))
+  allocate(temp(Musicpver))
+  allocate(o2vmrcol(Musicpver))
+  allocate(o3vmrcol(Musicpver))
+  allocate(so2vmrcol(Musicpver))
+  allocate(no2vmrcol(Musicpver))
   ntuvRates=113
-  allocate(prates(nlevels,ntuvRates))
+  allocate(prates(Musicpver,ntuvRates))
 
   if (model_name == 'terminator') then
      allocate(wghts(nSpecies))
@@ -260,40 +261,30 @@ subroutine MusicBox_sub()
   enddo
   enddo
 
-
-    ! Initialize the timestep
-    call MusicBox_ccpp_physics_timestep_initial('MusicBox_suite', ntimes, file_times, box_press, box_temp,       &
-        nSpecies, vmr, relhum, box_h2o, photo_lev,TimeStart,TimeEnd,njRxt,errmsg, errflg)
+  TimeStart = 0._kind_phys
+  TimeEnd = TimeStart + dt
+  
+    ! Use the suite information to setup the run
+    call MusicBox_ccpp_physics_initialize('MusicBox_suite', Musicpver, Musicpverp, nbox, ntimes, ntuvRates, nkRxt,        &
+        njRxt, file_times, box_press, box_temp, nSpecies, vmr, relhum, box_h2o, photo_lev,        &
+        TimeStart, TimeEnd, nlevels, zenith, albedo, press_mid, press_int, alt, temp, o2vmrcol,      &
+        o3vmrcol, so2vmrcol, no2vmrcol, prates, o3totcol,dt, errmsg, errflg)
     if (errflg /= 0) then
       write(6, *) trim(errmsg)
       stop
     end if
 
-  TimeStart = 0._kind_phys
-  TimeEnd = TimeStart + dt
-  
-!init_loop: & ! ccpp requires a loop over columns
-!  do i = 1, ncols
-!      call ccpp_init( '../suites/'//trim(model_name)//'.xml', cdata(i), ierr)
-!
-!      if (ierr/=0) then
-!          write(*,'(a,i0,a)') 'An error occurred in ccpp_init for column ', i, '. Exiting...'
-!          stop
-!      end if
-!
-! ! use ccpp_fields.inc to call ccpp_field_add for all variables to be exposed to CCPP (this is
-! ! auto-generated from /src/ccpp/scripts/ccpp_prebuild.py - the script parses tables in MusicBox_type_defs.f90)
-! ! this requires column index i
-!#  include "ccpp_fields.inc"
-!
-!      !initialize each column's physics
-!      call ccpp_physics_init(cdata(i), ierr=ierr)
-!      if (ierr/=0) then
-!          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_init for column ', i, '. Exiting...'
-!          stop
-!      end if
-!  end do init_loop
+    ! Initialize the timestep
+    call MusicBox_ccpp_physics_timestep_initial('MusicBox_suite', Musicpver, Musicpverp, nbox, ntimes, ntuvRates, nkRxt,        &
+        njRxt, file_times, box_press, box_temp, nSpecies, vmr, relhum, box_h2o, photo_lev,        &
+        TimeStart, TimeEnd, nlevels, zenith, albedo, press_mid, press_int, alt, temp, o2vmrcol,      &
+        o3vmrcol, so2vmrcol, no2vmrcol, prates, o3totcol,dt, errmsg, errflg)
+    if (errflg /= 0) then
+      write(6, *) trim(errmsg)
+      stop
+    end if
 
+  ntimes = 10
   call relhum_mod_init()
 
 !-----------------------------------------------------------
@@ -327,8 +318,13 @@ time_loop: &
 !       call ccpp_physics_run(cdata(i), ierr=ierr)
      col_start=1
      col_end=1
-     call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, ntimes, file_times, box_press, box_temp, &
-        nSpecies, vmr, relhum, box_h2o, photo_lev,TimeStart,TimeEnd,njRxt,errmsg, errflg)
+!     call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, ntimes, file_times, box_press, box_temp, &
+!        nSpecies, vmr, relhum, box_h2o, photo_lev,TimeStart,TimeEnd,njRxt,errmsg, errflg)
+     call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, Musicpver, Musicpverp, nbox, ntimes,  &
+        ntuvRates, nkRxt, njRxt, file_times, box_press, box_temp, nSpecies, vmr, relhum,          &
+        box_h2o, photo_lev, TimeStart, TimeEnd, nlevels, zenith, albedo, press_mid, press_int,    &
+        alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, prates, o3totcol,dt, errmsg, errflg)
+
       if (errflg /= 0) then
         write(6, *) trim(errmsg)
         call ccpp_physics_suite_part_list('MusicBox_suite', part_names, errmsg, errflg)
@@ -365,11 +361,25 @@ time_loop: &
     end do
   end do time_loop
 
-    call MusicBox_ccpp_physics_timestep_final('MusicBox_suite',  ntimes, file_times, box_press, box_temp,       &
-        nSpecies, vmr, relhum, box_h2o,photo_lev,TimeStart,TimeEnd,njRxt,errmsg, errflg)
+!    call MusicBox_ccpp_physics_timestep_final('MusicBox_suite',  ntimes, file_times, box_press, box_temp,       &
+!        nSpecies, vmr, relhum, box_h2o,photo_lev,TimeStart,TimeEnd,njRxt,errmsg, errflg)
+   call MusicBox_ccpp_physics_timestep_final('MusicBox_suite', Musicpver, Musicpverp, nbox,       &
+        ntimes, ntuvRates, nkRxt, njRxt, file_times, box_press, box_temp, nSpecies, vmr, relhum,  &
+        box_h2o, photo_lev, TimeStart, TimeEnd, nlevels, zenith, albedo, press_mid, press_int,    &
+        alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, prates, o3totcol, dt, errmsg,        &
+        errflg)
 
-    call MusicBox_ccpp_physics_finalize('MusicBox_suite',  ntimes, file_times, box_press, box_temp,       &
-        nSpecies, vmr, relhum, box_h2o,photo_lev,TimeStart,TimeEnd,njRxt,errmsg, errflg)
+
+
+!    call MusicBox_ccpp_physics_finalize('MusicBox_suite',  ntimes, file_times, box_press, box_temp,       &
+!        nSpecies, vmr, relhum, box_h2o,photo_lev,TimeStart,TimeEnd,njRxt,errmsg, errflg)
+   call MusicBox_ccpp_physics_finalize('MusicBox_suite', Musicpver, Musicpverp, nbox, ntimes,     &
+        ntuvRates, nkRxt, njRxt, file_times, box_press, box_temp, nSpecies, vmr, relhum,          &
+        box_h2o, photo_lev, TimeStart, TimeEnd, nlevels, zenith, albedo, press_mid, press_int,    &
+        alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, prates, o3totcol, dt, errmsg,        &
+        errflg)
+
+
     if (errflg /= 0) then
       write(6, *) trim(errmsg)
       write(6,'(a)') 'An error occurred in ccpp_timestep_final, Exiting...'

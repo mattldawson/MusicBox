@@ -5,7 +5,6 @@
     <scheme>prepare_chemistry</scheme>
     <scheme>get_environ_cond</scheme>
     <scheme>mass_quantities_util</scheme>
-    <scheme>hello_scheme</scheme>
     <scheme>k_rateConst</scheme>
     <scheme>tuv_photolysis</scheme>
     <scheme>photolysis_interstitial</scheme>
