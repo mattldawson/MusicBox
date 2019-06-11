@@ -16,6 +16,21 @@
   type = integer
   units = count
   dimensions = ()
+[ ntuvRates ]
+  standard_name = number_of_tuv_jrates
+  type = integer
+  units = count
+  dimensions = ()
+[nkRxt]
+  standard_name=number_of_kinetics_reactions
+  units = count
+  dimensions = ()
+  type = integer
+[njRxt]
+  standard_name=number_of_photolysis_reactions
+  units = count
+  dimensions = ()
+  type = integer
 [ file_times ]
   standard_name = file_times
   units = seconds

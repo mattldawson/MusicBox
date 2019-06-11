@@ -41,6 +41,16 @@ set(NONCCPP_FILES
     ../../MICM_chemistry/src/json_lib/json_parameters.F90
     ../../MICM_chemistry/src/json_lib/json_string_utilities.F90
     ../../MICM_chemistry/src/json_lib/json_value_module.F90
+    ../../MICM_chemistry/src/tuv/numer.F90
+    ../../MICM_chemistry/src/tuv/rad_trans.F90
+    ../../MICM_chemistry/src/tuv/tuv_subs.F90
+    ../../MICM_chemistry/src/tuv/la_srb_mod.F90
+    ../../MICM_chemistry/src/tuv/module_prates_tuv.F90
+    ../../MICM_chemistry/src/tuv/module_xsections.F90
+    ../../MICM_chemistry/src/tuv/params_mod.F90
+    ../../MICM_chemistry/src/tuv/tuv_error_mod.F90
+    ../../MICM_chemistry/src/tuv/module_rxn.F90
+    ../../MICM_chemistry/src/tuv/module_params.F90
 )
 
 #-----------------------------------------------------------------------------
