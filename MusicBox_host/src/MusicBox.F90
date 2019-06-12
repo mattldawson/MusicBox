@@ -153,7 +153,7 @@ subroutine MusicBox_sub()
 
   model_name = 'Chapman_v3_1547831703456'
 
-  jsonfile = '../../../MICM_chemistry/generated/'//trim(model_name)//'/molec_info.json'
+  jsonfile = '../../MICM_chemistry/generated/'//trim(model_name)//'/molec_info.json'
   call json_loader_read( jsonfile, cnst_info, nSpecies, nkRxt, njRxt )
 
 
@@ -284,7 +284,9 @@ subroutine MusicBox_sub()
       stop
     end if
 
-  ntimes = 10
+! For testing short runs   
+!   ntimes = 10
+
   call relhum_mod_init()
 
 !-----------------------------------------------------------
