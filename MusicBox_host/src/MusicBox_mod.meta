@@ -1,0 +1,13 @@
+[ccpp-arg-table]
+  name = MusicBox_mod
+  type = module
+[ temp_midpoints ]
+  standard_name = potential_temperature
+  units = K
+  dimensions = ()
+  type = real | kind = kind_phys
+[ temp_interfaces ]
+  standard_name = potential_temperature_at_interface
+  units = K
+  dimensions = ()
+  type = real | kind = kind_phys

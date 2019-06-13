@@ -266,7 +266,7 @@ subroutine MusicBox_sub()
   
     ! Use the suite information to setup the run
     call MusicBox_ccpp_physics_initialize('MusicBox_suite', Musicpver, Musicpverp, nbox, ntimes, ntuvRates, nkRxt,        &
-        njRxt, file_times, box_press, box_temp, nSpecies, vmr, relhum, box_h2o, photo_lev,        &
+        njRxt, box_temp, nSpecies, vmr, relhum, box_h2o, photo_lev,        &
         TimeStart, TimeEnd, nlevels, zenith, albedo, press_mid, press_int, alt, temp, o2vmrcol,      &
         o3vmrcol, so2vmrcol, no2vmrcol, prates, o3totcol,dt, density, mbar, errmsg, errflg)
     if (errflg /= 0) then
@@ -276,7 +276,7 @@ subroutine MusicBox_sub()
 
     ! Initialize the timestep
     call MusicBox_ccpp_physics_timestep_initial('MusicBox_suite', Musicpver, Musicpverp, nbox, ntimes, ntuvRates, nkRxt,        &
-        njRxt, file_times, box_press, box_temp, nSpecies, vmr, relhum, box_h2o, photo_lev,        &
+        njRxt, box_temp, nSpecies, vmr, relhum, box_h2o, photo_lev,        &
         TimeStart, TimeEnd, nlevels, zenith, albedo, press_mid, press_int, alt, temp, o2vmrcol,      &
         o3vmrcol, so2vmrcol, no2vmrcol, prates, o3totcol,dt, density, mbar, errmsg, errflg)
     if (errflg /= 0) then
@@ -323,7 +323,7 @@ time_loop: &
 !     call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, ntimes, file_times, box_press, box_temp, &
 !        nSpecies, vmr, relhum, box_h2o, photo_lev,TimeStart,TimeEnd,njRxt,errmsg, errflg)
      call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, Musicpver, Musicpverp, nbox, ntimes,  &
-        ntuvRates, nkRxt, njRxt, file_times, box_press, box_temp, nSpecies, vmr, relhum,          &
+        ntuvRates, nkRxt, njRxt, box_temp, nSpecies, vmr, relhum,          &
         box_h2o, photo_lev, TimeStart, TimeEnd, nlevels, zenith, albedo, press_mid, press_int,    &
         alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, prates, o3totcol,dt,density, mbar,  errmsg, errflg)
 
@@ -339,7 +339,7 @@ time_loop: &
 
        vmrboxes(:,ibox) = vmr(:)
        write(*,'(2(a,f6.2))') 'solar zenith (degrees): ',zenith,' ...total ozone (DU): ', o3totcol
-       write(*,'(a, e12.4, f6.2, f6.2)') ' total density, pressure, temperature :', density, box_press, box_temp
+       write(*,'(a, e12.4, f6.2, f6.2)') ' total density, pressure, temperature :', density, box_press, box_press, box_temp
        call outfile%out( 'O3totcol', o3totcol )
        call outfile%out( 'Density', density )
        call outfile%out( 'Mbar', mbar )
@@ -366,7 +366,7 @@ time_loop: &
 !    call MusicBox_ccpp_physics_timestep_final('MusicBox_suite',  ntimes, file_times, box_press, box_temp,       &
 !        nSpecies, vmr, relhum, box_h2o,photo_lev,TimeStart,TimeEnd,njRxt,errmsg, errflg)
    call MusicBox_ccpp_physics_timestep_final('MusicBox_suite', Musicpver, Musicpverp, nbox,       &
-        ntimes, ntuvRates, nkRxt, njRxt, file_times, box_press, box_temp, nSpecies, vmr, relhum,  &
+        ntimes, ntuvRates, nkRxt, njRxt, box_temp, nSpecies, vmr, relhum,  &
         box_h2o, photo_lev, TimeStart, TimeEnd, nlevels, zenith, albedo, press_mid, press_int,    &
         alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, prates, o3totcol, dt, density, mbar, errmsg,        &
         errflg)
@@ -376,7 +376,7 @@ time_loop: &
 !    call MusicBox_ccpp_physics_finalize('MusicBox_suite',  ntimes, file_times, box_press, box_temp,       &
 !        nSpecies, vmr, relhum, box_h2o,photo_lev,TimeStart,TimeEnd,njRxt,errmsg, errflg)
    call MusicBox_ccpp_physics_finalize('MusicBox_suite', Musicpver, Musicpverp, nbox, ntimes,     &
-        ntuvRates, nkRxt, njRxt, file_times, box_press, box_temp, nSpecies, vmr, relhum,          &
+        ntuvRates, nkRxt, njRxt, box_temp, nSpecies, vmr, relhum,          &
         box_h2o, photo_lev, TimeStart, TimeEnd, nlevels, zenith, albedo, press_mid, press_int,    &
         alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, prates, o3totcol, dt, density, mbar, errmsg,        &
         errflg)
