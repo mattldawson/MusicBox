@@ -3,10 +3,8 @@ module MusicBox_main
 !  use ccpp_kinds, only: r8 => kind_phys
   use ccpp_kinds, only: kind_phys
 
-use const_props_mod,        only: const_props_type
 use json_loader,            only: json_loader_read
 use environ_conditions_mod, only: environ_conditions_create, environ_conditions
-!!!! use prepare_chemistry_mod,  only: prepare_chemistry_init
 use output_file,            only: output_file_type
 use relhum_mod,             only: relhum_mod_init, relhum_mod_run, relhum_mod_final
 use MusicBox_mod,           only: box_press, box_temp, relhum, box_h2o, photo_lev, nspecies, vmr
@@ -15,6 +13,7 @@ use MusicBox_mod,           only: nkRxt, njRxt, file_times, TimeStart, TimeEnd
 use MusicBox_mod,           only: nlevels, zenith, albedo, press_mid, press_int
 use MusicBox_mod,           only: alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol
 use MusicBox_mod,           only: prates, o3totcol, dt, density, mbar
+use MusicBox_mod,           only: cnst_info
 
 
 implicit none
@@ -62,14 +61,10 @@ subroutine MusicBox_sub()
   real(kind_phys) :: Time
   
 
-!  type :: environ_conditions_array_type
-!     type(environ_conditions) :: EnvCond
-!  end type
-
 ! declare the types
   type(environ_conditions),allocatable :: theEnvConds(:)
   type(environ_conditions),allocatable :: colEnvConds(:) 
-  type(const_props_type), allocatable :: cnst_info(:)
+!  type(const_props_type), allocatable :: cnst_info(:)
 
   character(len=16)  :: cnst_name
   character(len=255) :: model_name
@@ -122,12 +117,8 @@ subroutine MusicBox_sub()
     stop
   end if
 
-
-
-! Remove this call when the CPF can allocate arrays 
-! NOTE - It is called again in chemistry_driver_init which is where it will
-! permamently reside
-!!!!!!!  call prepare_chemistry_init(cnst_info, model_name, nSpecies, nkRxt, njRxt)
+  !---------------------------
+  ! Read in the molecular information
 
   model_name = 'Chapman_v3_1547831703456'
 
@@ -160,8 +151,8 @@ subroutine MusicBox_sub()
 !----------------------------------------
 ! These allocates will go away once the CPF is able to allocate arrays
 
-  allocate(k_rateConst(nkRxt))
-  allocate(j_rateConst(njRxt))
+!  allocate(k_rateConst(nkRxt))
+!  allocate(j_rateConst(njRxt))
   
   allocate(vmrboxes(nSpecies,nbox))
   allocate(vmr(nSpecies))
@@ -289,7 +280,6 @@ time_loop: &
        call outfile%out( 'RelHum', relhum )
        call outfile%out( 'Zenith', zenith )
        Time = TimeStart
-!       call ccpp_physics_run(cdata(i), ierr=ierr)
      col_start=1
      col_end=1
      call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, errmsg, errflg)
@@ -343,11 +333,8 @@ time_loop: &
 
   call outfile%close()
 
-  deallocate(k_rateConst)
-  deallocate(j_rateConst)
   deallocate(vmr)
   deallocate(vmrboxes)
-!  deallocate(cdata)
   deallocate(alt)
   deallocate(press_mid)
   deallocate(press_int)

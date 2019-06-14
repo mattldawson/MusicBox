@@ -1,6 +1,7 @@
 module MusicBox_mod
 
-   use ccpp_kinds, only: kind_phys
+   use ccpp_kinds,        only: kind_phys
+   use const_props_mod,   only: const_props_type
 
    implicit none
    public
@@ -40,5 +41,6 @@ module MusicBox_mod
    real(kind_phys), allocatable :: file_times(:)
    real(kind_phys), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
 
+   type(const_props_type), allocatable :: cnst_info(:)
 
 end module MusicBox_mod
