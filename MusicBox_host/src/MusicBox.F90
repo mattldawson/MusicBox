@@ -9,6 +9,13 @@ use environ_conditions_mod, only: environ_conditions_create, environ_conditions
 !!!! use prepare_chemistry_mod,  only: prepare_chemistry_init
 use output_file,            only: output_file_type
 use relhum_mod,             only: relhum_mod_init, relhum_mod_run, relhum_mod_final
+use MusicBox_mod,           only: box_press, box_temp, relhum, box_h2o, photo_lev, nspecies, vmr
+use MusicBox_mod,           only: Musicpver, Musicpverp, nbox, ntimes, ntuvRates
+use MusicBox_mod,           only: nkRxt, njRxt, file_times, TimeStart, TimeEnd
+use MusicBox_mod,           only: nlevels, zenith, albedo, press_mid, press_int
+use MusicBox_mod,           only: alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol
+use MusicBox_mod,           only: prates, o3totcol, dt, density, mbar
+
 
 implicit none
 
@@ -34,35 +41,25 @@ subroutine MusicBox_sub()
   implicit none
 
     integer                         :: col_start, col_end
-    integer                         :: Musicpver, Musicpverp
     integer                         :: index
     character(len=128), allocatable :: part_names(:)
     character(len=512)              :: errmsg
     integer                         :: errflg
 
-!-----------------------------------------------------------
-!  these dimension parameters will be set by the cafe/configurator
-!-----------------------------------------------------------
-  integer :: nSpecies = 0   ! number prognostic constituents
-  integer :: nkRxt = 0      ! number gas phase reactions
-  integer :: njRxt = 0      ! number of photochemical reactions
-  integer :: ntimes = 0     ! number of time steps
 
   integer  :: ncols = 1 ! number columns in domain
   integer,parameter  :: nbox_param=1    ! Need to read this in from namelist and then allocate arrays
   
-  integer :: nbox
 
   
   integer            :: i,n
   integer            :: ierr
   real(kind=kind_phys), allocatable :: j_rateConst(:)  ! host model provides photolysis rates for now 
   real(kind=kind_phys), allocatable :: k_rateConst(:)  ! host model provides photolysis rates for now
-  real(kind=kind_phys), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
   real(kind=kind_phys), allocatable :: vmrboxes(:,:)   ! vmr for all boxes
   real(kind=kind_phys), allocatable :: wghts(:)
 
-  real(kind_phys) :: TimeStart, TimeEnd, Time, dt
+  real(kind_phys) :: Time
   
 
 !  type :: environ_conditions_array_type
@@ -79,23 +76,6 @@ subroutine MusicBox_sub()
 
   type(output_file_type) :: outfile
 
-  integer :: photo_lev
-  integer :: nlevels
-  real(kind_phys) :: zenith
-  real(kind_phys) :: albedo
-  real(kind_phys) :: o3totcol
-  real(kind_phys), allocatable :: alt(:)
-  real(kind_phys), allocatable :: press_mid(:)
-  real(kind_phys), allocatable :: press_int(:)
-  real(kind_phys), allocatable :: temp(:)
-  real(kind_phys), allocatable :: o2vmrcol(:)
-  real(kind_phys), allocatable :: o3vmrcol(:)
-  real(kind_phys), allocatable :: so2vmrcol(:)
-  real(kind_phys), allocatable :: no2vmrcol(:)
-  real(kind_phys), allocatable :: prates(:,:)
-  real(kind_phys), allocatable :: file_times(:)
-  real(kind_phys) :: relhum ! relative humidity
-  real(kind_phys) :: density, mbar, box_temp, box_press, box_h2o
   integer :: file_ntimes
   integer :: ibox
   real(kind_phys) :: sim_beg_time, sim_end_time
@@ -113,8 +93,6 @@ subroutine MusicBox_sub()
   
   character(len=*), parameter :: nml_options = '../MusicBox_options'
   character(len=120) :: jsonfile
-
-  integer :: ntuvRates
 
   ! read namelist run-time options
   namelist /options/ outfile_name, env_conds_file
@@ -265,20 +243,14 @@ subroutine MusicBox_sub()
   TimeEnd = TimeStart + dt
   
     ! Use the suite information to setup the run
-    call MusicBox_ccpp_physics_initialize('MusicBox_suite', Musicpver, Musicpverp, nbox, ntimes, ntuvRates, nkRxt,        &
-        njRxt, box_temp, nSpecies, vmr, relhum, box_h2o, photo_lev,        &
-        TimeStart, TimeEnd, nlevels, zenith, albedo, press_mid, press_int, alt, temp, o2vmrcol,      &
-        o3vmrcol, so2vmrcol, no2vmrcol, prates, o3totcol,dt, density, mbar, errmsg, errflg)
+    call MusicBox_ccpp_physics_initialize('MusicBox_suite', errmsg, errflg)
     if (errflg /= 0) then
       write(6, *) trim(errmsg)
       stop
     end if
 
     ! Initialize the timestep
-    call MusicBox_ccpp_physics_timestep_initial('MusicBox_suite', Musicpver, Musicpverp, nbox, ntimes, ntuvRates, nkRxt,        &
-        njRxt, box_temp, nSpecies, vmr, relhum, box_h2o, photo_lev,        &
-        TimeStart, TimeEnd, nlevels, zenith, albedo, press_mid, press_int, alt, temp, o2vmrcol,      &
-        o3vmrcol, so2vmrcol, no2vmrcol, prates, o3totcol,dt, density, mbar, errmsg, errflg)
+    call MusicBox_ccpp_physics_timestep_initial('MusicBox_suite', errmsg, errflg)
     if (errflg /= 0) then
       write(6, *) trim(errmsg)
       stop
@@ -320,12 +292,7 @@ time_loop: &
 !       call ccpp_physics_run(cdata(i), ierr=ierr)
      col_start=1
      col_end=1
-!     call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, ntimes, file_times, box_press, box_temp, &
-!        nSpecies, vmr, relhum, box_h2o, photo_lev,TimeStart,TimeEnd,njRxt,errmsg, errflg)
-     call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, Musicpver, Musicpverp, nbox, ntimes,  &
-        ntuvRates, nkRxt, njRxt, box_temp, nSpecies, vmr, relhum,          &
-        box_h2o, photo_lev, TimeStart, TimeEnd, nlevels, zenith, albedo, press_mid, press_int,    &
-        alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, prates, o3totcol,dt,density, mbar,  errmsg, errflg)
+     call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, errmsg, errflg)
 
       if (errflg /= 0) then
         write(6, *) trim(errmsg)
@@ -339,7 +306,7 @@ time_loop: &
 
        vmrboxes(:,ibox) = vmr(:)
        write(*,'(2(a,f6.2))') 'solar zenith (degrees): ',zenith,' ...total ozone (DU): ', o3totcol
-       write(*,'(a, e12.4, f6.2, f6.2)') ' total density, pressure, temperature :', density, box_press, box_press, box_temp
+       write(*,'(a, e12.4, f6.2, f6.2)') ' total density, pressure, temperature :', density, box_press, box_temp
        call outfile%out( 'O3totcol', o3totcol )
        call outfile%out( 'Density', density )
        call outfile%out( 'Mbar', mbar )
@@ -363,23 +330,9 @@ time_loop: &
     end do
   end do time_loop
 
-!    call MusicBox_ccpp_physics_timestep_final('MusicBox_suite',  ntimes, file_times, box_press, box_temp,       &
-!        nSpecies, vmr, relhum, box_h2o,photo_lev,TimeStart,TimeEnd,njRxt,errmsg, errflg)
-   call MusicBox_ccpp_physics_timestep_final('MusicBox_suite', Musicpver, Musicpverp, nbox,       &
-        ntimes, ntuvRates, nkRxt, njRxt, box_temp, nSpecies, vmr, relhum,  &
-        box_h2o, photo_lev, TimeStart, TimeEnd, nlevels, zenith, albedo, press_mid, press_int,    &
-        alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, prates, o3totcol, dt, density, mbar, errmsg,        &
-        errflg)
+   call MusicBox_ccpp_physics_timestep_final('MusicBox_suite', errmsg, errflg)
 
-
-
-!    call MusicBox_ccpp_physics_finalize('MusicBox_suite',  ntimes, file_times, box_press, box_temp,       &
-!        nSpecies, vmr, relhum, box_h2o,photo_lev,TimeStart,TimeEnd,njRxt,errmsg, errflg)
-   call MusicBox_ccpp_physics_finalize('MusicBox_suite', Musicpver, Musicpverp, nbox, ntimes,     &
-        ntuvRates, nkRxt, njRxt, box_temp, nSpecies, vmr, relhum,          &
-        box_h2o, photo_lev, TimeStart, TimeEnd, nlevels, zenith, albedo, press_mid, press_int,    &
-        alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, prates, o3totcol, dt, density, mbar, errmsg,        &
-        errflg)
+   call MusicBox_ccpp_physics_finalize('MusicBox_suite', errmsg, errflg)
 
 
     if (errflg /= 0) then

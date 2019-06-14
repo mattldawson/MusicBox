@@ -11,3 +11,10 @@
   units = K
   dimensions = ()
   type = real | kind = kind_phys
+[box_press] 
+  standard_name = pressure
+  long_name = ambient pressure
+  units = Pa
+  dimensions = ()
+  type = real
+  kind = kind_phys

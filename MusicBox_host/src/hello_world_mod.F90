@@ -11,6 +11,7 @@ module hello_world_mod
    !!
    real(kind_phys)    :: temp_midpoints
    real(kind_phys)    :: temp_interfaces
+   real(kind_phys)    :: box_press
 
    public :: init_temp
    public :: compare_temp
