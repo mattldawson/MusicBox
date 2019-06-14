@@ -36,6 +36,9 @@ module MusicBox_var_defs
 !! | press_int  | layer_interface_pressure                         | layer interface pressure                | Pa        |    1 | real        | kind_phys | in     | F        |
 !! | alt        | layer_altitude                                   | mid-point layer altitude                | km        |    1 | real        | kind_phys | in     | F        |
 !! | temp       | layer_temperature                                | mid-point layer temperature             | K         |    1 | real        | kind_phys | in     | F        |
+!! | dto2       | O2_optical_depth                                 | optical depth due to O2 absorption      | cm        |    2 | real        | kind_phys | in     | F        |
+!! | srb_o2_xs  | O2_xsect                                         | O2 effective cross section              | cm2       |    2 | real        | kind_phys | in     | F        |
+!! | radfld     | actinic_photon_fluxes                            | actinic photon fluxes                   | cm-2 sec-1|    2 | real        | kind_phys | out    | F        |
 !! | o2vmrcol   | O2_vmr_col                                       | O2 volume mixing ratio column           | mole/mole |    1 | real        | kind_phys | in     | F        |
 !! | o3vmrcol   | O3_vmr_col                                       | O3 volume mixing ratio column           | mole/mole |    1 | real        | kind_phys | in     | F        |
 !! | so2vmrcol  | SO2_vmr_col                                      | SO2 volume mixing ratio column          | mole/mole |    1 | real        | kind_phys | in     | F        |
@@ -48,8 +51,9 @@ module MusicBox_var_defs
 !! | box_press  | pressure                                         | ambient pressure                        | Pa        | 0    | real        | kind_phys | in     | F        |
 !! | box_temp   | temperature                                      | ambient temperature                     | K         | 0    | real        | kind_phys | in     | F        |
 !! | box_h2o    | water_vapor                                      | water vapor                             | mole/mole | 0    | real        | kind_phys | in     | F        |
-!! | density    | total_number_density                             | total number density                | molecules/cm3 | 0    | real        | kind_phys | out    | F        |
+!! | density    | total_number_density                             | total number density                    | molecules/cm3 | 0| real        | kind_phys | out    | F        |
 !! | mbar       | mean_molec_mass                                  | mean molecular mass                     | g/mole    | 0    | real        | kind_phys | out    | F        |
+!! | r8         | phys_real_kind                                   | physics real kind                       | none      |    0 | integer     |           | in     | F        |
 !!
 
 end module MusicBox_var_defs

@@ -4,14 +4,10 @@
     <subcycle loop="1">
       <scheme>mass_quantities_util</scheme>
       <scheme>k_rateConst</scheme>
-      <scheme>tuv_photolysis</scheme>
-      <scheme>photolysis_interstitial</scheme>
       <scheme>chemistry_driver_ros</scheme>
     </subcycle>
   </group>
   <finalize>mass_quantities_util</finalize>
   <finalize>k_rateConst</finalize>
-  <finalize>tuv_photolysis</finalize>
-  <finalize>photolysis_interstitial</finalize>
   <finalize>chemistry_driver_ros</finalize>
 </suite>

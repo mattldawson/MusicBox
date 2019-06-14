@@ -22,6 +22,7 @@ subroutine MusicBox_main_sub()
                ccpp_field_add
 
   use :: iso_c_binding, only: c_loc
+  use tuv_photolysis,   only: tuv_photolysis_readnl, tuv_n_phot, tuv_n_wavelen
 
 #include "ccpp_modules.inc"
 
@@ -72,6 +73,9 @@ subroutine MusicBox_main_sub()
   real(r8), allocatable :: so2vmrcol(:)
   real(r8), allocatable :: no2vmrcol(:)
   real(r8), allocatable :: prates(:,:)
+  real(r8), allocatable :: dto2(:,:)
+  real(r8), allocatable :: radfld(:,:)
+  real(r8), allocatable :: srb_o2_xs(:,:)
   real(r8), allocatable :: file_times(:)
   real(r8) :: relhum ! relative humidity
   real(r8) :: density, mbar, box_temp, box_press, box_h2o
@@ -90,6 +94,7 @@ subroutine MusicBox_main_sub()
   real :: user_dtime = NOT_SET
   
   character(len=*), parameter :: nml_options = '../MusicBox_options'
+  character(len=*), parameter :: phot_options = '../Photolysis_options'
   ! read namelist run-time options
   namelist /options/ outfile_name, env_conds_file
   namelist /options/ env_lat, env_lon, env_lev
@@ -114,6 +119,11 @@ subroutine MusicBox_main_sub()
       write(*,*) 'Invalid namelist setting: env_lev = ',env_lev
      write(*,*) 'Must be set to a positive pressure level (hPa)'
     stop
+  end if
+
+  if (model_name == 'terminator') then
+     ! CPF should call this
+     call tuv_photolysis_readnl(phot_options)
   end if
 
 ! Remove this call when the CPF can allocate arrays 
@@ -190,11 +200,14 @@ subroutine MusicBox_main_sub()
   allocate(o3vmrcol(nlevels))
   allocate(so2vmrcol(nlevels))
   allocate(no2vmrcol(nlevels))
-  allocate(prates(nlevels,113))
 
   if (model_name == 'terminator') then
      allocate(wghts(nSpecies))
      wghts(:) = 1._r8
+
+     allocate(srb_o2_xs(tuv_n_wavelen,nlevels), dto2(nlevels-1,tuv_n_wavelen))
+     allocate(radfld(tuv_n_wavelen,nlevels))
+     allocate(prates(nlevels, tuv_n_phot ) )
   endif
 
   do n = 1,nSpecies
@@ -269,8 +282,7 @@ time_loop: &
        call outfile%out( 'Zenith', zenith )
        Time = TimeStart
        call ccpp_physics_run(cdata(i), ierr=ierr)
-       write(*,'(2(a,f6.2))') 'solar zenith (degrees): ',zenith,' ...total ozone (DU): ', o3totcol
-       write(*,'(a, e12.4, f6.2, f6.2)') ' total density, pressure, temperature :', density, box_press, box_temp
+       write(*,'(a, e12.4, f10.2, f10.2)') ' total density, pressure, temperature :', density, box_press, box_temp
        call outfile%out( 'O3totcol', o3totcol )
        call outfile%out( 'Density', density )
        call outfile%out( 'Mbar', mbar )
@@ -320,7 +332,12 @@ finis_loop: &
   deallocate(o3vmrcol)
   deallocate(so2vmrcol)
   deallocate(no2vmrcol)
-  deallocate(prates)
+  if (model_name == 'terminator') then
+     deallocate(prates)
+     deallocate(srb_o2_xs)
+     deallocate(dto2)
+     deallocate(radfld)
+  end if
   if (allocated(wghts)) deallocate(wghts)
   if (allocated(file_times)) deallocate(file_times)
 
