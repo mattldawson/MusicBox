@@ -121,16 +121,15 @@ subroutine MusicBox_main_sub()
     stop
   end if
 
-  if (model_name == 'terminator') then
-     ! CPF should call this
-     call tuv_photolysis_readnl(phot_options)
-  end if
-
 ! Remove this call when the CPF can allocate arrays 
 ! NOTE - It is called again in chemistry_driver_init which is where it will
 ! permamently reside
-
   call prepare_chemistry_init(cnst_info, model_name, nSpecies, nkRxt, njRxt)
+
+  if (model_name /= '3component') then
+     ! CPF should call this
+     call tuv_photolysis_readnl(phot_options)
+  end if
     
   write(*,*) '*******************************************************'
   write(*,*) '************** model = '//trim(model_name)//' ***************'
@@ -201,7 +200,7 @@ subroutine MusicBox_main_sub()
   allocate(so2vmrcol(nlevels))
   allocate(no2vmrcol(nlevels))
 
-  if (model_name == 'terminator') then
+  if (model_name /= '3component') then
      allocate(wghts(nSpecies))
      wghts(:) = 1._r8
 
@@ -332,12 +331,10 @@ finis_loop: &
   deallocate(o3vmrcol)
   deallocate(so2vmrcol)
   deallocate(no2vmrcol)
-  if (model_name == 'terminator') then
-     deallocate(prates)
-     deallocate(srb_o2_xs)
-     deallocate(dto2)
-     deallocate(radfld)
-  end if
+  if(allocated(prates)) deallocate(prates)
+  if(allocated(srb_o2_xs)) deallocate(srb_o2_xs)
+  if(allocated(dto2)) deallocate(dto2)
+  if(allocated(radfld)) deallocate(radfld)
   if (allocated(wghts)) deallocate(wghts)
   if (allocated(file_times)) deallocate(file_times)
 
