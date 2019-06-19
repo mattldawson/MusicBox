@@ -34,7 +34,7 @@ module MusicBox_var_defs
 !! | albedo     | surface_albedo                                   | surface albedo                          | none      |    0 | real        | kind_phys | in     | F        |
 !! | press_mid  | layer_pressure                                   | mid-point layer pressure                | Pa        |    1 | real        | kind_phys | in     | F        |
 !! | press_int  | layer_interface_pressure                         | layer interface pressure                | Pa        |    1 | real        | kind_phys | in     | F        |
-!! | alt        | layer_altitude                                   | mid-point layer altitude                | km        |    1 | real        | kind_phys | in     | F        |
+!! | alt        | layer_altitude                                   | mid-point layer altitude                | m         |    1 | real        | kind_phys | in     | F        |
 !! | temp       | layer_temperature                                | mid-point layer temperature             | K         |    1 | real        | kind_phys | in     | F        |
 !! | dto2       | O2_optical_depth                                 | optical depth due to O2 absorption      | cm        |    2 | real        | kind_phys | in     | F        |
 !! | srb_o2_xs  | O2_xsect                                         | O2 effective cross section              | cm2       |    2 | real        | kind_phys | in     | F        |

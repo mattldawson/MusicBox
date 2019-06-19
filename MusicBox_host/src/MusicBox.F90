@@ -63,7 +63,6 @@ subroutine MusicBox_main_sub()
   integer :: nlevels
   real(r8) :: zenith
   real(r8) :: albedo
-  real(r8) :: o3totcol
   real(r8), allocatable :: alt(:)
   real(r8), allocatable :: press_mid(:)
   real(r8), allocatable :: press_int(:)
@@ -138,7 +137,6 @@ subroutine MusicBox_main_sub()
   call outfile%create(outfile_name)
   call outfile%add(cnst_info)
   call outfile%add('Zenith','solar zenith angle','degrees')
-  call outfile%add('O3totcol','integrated ozone column (dobson units)','DU')
   call outfile%add('Density','total number density','molecules/cm3')
   call outfile%add('Mbar','mean molar mass','g/mole')
   if (model_name == 'terminator') then
@@ -282,7 +280,6 @@ time_loop: &
        Time = TimeStart
        call ccpp_physics_run(cdata(i), ierr=ierr)
        write(*,'(a, e12.4, f10.2, f10.2)') ' total density, pressure, temperature :', density, box_press, box_temp
-       call outfile%out( 'O3totcol', o3totcol )
        call outfile%out( 'Density', density )
        call outfile%out( 'Mbar', mbar )
        if (ierr/=0) then
