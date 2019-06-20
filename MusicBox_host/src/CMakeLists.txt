@@ -41,16 +41,17 @@ set(NONCCPP_FILES
     ../../MICM_chemistry/src/json_lib/json_parameters.F90
     ../../MICM_chemistry/src/json_lib/json_string_utilities.F90
     ../../MICM_chemistry/src/json_lib/json_value_module.F90
-    ../../MICM_chemistry/src/tuv/numer.F90
-    ../../MICM_chemistry/src/tuv/rad_trans.F90
-    ../../MICM_chemistry/src/tuv/tuv_subs.F90
-    ../../MICM_chemistry/src/tuv/la_srb_mod.F90
-    ../../MICM_chemistry/src/tuv/module_prates_tuv.F90
-    ../../MICM_chemistry/src/tuv/module_xsections.F90
-    ../../MICM_chemistry/src/tuv/params_mod.F90
-    ../../MICM_chemistry/src/tuv/tuv_error_mod.F90
-    ../../MICM_chemistry/src/tuv/module_rxn.F90
-    ../../MICM_chemistry/src/tuv/module_params.F90
+    ../../MICM_chemistry/src/tuv/oxygen_xsect/la_srb_mod.F90
+    ../../MICM_chemistry/src/tuv/photo_rates/module_prates_tuv.F90
+    ../../MICM_chemistry/src/tuv/photo_rates/module_rxn.F90
+    ../../MICM_chemistry/src/tuv/rad_xfer/rad_abs_xsect.F90
+    ../../MICM_chemistry/src/tuv/rad_xfer/rad_trans.F90
+    ../../MICM_chemistry/src/tuv/rad_xfer/tuv_subs.F90
+    ../../MICM_chemistry/src/tuv/share/numer.F90
+    ../../MICM_chemistry/src/tuv/share/module_xsections.F90
+    ../../MICM_chemistry/src/tuv/share/params_mod.F90
+    ../../MICM_chemistry/src/tuv/share/phot_util_mod.F90
+    ../../MICM_chemistry/src/tuv/share/phot_kind_mod.F90
 )
 
 #-----------------------------------------------------------------------------

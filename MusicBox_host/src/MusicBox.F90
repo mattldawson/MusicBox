@@ -12,7 +12,7 @@ use MusicBox_mod,           only: Musicpver, Musicpverp, nbox, ntimes, ntuvRates
 use MusicBox_mod,           only: nkRxt, njRxt, file_times, TimeStart, TimeEnd
 use MusicBox_mod,           only: nlevels, zenith, albedo, press_mid, press_int
 use MusicBox_mod,           only: alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol
-use MusicBox_mod,           only: prates, o3totcol, dt, density, mbar
+use MusicBox_mod,           only: prates, dt, density, mbar
 use MusicBox_mod,           only: cnst_info
 
 
@@ -134,7 +134,6 @@ subroutine MusicBox_sub()
   call outfile%create(outfile_name)
   call outfile%add(cnst_info)
   call outfile%add('Zenith','solar zenith angle','degrees')
-  call outfile%add('O3totcol','integrated ozone column (dobson units)','DU')
   call outfile%add('Density','total number density','molecules/cm3')
   call outfile%add('Mbar','mean molar mass','g/mole')
   if (model_name == 'terminator') then
@@ -295,9 +294,7 @@ time_loop: &
       end if
 
        vmrboxes(:,ibox) = vmr(:)
-       write(*,'(2(a,f6.2))') 'solar zenith (degrees): ',zenith,' ...total ozone (DU): ', o3totcol
        write(*,'(a, e12.4, f6.2, f6.2)') ' total density, pressure, temperature :', density, box_press, box_temp
-       call outfile%out( 'O3totcol', o3totcol )
        call outfile%out( 'Density', density )
        call outfile%out( 'Mbar', mbar )
        if (ierr/=0) then

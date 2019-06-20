@@ -43,13 +43,6 @@
   dimensions = ()
   type = real
   kind = kind_phys
-[o3totcol]
-  standard_name = ozone_column_density
-  long_name = total ozone column density
-  units = DU
-  dimensions = ()
-  type = real
-  kind = kind_phys
 [density]
   standard_name = total_number_density
   long_name = total number density
@@ -85,6 +78,12 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[realkind]
+  standard_name = phys_real_kind
+  long_name = physics real kind
+  units = 1
+  dimensions = ()
+  type = integer
 [photo_lev]
   standard_name = level_number_for_photolysis
   long_name = level number used to set j_rateConst
@@ -99,6 +98,12 @@
 [nlevels]
   standard_name = num_levels_for_photolysis
   long_name = number of column layers
+  units = count
+  dimensions = ()
+  type = integer
+[nlevelsMinus1]
+  standard_name = num_levels_for_photolysis_minus_1
+  long_name = number of column layers minus 1
   units = count
   dimensions = ()
   type = integer
@@ -140,7 +145,7 @@
 [alt]
   standard_name = layer_altitude
   long_name = mid-point layer altitude
-  units = km
+  units = m
   dimensions = (vertical_layer_dimension)
   type = real
   kind = kind_phys

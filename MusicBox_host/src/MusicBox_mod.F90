@@ -15,13 +15,14 @@ module MusicBox_mod
    real(kind_phys)    :: box_h2o
    real(kind_phys)    :: zenith
    real(kind_phys)    :: albedo
-   real(kind_phys)    :: o3totcol
    real(kind_phys)    :: density, mbar
    real(kind_phys)    :: TimeStart, TimeEnd, dt
 
+   integer,parameter  :: realkind = kind_phys
    integer            :: photo_lev
    integer            :: nspecies
    integer            :: nlevels
+   integer            :: nlevelsMinus1
    integer            :: Musicpver, Musicpverp
    integer            :: nbox
    integer            :: nkRxt       ! number gas phase reactions
