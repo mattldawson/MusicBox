@@ -10,7 +10,7 @@ use relhum_mod,             only: relhum_mod_init, relhum_mod_run, relhum_mod_fi
 use MusicBox_mod,           only: box_press, box_temp, relhum, box_h2o, photo_lev, nspecies, vmr
 use MusicBox_mod,           only: Musicpver, Musicpverp, nbox, ntimes, ntuvRates
 use MusicBox_mod,           only: nkRxt, njRxt, file_times, TimeStart, TimeEnd
-use MusicBox_mod,           only: nlevels, zenith, albedo, press_mid, press_int
+use MusicBox_mod,           only: nlevels, nlevelsMinus1, zenith, albedo, press_mid, press_int
 use MusicBox_mod,           only: alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol
 use MusicBox_mod,           only: prates, dt, density, mbar
 use MusicBox_mod,           only: cnst_info
@@ -190,6 +190,7 @@ subroutine MusicBox_sub()
      colEnvConds(ibox)= environ_conditions_create( env_conds_file, lat=env_lat(ibox), lon=env_lon(ibox) )
   end do
   nlevels = colEnvConds(1)%nlevels()
+  nlevelsMinus1 = nlevels - 1
   Musicpver = nlevels
   Musicpverp = nlevels +1
   photo_lev = theEnvConds(1)%levnum()
@@ -205,7 +206,7 @@ subroutine MusicBox_sub()
   ntuvRates=113
   allocate(prates(Musicpver,ntuvRates))
 
-  if (model_name == 'terminator') then
+  if (model_name /= '3component') then
      allocate(wghts(nSpecies))
      wghts(:) = 1._kind_phys
   endif

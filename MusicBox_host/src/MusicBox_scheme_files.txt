@@ -7,3 +7,5 @@ relhum/wv_saturation.F90
 relhum/shr_const_mod.F90
 relhum/wv_sat_methods.F90
 relhum/relhum_mod.F90
+../../MICM_chemistry/src/tuv/rad_xfer/tuv_radiation_transfer.meta
+../../MICM_chemistry/src/tuv/oxygen_xsect/molec_ox_xsect.meta

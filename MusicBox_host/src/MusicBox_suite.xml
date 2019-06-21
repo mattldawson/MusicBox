@@ -5,6 +5,8 @@
     <scheme>get_environ_cond</scheme>
     <scheme>mass_quantities_util</scheme>
     <scheme>k_rateConst</scheme>
+    <scheme>molec_ox_xsect</scheme>
+    <scheme>tuv_radiation_transfer</scheme>
     <scheme>tuv_photolysis</scheme>
     <scheme>photolysis_interstitial</scheme>
     <scheme>chemistry_driver_ros</scheme>
