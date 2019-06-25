@@ -46,7 +46,6 @@ subroutine MusicBox_sub()
     integer                         :: errflg
 
 
-  integer  :: ncols = 1 ! number columns in domain
   integer,parameter  :: nbox_param=1    ! Need to read this in from namelist and then allocate arrays
   
 
@@ -148,7 +147,8 @@ subroutine MusicBox_sub()
   call outfile%define() ! cannot add more fields after this call
   
 !----------------------------------------
-! These allocates will go away once the CPF is able to allocate arrays
+! allocate
+!----------------------------------------
 
 !  allocate(k_rateConst(nkRxt))
 !  allocate(j_rateConst(njRxt))
@@ -157,7 +157,6 @@ subroutine MusicBox_sub()
   allocate(vmr(nSpecies))
   allocate(theEnvConds(nbox))
   allocate(colEnvConds(nbox))
-!----------------------------------------
 
   do ibox=1,nbox
      theEnvConds(ibox) = environ_conditions_create( env_conds_file, lat=env_lat(ibox), lon=env_lon(ibox), lev=env_lev(ibox) )
@@ -170,7 +169,6 @@ subroutine MusicBox_sub()
 
   if (user_begin_time == NOT_SET .or. user_end_time == NOT_SET) then
      file_ntimes= theEnvConds(1)%ntimes()
-!     allocate(file_times(file_ntimes))
      file_times = theEnvConds(1)%get_times()
   end if
   if (user_begin_time /= NOT_SET) then
@@ -183,8 +181,6 @@ subroutine MusicBox_sub()
   else
      sim_end_time = file_times(file_ntimes)
   end if
-
-!  ntimes = 1+int((sim_end_time-sim_beg_time)/dt)
 
   do ibox=1,nbox
      colEnvConds(ibox)= environ_conditions_create( env_conds_file, lat=env_lat(ibox), lon=env_lon(ibox) )
@@ -256,12 +252,12 @@ subroutine MusicBox_sub()
 !  loop over time
 !-----------------------------------------------------------
 time_loop: &
-  do ibox=1,nbox
   do n = 1, ntimes
     call outfile%advance(TimeStart)
-    call colEnvConds(ibox)%update(TimeStart)
     TimeEnd = TimeStart + dt
-    do i = 1, ncols
+Box_loop: &
+  do ibox=1,nbox
+       call colEnvConds(ibox)%update(TimeStart)
        zenith = colEnvConds(ibox)%getsrf('SZA')
        albedo = colEnvConds(ibox)%getsrf('ASDIR')
        press_mid(:nlevels) = colEnvConds(ibox)%press_mid(nlevels)
@@ -280,9 +276,11 @@ time_loop: &
        call outfile%out( 'RelHum', relhum )
        call outfile%out( 'Zenith', zenith )
        Time = TimeStart
-     col_start=1
-     col_end=1
-     call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, errmsg, errflg)
+
+       col_start=1
+       col_end=1
+
+       call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, errmsg, errflg)
 
       if (errflg /= 0) then
         write(6, *) trim(errmsg)
@@ -298,14 +296,8 @@ time_loop: &
        write(*,'(a, e12.4, f6.2, f6.2)') ' total density, pressure, temperature :', density, box_press, box_temp
        call outfile%out( 'Density', density )
        call outfile%out( 'Mbar', mbar )
-       if (ierr/=0) then
-          write(*,'(a,i0,a)') 'An error occurred in ccpp_physics_run for column ', i, '. Exiting...'
-          stop
-       end if
-        call outfile%out( cnst_info, vmrboxes(:,ibox) )
-    end do
-    TimeStart = real(n,kind=kind_phys)*dt
-    write(*,'(a,1p,g0)') 'Concentration @ hour = ',TimeStart/3600.
+       call outfile%out( cnst_info, vmrboxes(:,ibox) )
+       write(*,'(a,1p,g0)') 'Concentration @ hour = ',TimeStart/3600.
     write(*,'(1p,5(1x,g0))') vmrboxes(:,ibox),sum(vmrboxes(:,ibox))
     if (model_name == 'terminator') then
        call outfile%out('CL_TOT', sum(vmrboxes(:,ibox)*wghts(:) ))
@@ -315,7 +307,8 @@ time_loop: &
        call outfile%out('VMRTOT', sum(vmrboxes(:,ibox)))
     end if
 
-    end do
+    end do Box_loop
+    TimeStart = TimeEnd
   end do time_loop
 
    call MusicBox_ccpp_physics_timestep_final('MusicBox_suite', errmsg, errflg)

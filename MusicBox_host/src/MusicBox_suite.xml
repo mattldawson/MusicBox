@@ -9,6 +9,6 @@
     <scheme>tuv_radiation_transfer</scheme>
     <scheme>tuv_photolysis</scheme>
     <scheme>photolysis_interstitial</scheme>
-    <scheme>chemistry_driver_ros</scheme>
+    <scheme>chemistry_driver</scheme>
   </group>
 </suite>
