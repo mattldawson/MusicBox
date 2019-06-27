@@ -147,12 +147,9 @@ subroutine MusicBox_sub()
   call outfile%define() ! cannot add more fields after this call
   
 !----------------------------------------
-! allocate
+! allocate host model arrays
 !----------------------------------------
 
-!  allocate(k_rateConst(nkRxt))
-!  allocate(j_rateConst(njRxt))
-  
   allocate(vmrboxes(nSpecies,nbox))
   allocate(vmr(nSpecies))
   allocate(theEnvConds(nbox))
@@ -211,13 +208,7 @@ subroutine MusicBox_sub()
   do ibox=1,nbox
      call cnst_info(n)%print()
      cnst_name = cnst_info(n)%get_name()
-     if (cnst_name == 'N2') then
-        vmrboxes(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.79_kind_phys)
-     else if (cnst_name == 'O2') then
-        vmrboxes(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.21_kind_phys)
-     else
-        vmrboxes(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.00_kind_phys)
-     end if
+     vmrboxes(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.00_kind_phys)
 
      write(*,fmt="(' cnst name : ',a20,' init value : ',e13.6)") cnst_name, vmrboxes(n,ibox)
      if (allocated(wghts) .and. cnst_name == 'CL2') then

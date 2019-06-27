@@ -11,9 +11,9 @@ Please see https://wiki.ucar.edu/display/MusicBox/Quick+Start for details
 
  cd MusicBox_host/data 
 
- wget  ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_c190109.nc; mv MusicBox_env_cond_c190109.nc env_conditions.nc
+ wget  ftp://ftp.acom.ucar.edu/micm_environmental_conditions/One_day_cycle_WACCM_samples_c20180626.nc; mv One_day_cycle_WACCM_samples_c20180626.nc env_conditions.nc
  -- or --
- wget  ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_1col_c190109.nc; mv MusicBox_env_cond_1col_c190109.nc env_conditions.nc
+ wget  ftp://ftp.acom.ucar.edu/micm_environmental_conditions/Equatorial_Pacific_column_c20180626.nc; mv Equatorial_Pacific_column_c20180626.nc env_conditions.nc
 
  cd ../../
  cd MusicBox_host
