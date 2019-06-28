@@ -35,12 +35,13 @@ set(CCPP_ROOT "${MUSICBOX_ROOT}/../ccpp-framework")
 #
 #-----------------------------------------------------------------------------
 set(NONCCPP_FILES 
-    ../../MICM_chemistry/src/json_lib/json_file_module.F90
-    ../../MICM_chemistry/src/json_lib/json_kinds.F90
-    ../../MICM_chemistry/src/json_lib/json_module.F90
-    ../../MICM_chemistry/src/json_lib/json_parameters.F90
-    ../../MICM_chemistry/src/json_lib/json_string_utilities.F90
-    ../../MICM_chemistry/src/json_lib/json_value_module.F90
+    ../src/json_lib/json_file_module.F90
+    ../src/json_lib/json_kinds.F90
+    ../src/json_lib/json_module.F90
+    ../src/json_lib/json_parameters.F90
+    ../src/json_lib/json_string_utilities.F90
+    ../src/json_lib/json_value_module.F90
+    ../src/json_loader.F90
     ../../MICM_chemistry/src/tuv/oxygen_xsect/la_srb_mod.F90
     ../../MICM_chemistry/src/tuv/photo_rates/module_prates_tuv.F90
     ../../MICM_chemistry/src/tuv/photo_rates/module_rxn.F90

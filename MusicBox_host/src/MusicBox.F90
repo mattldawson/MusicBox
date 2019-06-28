@@ -217,37 +217,40 @@ subroutine MusicBox_sub()
   enddo
   enddo
 
-  TimeStart = 0._kind_phys
+  ! Set the times (note this needs to be set prior to call ccpp_initialize)
+  ! Once Rosenbrock_init is separated into init and time_step_init, this may go 
+  ! down right above time_step_init
+  TimeStart = sim_beg_time
   TimeEnd = TimeStart + dt
-  
-    ! Use the suite information to setup the run
-    call MusicBox_ccpp_physics_initialize('MusicBox_suite', errmsg, errflg)
-    if (errflg /= 0) then
-      write(6, *) trim(errmsg)
-      stop
-    end if
 
-    ! Initialize the timestep
-    call MusicBox_ccpp_physics_timestep_initial('MusicBox_suite', errmsg, errflg)
-    if (errflg /= 0) then
-      write(6, *) trim(errmsg)
-      stop
-    end if
+  ! Use the suite information to setup the run
+  call MusicBox_ccpp_physics_initialize('MusicBox_suite', errmsg, errflg)
+  if (errflg /= 0) then
+    write(6, *) trim(errmsg)
+    stop
+  end if
 
 ! For testing short runs   
 !   ntimes = 10
 
   call relhum_mod_init()
 
-!-----------------------------------------------------------
-!  loop over time
-!-----------------------------------------------------------
-time_loop: &
-  do n = 1, ntimes
+  !-----------------------------------------------------------
+  !  loop over time
+  !-----------------------------------------------------------
+
+  time_loop:  do while (timestart <= sim_end_time)
+
+    ! Initialize the timestep
+    call MusicBox_ccpp_physics_timestep_initial('MusicBox_suite', errmsg, errflg)
+    if (errflg /= 0) then
+       write(6, *) trim(errmsg)
+       stop
+    end if
+
     call outfile%advance(TimeStart)
-    TimeEnd = TimeStart + dt
-Box_loop: &
-  do ibox=1,nbox
+
+    Box_loop: do ibox=1,nbox
        call colEnvConds(ibox)%update(TimeStart)
        zenith = colEnvConds(ibox)%getsrf('SZA')
        albedo = colEnvConds(ibox)%getsrf('ASDIR')
@@ -289,20 +292,23 @@ Box_loop: &
        call outfile%out( 'Mbar', mbar )
        call outfile%out( cnst_info, vmrboxes(:,ibox) )
        write(*,'(a,1p,g0)') 'Concentration @ hour = ',TimeStart/3600.
-    write(*,'(1p,5(1x,g0))') vmrboxes(:,ibox),sum(vmrboxes(:,ibox))
-    if (model_name == 'terminator') then
-       call outfile%out('CL_TOT', sum(vmrboxes(:,ibox)*wghts(:) ))
-       call outfile%out( 'JCL2', j_rateConst(1) )
-    end if
-    if (model_name == '3component') then
-       call outfile%out('VMRTOT', sum(vmrboxes(:,ibox)))
-    end if
+       write(*,'(1p,5(1x,g0))') vmrboxes(:,ibox),sum(vmrboxes(:,ibox))
+       if (model_name == 'terminator') then
+          call outfile%out('CL_TOT', sum(vmrboxes(:,ibox)*wghts(:) ))
+          call outfile%out( 'JCL2', j_rateConst(1) )
+       end if
+       if (model_name == '3component') then
+          call outfile%out('VMRTOT', sum(vmrboxes(:,ibox)))
+       end if
 
     end do Box_loop
     TimeStart = TimeEnd
-  end do time_loop
+    TimeEnd = TimeStart + dt
 
-   call MusicBox_ccpp_physics_timestep_final('MusicBox_suite', errmsg, errflg)
+    call MusicBox_ccpp_physics_timestep_final('MusicBox_suite', errmsg, errflg)
+
+   end do time_loop
+
 
    call MusicBox_ccpp_physics_finalize('MusicBox_suite', errmsg, errflg)
 
