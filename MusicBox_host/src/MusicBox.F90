@@ -6,7 +6,6 @@ module MusicBox_main
 use json_loader,            only: json_loader_read
 use environ_conditions_mod, only: environ_conditions_create, environ_conditions
 use output_file,            only: output_file_type
-!use relhum_mod,             only: relhum_mod_init, relhum_mod_run, relhum_mod_final
 
 ! MusicBox host model data
 use MusicBox_mod,           only: box_press, box_temp, relhum, box_h2o, photo_lev, nspecies, vmr
@@ -29,6 +28,10 @@ contains
   !!
 subroutine MusicBox_sub()
 
+!-----------------------------------------------------------
+! Main driver routine for MusicBox - The box model of MICM
+!-----------------------------------------------------------
+
     use MusicBox_ccpp_cap, only: MusicBox_ccpp_physics_initialize
     use MusicBox_ccpp_cap, only: MusicBox_ccpp_physics_timestep_initial
     use MusicBox_ccpp_cap, only: MusicBox_ccpp_physics_run
@@ -37,9 +40,7 @@ subroutine MusicBox_sub()
     use MusicBox_ccpp_cap, only: ccpp_physics_suite_list
     use MusicBox_ccpp_cap, only: ccpp_physics_suite_part_list
 
-  use :: iso_c_binding, only: c_loc
-
-  implicit none
+    implicit none
 
     integer                         :: col_start, col_end
     integer                         :: index
@@ -50,22 +51,13 @@ subroutine MusicBox_sub()
 
   integer,parameter  :: nbox_param=1    ! Need to read this in from namelist and then allocate arrays
   
-
-  
   integer            :: i,n
-  integer            :: ierr
-  real(kind=kind_phys), allocatable :: j_rateConst(:)  ! host model provides photolysis rates for now 
-  real(kind=kind_phys), allocatable :: k_rateConst(:)  ! host model provides photolysis rates for now
   real(kind=kind_phys), allocatable :: vmrboxes(:,:)   ! vmr for all boxes
   real(kind=kind_phys), allocatable :: wghts(:)
-
-  real(kind_phys) :: Time
-  
 
 ! declare the types
   type(environ_conditions),allocatable :: theEnvConds(:)
   type(environ_conditions),allocatable :: colEnvConds(:) 
-!  type(const_props_type), allocatable :: cnst_info(:)
 
   character(len=16)  :: cnst_name
   character(len=255) :: model_name
@@ -87,8 +79,8 @@ subroutine MusicBox_sub()
   real :: user_end_time = NOT_SET
   real :: user_dtime = NOT_SET
   
-  character(len=*), parameter :: nml_options = '../MusicBox_options'
-  character(len=120) :: jsonfile
+  character(len=*), parameter   :: nml_options = '../MusicBox_options'
+  character(len=120), parameter :: jsonfile    = '../molec_info.json'
 
   ! read namelist run-time options
   namelist /options/ outfile_name, env_conds_file
@@ -97,11 +89,16 @@ subroutine MusicBox_sub()
   
   nbox = nbox_param
 
+  !---------------------------
+  ! Read in the MusicBox_options file
+
   open(unit=10,file=nml_options)
   read(unit=10,nml=options)
   close(10)
 
-  ! error checking
+  !---------------------------
+  ! error checking of namelist settings
+
   if (any(env_lat(:)<-90.) .or.  any(env_lat(:) >90.)) then
      write(*,*) 'Invalid namelist setting: env_lat = ',env_lat(:)
      write(*,*) 'Must be set between -90 and 90 degrees north'
@@ -121,45 +118,41 @@ subroutine MusicBox_sub()
   !---------------------------
   ! Read in the molecular information
 
-  model_name = 'Chapman_v3_1547831703456'
-
-  jsonfile = '../../MICM_chemistry/generated/'//trim(model_name)//'/molec_info.json'
   call json_loader_read( jsonfile, cnst_info, nSpecies, nkRxt, njRxt )
-
-
     
-  write(*,*) '*******************************************************'
-  write(*,*) '************** model = '//trim(model_name)//' ***************'
-  write(*,*) '*******************************************************'
-  
+  !---------------------------
+  ! Create the fields for the output netCDF file
+
   call outfile%create(outfile_name)
   call outfile%add(cnst_info)
   call outfile%add('Zenith','solar zenith angle','degrees')
   call outfile%add('Density','total number density','molecules/cm3')
   call outfile%add('Mbar','mean molar mass','g/mole')
-  if (model_name == 'terminator') then
-     call outfile%add('JCL2','Cl2 photolysis rate','sec^-1')
-     call outfile%add('CL_TOT','Total Chlorine','molec/molec')
-  end if
-  if (model_name == '3component') then
-     call outfile%add('VMRTOT','sum of all species','molec/molec')
-  end if
   call outfile%add('RelHum','relative humidity','')
-
   call outfile%define() ! cannot add more fields after this call
   
-!----------------------------------------
-! allocate host model arrays
-!----------------------------------------
+  !---------------------------
+  ! allocate host model arrays
 
   allocate(vmrboxes(nSpecies,nbox))
   allocate(vmr(nSpecies))
   allocate(theEnvConds(nbox))
   allocate(colEnvConds(nbox))
 
+  !---------------------------
+  ! Read in the first time slice of data.  
+  ! "theEnvConds" contains the time slice at the requested lat/lon/level
+  ! "colEnvConds" contains the column time slice at the requested lat/lon
+
   do ibox=1,nbox
      theEnvConds(ibox) = environ_conditions_create( env_conds_file, lat=env_lat(ibox), lon=env_lon(ibox), lev=env_lev(ibox) )
+     colEnvConds(ibox)= environ_conditions_create( env_conds_file, lat=env_lat(ibox), lon=env_lon(ibox) )
   end do
+
+  !---------------------------
+  ! Assign the times based on the user provided namelist values or use the
+  ! values provided in the environmental conditions file
+
   if (user_dtime>0.) then
      dt = user_dtime
   else
@@ -181,14 +174,15 @@ subroutine MusicBox_sub()
      sim_end_time = file_times(file_ntimes)
   end if
 
-  do ibox=1,nbox
-     colEnvConds(ibox)= environ_conditions_create( env_conds_file, lat=env_lat(ibox), lon=env_lon(ibox) )
-  end do
+  !---------------------------
+  ! Set up the various dimensions and allocate arrays accordingly
+
   nlevels = colEnvConds(1)%nlevels()
   nlevelsMinus1 = nlevels - 1
-  Musicpver = nlevels
-  Musicpverp = nlevels +1
-  photo_lev = theEnvConds(1)%levnum()
+  Musicpver     = nlevels
+  Musicpverp    = nlevels +1
+  photo_lev     = theEnvConds(1)%levnum()
+  ntuvRates     = 113
 
   allocate(alt(nlevels))
   allocate(press_mid(Musicpver))
@@ -198,33 +192,35 @@ subroutine MusicBox_sub()
   allocate(o3vmrcol(Musicpver))
   allocate(so2vmrcol(Musicpver))
   allocate(no2vmrcol(Musicpver))
-  ntuvRates=113
   allocate(prates(Musicpver,ntuvRates))
 
-  if (model_name /= '3component') then
-     allocate(wghts(nSpecies))
-     wghts(:) = 1._kind_phys
-  endif
+  allocate(wghts(nSpecies))
+  wghts(:) = 1._kind_phys
 
+  !---------------------------
+  ! Retrieve the vmr for all species and boxes
   do n = 1,nSpecies
-  do ibox=1,nbox
-     call cnst_info(n)%print()
-     cnst_name = cnst_info(n)%get_name()
-     vmrboxes(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.00_kind_phys)
+     do ibox=1,nbox
+        call cnst_info(n)%print()
+        cnst_name = cnst_info(n)%get_name()
+        vmrboxes(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.00_kind_phys)
 
-     write(*,fmt="(' cnst name : ',a20,' init value : ',e13.6)") cnst_name, vmrboxes(n,ibox)
-     if (allocated(wghts) .and. cnst_name == 'CL2') then
-        wghts(n) = 2._kind_phys
-     end if
-  enddo
+        write(*,fmt="(' cnst name : ',a20,' init value : ',e13.6)") cnst_name, vmrboxes(n,ibox)
+        if (cnst_name == 'CL2') then
+           wghts(n) = 2._kind_phys
+        end if
+     enddo
   enddo
 
+  !---------------------------
   ! Set the times (note this needs to be set prior to call ccpp_initialize)
   ! Once Rosenbrock_init is separated into init and time_step_init, this may go 
   ! down right above time_step_init
+
   TimeStart = sim_beg_time
   TimeEnd = TimeStart + dt
 
+  !---------------------------
   ! Use the suite information to setup the run
   call MusicBox_ccpp_physics_initialize('MusicBox_suite', errmsg, errflg)
   if (errflg /= 0) then
@@ -235,7 +231,6 @@ subroutine MusicBox_sub()
 ! For testing short runs   
 !   ntimes = 10
 
-!  call relhum_mod_init()
 
   !-----------------------------------------------------------
   !  loop over time
@@ -243,50 +238,70 @@ subroutine MusicBox_sub()
 
   time_loop:  do while (timestart <= sim_end_time)
 
+    !---------------------------
     ! Initialize the timestep
+
     call MusicBox_ccpp_physics_timestep_initial('MusicBox_suite', errmsg, errflg)
     if (errflg /= 0) then
        write(6, *) trim(errmsg)
        stop
     end if
 
+    !---------------------------
+    ! set the timestep for the output file
+
     call outfile%advance(TimeStart)
 
+    !---------------------------
+    ! Loop over the boxes
+
     Box_loop: do ibox=1,nbox
+
+       !---------------------------
+       ! read environmental conditions for the next time step
+
        call colEnvConds(ibox)%update(TimeStart)
-       zenith = colEnvConds(ibox)%getsrf('SZA')
-       albedo = colEnvConds(ibox)%getsrf('ASDIR')
+       call theEnvConds(ibox)%update(TimeStart)
+
+       !---------------------------
+       ! Read in the species information
+
+       zenith              = colEnvConds(ibox)%getsrf('SZA')
+       albedo              = colEnvConds(ibox)%getsrf('ASDIR')
        press_mid(:nlevels) = colEnvConds(ibox)%press_mid(nlevels)
        press_int(:nlevels) = colEnvConds(ibox)%press_int(nlevels)
-       alt(:nlevels) = colEnvConds(ibox)%getcol('Z3',nlevels)
-       temp(:nlevels) = colEnvConds(ibox)%getcol('T',nlevels)
-       o2vmrcol(:nlevels) = colEnvConds(ibox)%getcol('O2',nlevels)
-       o3vmrcol(:nlevels) = colEnvConds(ibox)%getcol('O3',nlevels)
+       alt(:nlevels)       = colEnvConds(ibox)%getcol('Z3',nlevels)
+       temp(:nlevels)      = colEnvConds(ibox)%getcol('T',nlevels)
+       o2vmrcol(:nlevels)  = colEnvConds(ibox)%getcol('O2',nlevels)
+       o3vmrcol(:nlevels)  = colEnvConds(ibox)%getcol('O3',nlevels)
        so2vmrcol(:nlevels) = colEnvConds(ibox)%getcol('SO2',nlevels)
        no2vmrcol(:nlevels) = colEnvConds(ibox)%getcol('NO2',nlevels)
        vmr(:)    = vmrboxes(:,ibox)
        box_h2o   = theEnvConds(ibox)%getvar('H2O')
        box_temp  = temp(photo_lev)
        box_press = press_mid(photo_lev)
-!       call relhum_mod_run( box_temp, box_press, box_h2o, relhum )
-       Time = TimeStart
 
+       !---------------------------
+       ! Call the schemes for the timestep
        col_start=1
        col_end=1
 
        call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, errmsg, errflg)
+       if (errflg /= 0) then
+         write(6, *) trim(errmsg)
+         call ccpp_physics_suite_part_list('MusicBox_suite', part_names, errmsg, errflg)
+         write(6, *) 'Available suite parts are:'
+         do index = 1, size(part_names)
+           write(6, *) trim(part_names(index))
+         end do
+         stop
+       end if
+
+       !---------------------------
+       ! write out the timestep values
 
        call outfile%out( 'RelHum', relhum )
        call outfile%out( 'Zenith', zenith )
-      if (errflg /= 0) then
-        write(6, *) trim(errmsg)
-        call ccpp_physics_suite_part_list('MusicBox_suite', part_names, errmsg, errflg)
-        write(6, *) 'Available suite parts are:'
-        do index = 1, size(part_names)
-          write(6, *) trim(part_names(index))
-        end do
-        stop
-      end if
 
        vmrboxes(:,ibox) = vmr(:)
        write(*,'(a, e12.4, f6.2, f6.2)') ' total density, pressure, temperature :', density, box_press, box_temp
@@ -295,29 +310,34 @@ subroutine MusicBox_sub()
        call outfile%out( cnst_info, vmrboxes(:,ibox) )
        write(*,'(a,1p,g0)') 'Concentration @ hour = ',TimeStart/3600.
        write(*,'(1p,5(1x,g0))') vmrboxes(:,ibox),sum(vmrboxes(:,ibox))
-       if (model_name == 'terminator') then
-          call outfile%out('CL_TOT', sum(vmrboxes(:,ibox)*wghts(:) ))
-          call outfile%out( 'JCL2', j_rateConst(1) )
-       end if
-       if (model_name == '3component') then
-          call outfile%out('VMRTOT', sum(vmrboxes(:,ibox)))
-       end if
 
     end do Box_loop
+
+    !---------------------------
+    ! Advance the timestep
     TimeStart = TimeEnd
     TimeEnd = TimeStart + dt
 
+    !---------------------------
+    ! call the timestep_final scheme routines
     call MusicBox_ccpp_physics_timestep_final('MusicBox_suite', errmsg, errflg)
+    if (errflg /= 0) then
+      write(6, *) trim(errmsg)
+      write(6,'(a)') 'An error occurred in ccpp_timestep_final, Exiting...'
+      stop
+    end if
 
    end do time_loop
 
 
+   !---------------------------
+   ! Finalize all of the schemes
    call MusicBox_ccpp_physics_finalize('MusicBox_suite', errmsg, errflg)
 
 
     if (errflg /= 0) then
       write(6, *) trim(errmsg)
-      write(6,'(a)') 'An error occurred in ccpp_timestep_final, Exiting...'
+      write(6,'(a)') 'An error occurred in ccpp_finalize, Exiting...'
       stop
     end if
 
@@ -337,7 +357,6 @@ subroutine MusicBox_sub()
   if (allocated(wghts)) deallocate(wghts)
   if (allocated(file_times)) deallocate(file_times)
 
-!  call relhum_mod_final()
 
 end subroutine MusicBox_sub
 
