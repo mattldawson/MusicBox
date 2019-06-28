@@ -6,7 +6,9 @@ module MusicBox_main
 use json_loader,            only: json_loader_read
 use environ_conditions_mod, only: environ_conditions_create, environ_conditions
 use output_file,            only: output_file_type
-use relhum_mod,             only: relhum_mod_init, relhum_mod_run, relhum_mod_final
+!use relhum_mod,             only: relhum_mod_init, relhum_mod_run, relhum_mod_final
+
+! MusicBox host model data
 use MusicBox_mod,           only: box_press, box_temp, relhum, box_h2o, photo_lev, nspecies, vmr
 use MusicBox_mod,           only: Musicpver, Musicpverp, nbox, ntimes, ntuvRates
 use MusicBox_mod,           only: nkRxt, njRxt, file_times, TimeStart, TimeEnd
@@ -233,7 +235,7 @@ subroutine MusicBox_sub()
 ! For testing short runs   
 !   ntimes = 10
 
-  call relhum_mod_init()
+!  call relhum_mod_init()
 
   !-----------------------------------------------------------
   !  loop over time
@@ -266,9 +268,7 @@ subroutine MusicBox_sub()
        box_h2o   = theEnvConds(ibox)%getvar('H2O')
        box_temp  = temp(photo_lev)
        box_press = press_mid(photo_lev)
-       call relhum_mod_run( box_temp, box_press, box_h2o, relhum )
-       call outfile%out( 'RelHum', relhum )
-       call outfile%out( 'Zenith', zenith )
+!       call relhum_mod_run( box_temp, box_press, box_h2o, relhum )
        Time = TimeStart
 
        col_start=1
@@ -276,6 +276,8 @@ subroutine MusicBox_sub()
 
        call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, errmsg, errflg)
 
+       call outfile%out( 'RelHum', relhum )
+       call outfile%out( 'Zenith', zenith )
       if (errflg /= 0) then
         write(6, *) trim(errmsg)
         call ccpp_physics_suite_part_list('MusicBox_suite', part_names, errmsg, errflg)
@@ -335,7 +337,7 @@ subroutine MusicBox_sub()
   if (allocated(wghts)) deallocate(wghts)
   if (allocated(file_times)) deallocate(file_times)
 
-  call relhum_mod_final()
+!  call relhum_mod_final()
 
 end subroutine MusicBox_sub
 

@@ -2,6 +2,7 @@
 
 <suite name="MusicBox_suite" version="1.0">
   <group name="physics">
+    <scheme>relhum_mod</scheme>
     <scheme>get_environ_cond</scheme>
     <scheme>mass_quantities_util</scheme>
     <scheme>k_rateConst</scheme>
