@@ -1,6 +1,7 @@
 module input_file
 
-  use machine,only: rk => kind_phys
+!  USE ccpp_kinds, ONLY: rk => kind_phys
+  USE ccpp_kinds, ONLY: kind_phys
 
   use netcdf, only: nf90_open, nf90_nowrite, nf90_noerr, nf90_inq_dimid, nf90_inquire_dimension
   use netcdf, only: nf90_inq_varid, nf90_get_var, nf90_inquire_attribute, nf90_get_att
@@ -85,7 +86,7 @@ contains
   
   function input_file_get_times(this) result(x)
     class(input_file_type), intent(in) :: this
-    real(rk) :: x(this%ntimes)
+    real(kind_phys) :: x(this%ntimes)
     x(:) = this%times(:)
   end function input_file_get_times
   
@@ -272,14 +273,14 @@ contains
     
     character(len=*), intent(in) :: varname
     type(slice_type), intent(in) :: slice
-    real(rk), optional, intent(in) :: default_value
+    real(kind_phys), optional, intent(in) :: default_value
     
-    real(rk), pointer :: data(:,:,:,:)
+    real(kind_phys), pointer :: data(:,:,:,:)
 
     integer :: varid, status
 
     allocate(data(slice%nlons,slice%nlats,slice%nlevs,slice%ntimes))
-    data = -1.e36_rk
+    data = -1.e36_kind_phys
     
     status = nf90_inq_varid(this%ncid, varname, varid)
     

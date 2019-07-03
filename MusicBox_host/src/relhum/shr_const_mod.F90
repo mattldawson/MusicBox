@@ -5,7 +5,7 @@
 
 MODULE shr_const_mod
 
-   use machine, only: r8 => kind_phys
+   use ccpp_kinds, only: r8 => kind_phys
 
    !----------------------------------------------------------------------------
    ! physical constants (all data public)

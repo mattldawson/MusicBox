@@ -5,33 +5,35 @@ Please see https://wiki.ucar.edu/display/MusicBox/Quick+Start for details
 
 get the MusicBox source code:
 ```
- git clone -b MusicBox01_0000 https://github.com/NCAR/MusicBox
+ git clone https://github.com/NCAR/MusicBox
  cd MusicBox
  manage_externals/checkout_externals
 ```    
 get input data:
 ```
  cd MusicBox_host/data 
- wget ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_c190109.nc; mv MusicBox_env_cond_c190109.nc env_conditions.nc
+ wget  ftp://ftp.acom.ucar.edu/micm_environmental_conditions/One_day_cycle_WACCM_samples_c20180626.nc; mv One_day_cycle_WACCM_samples_c20180626.nc env_conditions.nc
  -- or --
- wget ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_1col_c190109.nc; mv MusicBox_env_cond_1col_c190109.nc env_conditions.nc
- -- or --
- wget ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_1col_5days_repeated_c190118.nc; mv MusicBox_env_cond_1col_5days_repeated_c190118.nc env_conditions.nc
- cd ../../
+ wget  ftp://ftp.acom.ucar.edu/micm_environmental_conditions/Equatorial_Pacific_column_c20180626.nc; mv Equatorial_Pacific_column_c20180626.nc env_conditions.nc
 ```
 build steps:
 ```
- cd MICM_chemistry
- ./distribute_include_files.py /path/$CHEM_NAME.json
- cd ..
+#### DISTRIBUTE WILL NEED TO BE REWORKED - right now it uses Chapman_v3_1547831703456
+## build steps:
+##  cd MICM_chemistry
+##  ./distribute_include_files.py /path/$CHEM_NAME.json
+##  cd ..
 
- ccpp-framework/scripts/ccpp_prebuild.py --model=MusicBox
+ cd ../../
  cd MusicBox_host
  source etc/CENTOS_setup.sh -- or -- source etc/Cheyenne_setup_intel.sh
- rm -rf $CHEM_NAME
- mkdir $CHEM_NAME
- cd $CHEM_NAME
- cmake -DPROJECT=$CHEM_NAME ../src  (or -DPROJECT=3component or -DPROJECT=terminator) (may add -DCMAKE_BUILD_TYPE=Debug for debugging)
+ rm -rf build
+ mkdir build; cd build
+ cmake3 ../CMakeLists.txt -S ../src -B . -DCMAKE_BUILD_TYPE=Debug (with debug)
+ -- or --
+ cmake3 ../CMakeLists.txt -S ../src -B .  (no debug)
+
+
  make
 ```
 execute:
