@@ -4,7 +4,9 @@ module environ_conditions_mod
 ! This module retrieves the enviromental conditions from a named file
 !---------------------------------------------------------------------
 
-  use machine,     only: rk => kind_phys
+!   USE ccpp_kinds, ONLY: rk => kind_phys
+  USE ccpp_kinds, ONLY: kind_phys
+
   use input_file,  only: input_file_type
   use input_slice, only: slice_type
 
@@ -14,7 +16,7 @@ module environ_conditions_mod
      private
      type(input_file_type) :: inputfile
      type(slice_type) :: slice
-     real(rk) :: wghts(2) = 0._rk
+     real(kind_phys) :: wghts(2) = 0._kind_phys
      integer :: num_times
      real, allocatable :: times(:)
    contains
@@ -63,7 +65,7 @@ contains
     units = env_cond%inputfile%get_units('time')
     if (index(units,'days')>0) then
        ! convert to seconds
-       env_cond%times = 24._rk*3600._rk* env_cond%inputfile%get_times()
+       env_cond%times = 24._kind_phys*3600._kind_phys* env_cond%inputfile%get_times()
     else
        write(*,*) 'ERROR: Do not recognize time units in file: '//trim(infilepath)
        call abort()
@@ -80,18 +82,18 @@ contains
 
   subroutine environ_conditions_update_flt(this, time)
     class(environ_conditions), intent(inout) :: this
-    real(rk), intent(in) :: time
+    real(kind_phys), intent(in) :: time
 
     integer :: ndx
 
     if (time<=this%times(1)) then
        this%slice%begtime = 1
        this%slice%ntimes = 1
-       this%wghts = 0._rk
+       this%wghts = 0._kind_phys
     elseif (time>=this%times(this%num_times)) then
        this%slice%begtime = this%num_times
        this%slice%ntimes = 1      
-       this%wghts = 0._rk
+       this%wghts = 0._kind_phys
     else
        findtime: do ndx = 1,this%num_times-1
           if (this%times(ndx)>=time) then
@@ -102,7 +104,7 @@ contains
        this%slice%begtime = ndx
        this%slice%ntimes = 2
        this%wghts(2) = (time - this%times(ndx))/(this%times(ndx+1)-this%times(ndx))
-       this%wghts(1) = 1._rk-this%wghts(2)
+       this%wghts(1) = 1._kind_phys-this%wghts(2)
     end if
     
   end subroutine environ_conditions_update_flt
@@ -110,11 +112,11 @@ contains
   function environ_conditions_getvar(this, var, default_value) result(thevalue)
     class(environ_conditions), intent(inout) :: this
     character(len=*), intent(in) :: var
-    real(rk), optional, intent(in) :: default_value
+    real(kind_phys), optional, intent(in) :: default_value
 
-    real(rk) :: thevalue
+    real(kind_phys) :: thevalue
 
-    real(rk), pointer :: data(:,:,:,:)
+    real(kind_phys), pointer :: data(:,:,:,:)
     
     data => this%inputfile%extract(var, this%slice, default_value)
     if (this%slice%ntimes == 2) then
@@ -130,9 +132,9 @@ contains
     class(environ_conditions), intent(inout) :: this
     character(len=*), intent(in) :: var
     integer,intent(in) :: nlev
-    real(rk) :: thecol(nlev)
+    real(kind_phys) :: thecol(nlev)
 
-    real(rk), pointer :: data(:,:,:,:)
+    real(kind_phys), pointer :: data(:,:,:,:)
     
     data => this%inputfile%extract(var, this%slice )
     if (this%slice%ntimes == 2) then
@@ -146,7 +148,7 @@ contains
   function environ_conditions_getsrf(this, var ) result(theval)
     class(environ_conditions), intent(inout) :: this
     character(len=*), intent(in) :: var
-    real(rk) :: theval
+    real(kind_phys) :: theval
 
     real, pointer :: data(:,:,:)
     
@@ -162,7 +164,7 @@ contains
   function environ_conditions_press_mid(this,nlev) result(press_mid)
     class(environ_conditions), intent(inout) :: this
     integer,intent(in) :: nlev
-    real(rk) :: press_mid(nlev)
+    real(kind_phys) :: press_mid(nlev)
 
     real, pointer :: data_srf(:,:,:)
     real :: ps
@@ -181,7 +183,7 @@ contains
   function environ_conditions_press_int(this,nlev) result(press_int)
     class(environ_conditions), intent(inout) :: this
     integer,intent(in) :: nlev
-    real(rk) :: press_int(nlev)
+    real(kind_phys) :: press_int(nlev)
 
     real, pointer :: data_srf(:,:,:)
     real :: ps
@@ -207,7 +209,7 @@ contains
   function environ_conditions_times(this) result(times)
     class(environ_conditions), intent(in) :: this
 
-    real(rk) :: times(this%num_times)
+    real(kind_phys) :: times(this%num_times)
     times(:) = this%times(:)
     
   end function environ_conditions_times

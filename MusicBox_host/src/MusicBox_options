@@ -14,10 +14,9 @@
  outfile_name = '../MusicBox_output.nc'
 
 ! optional settings which override the defaults determined from env_conds_file
- user_begin_time = 0.   ! sec
- user_dtime = 150.     ! sec
-
+! user_begin_time = 0.   ! sec
 ! user_end_time = 43200. ! sec
 ! user_dtime = 1800.     ! sec
+ user_dtime = 150.     ! sec
 
 /

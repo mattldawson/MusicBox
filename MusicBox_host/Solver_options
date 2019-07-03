@@ -1,0 +1,7 @@
+! Solver options
+
+&options
+
+ Solver_method = 'Rosenbrock'
+
+/
