@@ -21,12 +21,7 @@ implicit none
 
 public MusicBox_sub
 
-<<<<<<< HEAD
-  use :: iso_c_binding, only: c_loc
-  use tuv_photolysis,   only: tuv_photolysis_readnl, tuv_n_phot, tuv_n_wavelen
-=======
 contains
->>>>>>> c2953958eff72120fa85a31e675446eedf6cd50a
 
   !> \section arg_table_MusicBox_sub  Argument Table
   !! \htmlinclude arg_table_MusicBox_sub.html
@@ -358,10 +353,7 @@ subroutine MusicBox_sub()
   deallocate(o3vmrcol)
   deallocate(so2vmrcol)
   deallocate(no2vmrcol)
-  if(allocated(prates)) deallocate(prates)
-  if(allocated(srb_o2_xs)) deallocate(srb_o2_xs)
-  if(allocated(dto2)) deallocate(dto2)
-  if(allocated(radfld)) deallocate(radfld)
+  if (allocated(prates)) deallocate(prates)
   if (allocated(wghts)) deallocate(wghts)
   if (allocated(file_times)) deallocate(file_times)
 
