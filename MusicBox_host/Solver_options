@@ -5,3 +5,14 @@
  Solver_method = 'Rosenbrock'
 
 /
+
+&errCntrl
+
+ absTol = 1.e-12
+ relTol = 1.e-4
+
+/
+
+&timeCntrl
+
+/
