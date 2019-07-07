@@ -2,7 +2,7 @@
 
 &options
 
- Solver_method = 'Rosenbrock'
+ Solver_method = 'Mozart'
 
 /
 
