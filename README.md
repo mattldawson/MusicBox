@@ -11,7 +11,7 @@ get the MusicBox source code:
 ```    
 get input data (environmental conditions), and configure a tag from the cafe-dev web server:
 ```
- cd ../Mechanism_collection
+ cd Mechanism_collection
  burrito.py -tag_id 255
  eat_it.py -source_dir configured_tags/255
 ```
