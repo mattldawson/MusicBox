@@ -36,6 +36,6 @@ execute:
 
 Users may find it informative to check out the options in the tag collection process:
 ```
-burrito.py --help
-eat_it.py --help
+python3 burrito.py --help
+python3 eat_it.py --help
 ```
