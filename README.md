@@ -7,7 +7,7 @@ Please see https://wiki.ucar.edu/display/MusicBox/Quick+Start for details
 If you want to run with cafe-devel tag 255
 ```
  git clone https://github.com/NCAR/MusicBox
- cd MusicBox_host
+ cd MusicBox
  run_it.py -tag_id 255
 ```
 
