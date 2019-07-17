@@ -21,7 +21,11 @@ args = parser.parse_args()
 parent_dir = os.getcwd()
 
 # checkout the code
-os.system('git clone -b 8e89f83a6b19cfc7284cc716d37683133061be83 --depth 1 https://github.com/gold2718/ccpp-framework ')
+os.system('git clone https://github.com/gold2718/ccpp-framework ')
+os.chdir('ccpp-framework')
+os.system('git checkout 8e89f83')
+os.chdir('..')
+
 os.system('git clone -b sparse_beta --depth 1 https://github.com/NCAR/MICM_chemistry')
 os.system('git clone -b v1.0 --depth 1 https://github.com/NCAR/burrito Mechanism_collection')
 
@@ -56,3 +60,4 @@ os.system('make')
 
 #run?
 os.system('./MusicBox')
+
