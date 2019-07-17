@@ -3,6 +3,14 @@ A Box (point) Chemistry kinetic solver using the CCPP framework and MICM
 
 Please see https://wiki.ucar.edu/display/MusicBox/Quick+Start for details
 
+## Simple, fragile script
+If you want to run with cafe-devel tag 255
+```
+run_it.py -tag_id 255
+```
+
+## More robust process
+
 get the MusicBox source code:
 ```
  git clone https://github.com/NCAR/MusicBox
