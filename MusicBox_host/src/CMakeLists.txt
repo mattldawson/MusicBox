@@ -16,6 +16,7 @@ SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
 LIST (APPEND SCHEME_FILES  "../../MICM_chemistry/src/MICM_scheme_files.txt" "MusicBox_scheme_files.txt" )
 LIST(APPEND HOST_FILES  "../../MICM_chemistry/src/const_props_mod" "MusicBox_mod" )
 LIST(APPEND SUITE_FILES "MusicBox_suite.xml")
+LIST(APPEND UTILITY_FILES "MusicBox_utility_files.txt" "../../MICM_chemistry/src/MICM_utility_files.txt")
 # HOST is the name of the executable we will build.
 SET(HOST "${CMAKE_PROJECT_NAME}")
 # HOST_PROGRAM is the name of the program source files (Fortran and metadata)
@@ -28,32 +29,6 @@ SET(HOST_PROGRAM "MusicBox")
 #-----------------------------------------------------------------------------
 get_filename_component(MUSICBOX_ROOT "${CMAKE_SOURCE_DIR}" DIRECTORY)
 set(CCPP_ROOT "${MUSICBOX_ROOT}/../ccpp-framework")
-
-#-----------------------------------------------------------------------------
-#
-# Set non-CCPP files
-#
-#-----------------------------------------------------------------------------
-set(NONCCPP_FILES 
-    ../src/json_lib/json_file_module.F90
-    ../src/json_lib/json_kinds.F90
-    ../src/json_lib/json_module.F90
-    ../src/json_lib/json_parameters.F90
-    ../src/json_lib/json_string_utilities.F90
-    ../src/json_lib/json_value_module.F90
-    ../src/json_loader.F90
-    ../../MICM_chemistry/src/tuv/oxygen_xsect/la_srb_mod.F90
-    ../../MICM_chemistry/src/tuv/photo_rates/module_prates_tuv.F90
-    ../../MICM_chemistry/src/tuv/photo_rates/module_rxn.F90
-    ../../MICM_chemistry/src/tuv/rad_xfer/rad_abs_xsect.F90
-    ../../MICM_chemistry/src/tuv/rad_xfer/rad_trans.F90
-    ../../MICM_chemistry/src/tuv/rad_xfer/tuv_subs.F90
-    ../../MICM_chemistry/src/tuv/share/numer.F90
-    ../../MICM_chemistry/src/tuv/share/module_xsections.F90
-    ../../MICM_chemistry/src/tuv/share/params_mod.F90
-    ../../MICM_chemistry/src/tuv/share/phot_util_mod.F90
-    ../../MICM_chemistry/src/tuv/share/phot_kind_mod.F90
-)
 
 #-----------------------------------------------------------------------------
 ##############################################################################
@@ -140,6 +115,11 @@ else(OPENMP)
 endif()
 
 # Create metadata and source file lists
+FOREACH (FILE ${UTILITY_FILES})
+  FILE(STRINGS ${FILE} U_FILENAMES)
+  LIST(APPEND UTILITY_FILENAMES ${U_FILENAMES})
+ENDFOREACH(FILE)
+
 FOREACH (FILE ${SCHEME_FILES})
   FILE(STRINGS ${FILE} FILENAMES)
   LIST(APPEND SCHEME_FILENAMES ${FILENAMES})
@@ -196,12 +176,11 @@ endif(RES EQUAL 0)
 
 # Read the list of files from capfiles.txt and set to CCPP_CAPS
 file(STRINGS ${CCPP_CAP_FILES}/capfiles.txt CCPP_CAPS)
-target_sources(${HOST} PUBLIC ${CCPP_CAPS} ${NONCCPP_FILES})
+target_sources(${HOST} PUBLIC ${CCPP_CAPS} ${UTILITY_FILENAMES})
 
 SET(NETCDF_F90 "YES")
 FIND_PACKAGE(NetCDF)
 
-INCLUDE_DIRECTORIES(json_lib)
 INCLUDE_DIRECTORIES(${NETCDF_INCLUDES})
 INCLUDE_DIRECTORIES(${CCPP_CAP_FILES})
 

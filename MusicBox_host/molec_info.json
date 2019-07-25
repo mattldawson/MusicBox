@@ -1,17 +1,17 @@
 {
   "mechanism": {
     "tag_info": {
-      "id": "255",
-      "given_name": "Chapman_vdemo",
+      "id": "265",
+      "given_name": "Minimal_Chapman",
       "initials": "ajc",
       "branchname": "Chapman",
       "branch_id": "65",
-      "date": "2019-01-18 14:11:16.02075-07",
+      "date": "2019-07-24 11:21:46.789289-06",
       "buggy": false,
-      "filename": "MZ255_Chapman_20190118",
+      "filename": "MZ265_Chapman_20190724",
       "previousComments": {
         "comments": [
-          "ajc : 2019-01-18 : This is a demo.  I didn't like CO2 photodecomp."
+          "ajc : 2019-07-24 : Minimal Chapman cycle for MICM testing"
         ]
       }
     },
