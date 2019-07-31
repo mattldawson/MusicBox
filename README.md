@@ -4,11 +4,11 @@ A Box (point) Chemistry kinetic solver using the CCPP framework and MICM
 Please see https://wiki.ucar.edu/display/MusicBox/Quick+Start for details
 
 ## Simple, fragile script
-If you want to run with cafe-devel tag 255
+If you want to run with cafe-devel tag 265
 ```
  git clone https://github.com/NCAR/MusicBox
  cd MusicBox
- run_it.py -tag_id 255
+ run_it.py -tag_id 265
 ```
 
 ## More robust process
@@ -22,8 +22,8 @@ get the MusicBox source code:
 get input data (environmental conditions), and configure a tag from the cafe-dev web server:
 ```
  cd Mechanism_collection
- python3 burrito.py -tag_id 255
- python3 eat_it.py -source_dir configured_tags/255
+ python3 burrito.py -tag_id 265
+ python3 eat_it.py -source_dir configured_tags/265
 ```
 build steps:
 ```
@@ -49,3 +49,10 @@ Users may find it informative to check out the options in the tag collection pro
 python3 burrito.py --help
 python3 eat_it.py --help
 ```
+
+## Adding a new scheme
+
+The steps to adding a new MusicBox scheme are as follows:
+* Create XXX.F90 and XXX.meta files (the fortran code and its accompanying metadata file)
+* Add the XXX.meta file to MusicBox_scheme_files.txt
+* Add the scheme to MusicBox_suite.xml in the order in which it is to be run
