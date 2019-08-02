@@ -1,0 +1,91 @@
+[ccpp-arg-table]
+  name = calc_density_init
+  type = scheme
+[errmsg]
+  standard_name = ccpp_error_message
+  long_name = CCPP error message
+  units = 1
+  dimensions = ()
+  type = character
+  kind = len=512
+  intent = out
+  optional = F
+[errflg]
+  standard_name = ccpp_error_flag
+  long_name = CCPP error flag
+  units = flag
+  dimensions = ()
+  type = integer
+  intent = out
+  optional = F
+
+########################################################################
+[ccpp-arg-table]
+  name = calc_density_run
+  type = scheme
+[press]
+  standard_name = pressure
+  long_name = ambient pressure
+  units = Pa
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+  optional = F
+[temperature]
+  standard_name = temperature
+  long_name = ambient temperature
+  units = K
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+  optional = F
+[density]
+  standard_name = total_number_density
+  long_name = total number density
+  units = molecules/cm3
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = out
+  optional = F
+[errmsg]
+  standard_name = ccpp_error_message
+  long_name = CCPP error message
+  units = 1
+  dimensions = ()
+  type = character
+  kind = len=512
+  intent = out
+  optional = F
+[errflg]
+  standard_name = ccpp_error_flag
+  long_name = CCPP error flag
+  units = flag
+  dimensions = ()
+  type = integer
+  intent = out
+  optional = F
+
+########################################################################
+[ccpp-arg-table]
+  name = calc_density_finalize
+  type = scheme
+[errmsg]
+  standard_name = ccpp_error_message
+  long_name = CCPP error message
+  units = 1
+  dimensions = ()
+  type = character
+  kind = len=512
+  intent = out
+  optional = F
+[errflg]
+  standard_name = ccpp_error_flag
+  long_name = CCPP error flag
+  units = flag
+  dimensions = ()
+  type = integer
+  intent = out
+  optional = F

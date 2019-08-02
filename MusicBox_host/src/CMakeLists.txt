@@ -14,7 +14,7 @@ SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
 #
 #-----------------------------------------------------------------------------
 LIST (APPEND SCHEME_FILES  "../../MICM_chemistry/src/MICM_scheme_files.txt" "MusicBox_scheme_files.txt" )
-LIST(APPEND HOST_FILES  "../../MICM_chemistry/src/const_props_mod" "MusicBox_mod" )
+LIST(APPEND HOST_FILES  "const_props_mod" "MusicBox_mod" )
 LIST(APPEND SUITE_FILES "MusicBox_suite.xml")
 LIST(APPEND UTILITY_FILES "MusicBox_utility_files.txt" "../../MICM_chemistry/src/MICM_utility_files.txt")
 # HOST is the name of the executable we will build.
