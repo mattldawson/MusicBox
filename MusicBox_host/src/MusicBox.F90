@@ -2,15 +2,16 @@ module MusicBox_main
 
 !  use ccpp_kinds, only: r8 => kind_phys
   use ccpp_kinds, only: kind_phys
+use environ_conditions_mod, only: environ_conditions_create, environ_conditions
+use read_envConditions, only: read_envConditions_init, read_envConditions_timestep, read_envConditions_update_timestep
 
 use json_loader,            only: json_loader_read
-use environ_conditions_mod, only: environ_conditions_create, environ_conditions
 use output_file,            only: output_file_type
 
 ! MusicBox host model data
 use MusicBox_mod,           only: box_press, box_temp, relhum, box_h2o, photo_lev, nspecies, vmr
 use MusicBox_mod,           only: Musicpver, Musicpverp, nbox, ntimes, ntuvRates
-use MusicBox_mod,           only: nkRxt, njRxt, file_times, TimeStart, TimeEnd
+use MusicBox_mod,           only: nkRxt, njRxt, TimeStart, TimeEnd
 use MusicBox_mod,           only: nlevels, nlevelsMinus1, zenith, albedo, press_mid, press_int
 use MusicBox_mod,           only: alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol
 use MusicBox_mod,           only: prates, dt, density, mbar
@@ -132,57 +133,25 @@ subroutine MusicBox_sub()
   call outfile%define() ! cannot add more fields after this call
   
   !---------------------------
-  ! allocate host model arrays
+  ! Initialize the envrionmental conditions
 
-  allocate(vmrboxes(nSpecies,nbox))
-  allocate(vmr(nSpecies))
-  allocate(theEnvConds(nbox))
-  allocate(colEnvConds(nbox))
+   allocate(vmrboxes(nSpecies,nbox))
 
-  !---------------------------
-  ! Read in the first time slice of data.  
-  ! "theEnvConds" contains the time slice at the requested lat/lon/level
-  ! "colEnvConds" contains the column time slice at the requested lat/lon
-
-  do ibox=1,nbox
-     theEnvConds(ibox) = environ_conditions_create( env_conds_file, lat=env_lat(ibox), lon=env_lon(ibox), lev=env_lev(ibox) )
-     colEnvConds(ibox)= environ_conditions_create( env_conds_file, lat=env_lat(ibox), lon=env_lon(ibox) )
-  end do
+   call  read_envConditions_init(nbox, nSpecies, env_lat, env_lon, env_lev, user_begin_time, &
+             user_end_time, user_dtime, cnst_info, vmrboxes, dt, sim_beg_time, sim_end_time, nlevels, photo_lev)
 
   !---------------------------
-  ! Assign the times based on the user provided namelist values or use the
-  ! values provided in the environmental conditions file
+  ! Set up the various dimensions
 
-  if (user_dtime>0.) then
-     dt = user_dtime
-  else
-     dt = theEnvConds(1)%dtime()
-  end if
-
-  if (user_begin_time == NOT_SET .or. user_end_time == NOT_SET) then
-     file_ntimes= theEnvConds(1)%ntimes()
-     file_times = theEnvConds(1)%get_times()
-  end if
-  if (user_begin_time /= NOT_SET) then
-     sim_beg_time = user_begin_time
-  else
-     sim_beg_time = file_times(1)
-  end if
-  if (user_end_time /= NOT_SET) then
-     sim_end_time = user_end_time
-  else
-     sim_end_time = file_times(file_ntimes)
-  end if
-
-  !---------------------------
-  ! Set up the various dimensions and allocate arrays accordingly
-
-  nlevels = colEnvConds(1)%nlevels()
   nlevelsMinus1 = nlevels - 1
   Musicpver     = nlevels
   Musicpverp    = nlevels +1
-  photo_lev     = theEnvConds(1)%levnum()
   ntuvRates     = 113
+
+  !---------------------------
+  ! allocate host model arrays
+
+  allocate(vmr(nSpecies))
 
   allocate(alt(nlevels))
   allocate(press_mid(Musicpver))
@@ -196,21 +165,6 @@ subroutine MusicBox_sub()
 
   allocate(wghts(nSpecies))
   wghts(:) = 1._kind_phys
-
-  !---------------------------
-  ! Retrieve the vmr for all species and boxes
-  do n = 1,nSpecies
-     do ibox=1,nbox
-        call cnst_info(n)%print()
-        cnst_name = cnst_info(n)%get_name()
-        vmrboxes(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.00_kind_phys)
-
-        write(*,fmt="(' cnst name : ',a20,' init value : ',e13.6)") cnst_name, vmrboxes(n,ibox)
-        if (cnst_name == 'CL2') then
-           wghts(n) = 2._kind_phys
-        end if
-     enddo
-  enddo
 
   !---------------------------
   ! Set the times (note this needs to be set prior to call ccpp_initialize)
@@ -227,6 +181,8 @@ subroutine MusicBox_sub()
     write(6, *) trim(errmsg)
     stop
   end if
+
+
 
 ! For testing short runs   
 !   ntimes = 10
@@ -257,29 +213,13 @@ subroutine MusicBox_sub()
 
     Box_loop: do ibox=1,nbox
 
-       !---------------------------
-       ! read environmental conditions for the next time step
-
-       call colEnvConds(ibox)%update(TimeStart)
-       call theEnvConds(ibox)%update(TimeStart)
 
        !---------------------------
-       ! Read in the species information
+       ! Read in the environmental conditions  at TimeStart
 
-       zenith              = colEnvConds(ibox)%getsrf('SZA')
-       albedo              = colEnvConds(ibox)%getsrf('ASDIR')
-       press_mid(:nlevels) = colEnvConds(ibox)%press_mid(nlevels)
-       press_int(:nlevels) = colEnvConds(ibox)%press_int(nlevels)
-       alt(:nlevels)       = colEnvConds(ibox)%getcol('Z3',nlevels)
-       temp(:nlevels)      = colEnvConds(ibox)%getcol('T',nlevels)
-       o2vmrcol(:nlevels)  = colEnvConds(ibox)%getcol('O2',nlevels)
-       o3vmrcol(:nlevels)  = colEnvConds(ibox)%getcol('O3',nlevels)
-       so2vmrcol(:nlevels) = colEnvConds(ibox)%getcol('SO2',nlevels)
-       no2vmrcol(:nlevels) = colEnvConds(ibox)%getcol('NO2',nlevels)
-       vmr(:)    = vmrboxes(:,ibox)
-       box_h2o   = theEnvConds(ibox)%getvar('H2O')
-       box_temp  = temp(photo_lev)
-       box_press = press_mid(photo_lev)
+       call read_envConditions_timestep(TimeStart,ibox, nlevels, photo_lev, vmrboxes, zenith, albedo, &
+            press_mid, press_int, alt, &
+            temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, vmr, box_h2o, box_temp, box_press)
 
        !---------------------------
        ! Call the schemes for the timestep
@@ -298,15 +238,19 @@ subroutine MusicBox_sub()
        end if
 
        !---------------------------
+       ! Update the environmental conditions for the timestep
+       call read_envConditions_update_timestep(ibox, vmr, vmrboxes)
+
+       !---------------------------
        ! write out the timestep values
 
        call outfile%out( 'RelHum', relhum )
        call outfile%out( 'Zenith', zenith )
 
-       vmrboxes(:,ibox) = vmr(:)
        write(*,'(a, e12.4, f6.2, f6.2)') ' total density, pressure, temperature :', density, box_press, box_temp
        call outfile%out( 'Density', density )
        call outfile%out( 'Mbar', mbar )
+
        call outfile%out( cnst_info, vmrboxes(:,ibox) )
        write(*,'(a,1p,g0)') 'Concentration @ hour = ',TimeStart/3600.
        write(*,'(1p,5(1x,g0))') vmrboxes(:,ibox),sum(vmrboxes(:,ibox))
@@ -355,7 +299,6 @@ subroutine MusicBox_sub()
   deallocate(no2vmrcol)
   if (allocated(prates)) deallocate(prates)
   if (allocated(wghts)) deallocate(wghts)
-  if (allocated(file_times)) deallocate(file_times)
 
 
 end subroutine MusicBox_sub

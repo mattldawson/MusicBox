@@ -13,7 +13,10 @@ SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
 # Paths should be relative to CMAKE_SOURCE_DIR (this file's directory)
 #
 #-----------------------------------------------------------------------------
-LIST (APPEND SCHEME_FILES  "../../MICM_chemistry/src/MICM_scheme_files.txt" "MusicBox_scheme_files.txt" )
+
+#NOTE -- FILES WITH DDTs MUST APPEAR BEFORE THEY ARE USED
+LIST (APPEND SCHEME_FILES  "MusicBox_ddt_files.txt" "../../MICM_chemistry/src/MICM_scheme_files.txt" "MusicBox_scheme_files.txt" )
+
 LIST(APPEND HOST_FILES  "const_props_mod" "MusicBox_mod" )
 LIST(APPEND SUITE_FILES "MusicBox_suite.xml")
 LIST(APPEND UTILITY_FILES "MusicBox_utility_files.txt" "../../MICM_chemistry/src/MICM_utility_files.txt")

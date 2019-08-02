@@ -5,6 +5,7 @@
     <scheme>relhum_mod</scheme>
     <scheme>calc_molar_mass</scheme>
     <scheme>calc_density</scheme>
+    <scheme>calc_mbar</scheme>
     <scheme>k_rateConst</scheme>
     <scheme>molec_ox_xsect</scheme>
     <scheme>tuv_radiation_transfer</scheme>

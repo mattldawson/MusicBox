@@ -39,7 +39,6 @@ module MusicBox_mod
    real(kind_phys), allocatable :: prates(:,:)
    real(kind_phys), allocatable :: press_mid(:)
    real(kind_phys), allocatable :: press_int(:)
-   real(kind_phys), allocatable :: file_times(:)
    real(kind_phys), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
 
    type(const_props_type), allocatable :: cnst_info(:)

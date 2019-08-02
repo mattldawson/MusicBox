@@ -205,14 +205,6 @@
   dimensions = (vertical_level_dimension)
   type = real
   kind = kind_phys
-[ file_times ]
-  standard_name = file_times
-  units = seconds
-  dimensions = (number_of_model_times)
-  type = real
-  kind = kind_phys
-  intent = out
-  allocatable = True
 [vmr]
   standard_name = concentration
   long_name = species concentration
