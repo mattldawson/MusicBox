@@ -10,9 +10,9 @@ use output_file,            only: output_file_type
 
 ! MusicBox host model data
 use MusicBox_mod,           only: box_press, box_temp, relhum, box_h2o, photo_lev, nspecies, vmr
-use MusicBox_mod,           only: Musicpver, Musicpverp, nbox, ntimes, ntuvRates
+use MusicBox_mod,           only: nbox, ntimes, ntuvRates
 use MusicBox_mod,           only: nkRxt, njRxt, TimeStart, TimeEnd
-use MusicBox_mod,           only: nlevels, nlevelsMinus1, zenith, albedo, press_mid, press_int
+use MusicBox_mod,           only: nlayer, nlevel, zenith, albedo, press_mid, press_int
 use MusicBox_mod,           only: alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol
 use MusicBox_mod,           only: prates, dt, density, mbar
 use MusicBox_mod,           only: cnst_info
@@ -54,18 +54,9 @@ subroutine MusicBox_sub()
   
   integer            :: i,n
   real(kind=kind_phys), allocatable :: vmrboxes(:,:)   ! vmr for all boxes
-  real(kind=kind_phys), allocatable :: wghts(:)
-
-! declare the types
-  type(environ_conditions),allocatable :: theEnvConds(:)
-  type(environ_conditions),allocatable :: colEnvConds(:) 
-
-  character(len=16)  :: cnst_name
-  character(len=255) :: model_name
 
   type(output_file_type) :: outfile
 
-  integer :: file_ntimes
   integer :: ibox
   real(kind_phys) :: sim_beg_time, sim_end_time
 
@@ -137,15 +128,13 @@ subroutine MusicBox_sub()
 
    allocate(vmrboxes(nSpecies,nbox))
 
-   call  read_envConditions_init(nbox, nSpecies, env_lat, env_lon, env_lev, user_begin_time, &
-             user_end_time, user_dtime, cnst_info, vmrboxes, dt, sim_beg_time, sim_end_time, nlevels, photo_lev)
+   call  read_envConditions_init(nbox, nSpecies, env_conds_file, env_lat, env_lon, env_lev, user_begin_time, &
+             user_end_time, user_dtime, cnst_info, vmrboxes, dt, sim_beg_time, sim_end_time, nlevel, photo_lev)
 
   !---------------------------
   ! Set up the various dimensions
 
-  nlevelsMinus1 = nlevels - 1
-  Musicpver     = nlevels
-  Musicpverp    = nlevels +1
+  nlayer    = nlevel - 1
   ntuvRates     = 113
 
   !---------------------------
@@ -153,18 +142,15 @@ subroutine MusicBox_sub()
 
   allocate(vmr(nSpecies))
 
-  allocate(alt(nlevels))
-  allocate(press_mid(Musicpver))
-  allocate(press_int(Musicpverp))
-  allocate(temp(Musicpver))
-  allocate(o2vmrcol(Musicpver))
-  allocate(o3vmrcol(Musicpver))
-  allocate(so2vmrcol(Musicpver))
-  allocate(no2vmrcol(Musicpver))
-  allocate(prates(Musicpver,ntuvRates))
-
-  allocate(wghts(nSpecies))
-  wghts(:) = 1._kind_phys
+  allocate(alt(nlevel))
+  allocate(press_mid(nlevel))
+  allocate(press_int(nlevel+1))
+  allocate(temp(nlevel))
+  allocate(o2vmrcol(nlevel))
+  allocate(o3vmrcol(nlevel))
+  allocate(so2vmrcol(nlevel))
+  allocate(no2vmrcol(nlevel))
+  allocate(prates(nlevel,ntuvRates))
 
   !---------------------------
   ! Set the times (note this needs to be set prior to call ccpp_initialize)
@@ -217,7 +203,7 @@ subroutine MusicBox_sub()
        !---------------------------
        ! Read in the environmental conditions  at TimeStart
 
-       call read_envConditions_timestep(TimeStart,ibox, nlevels, photo_lev, vmrboxes, zenith, albedo, &
+       call read_envConditions_timestep(TimeStart,ibox, nlevel, photo_lev, vmrboxes, zenith, albedo, &
             press_mid, press_int, alt, &
             temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, vmr, box_h2o, box_temp, box_press)
 
@@ -298,7 +284,6 @@ subroutine MusicBox_sub()
   deallocate(so2vmrcol)
   deallocate(no2vmrcol)
   if (allocated(prates)) deallocate(prates)
-  if (allocated(wghts)) deallocate(wghts)
 
 
 end subroutine MusicBox_sub

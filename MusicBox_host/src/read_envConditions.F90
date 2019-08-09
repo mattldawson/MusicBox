@@ -12,12 +12,13 @@ type(environ_conditions),allocatable :: colEnvConds(:)
 
 contains
 
- subroutine  read_envConditions_init(nbox, nSpecies, env_lat, env_lon, env_lev, user_begin_time, &
+ subroutine  read_envConditions_init(nbox, nSpecies, env_conds_file, env_lat, env_lon, env_lev, user_begin_time, &
              user_end_time, user_dtime, cnst_info, vmrboxes, dt, sim_beg_time, sim_end_time, nlevels, photo_lev)
 
    real, parameter :: NOT_SET = -huge(1.0)
 
    integer, intent(in)                        :: nbox, nSpecies
+   character(len=120), intent(in)             :: env_conds_file
 
    ! These are dimensioned as plain reals to interface with the reading routins
    real, dimension(:), intent(in)       :: env_lat, env_lon, env_lev  
@@ -39,7 +40,6 @@ contains
     character(len=512)              :: errmsg
     integer                         :: errflg
 
-    character(len=120) :: env_conds_file = '../data/env_conditions.nc'
 
 
   integer,parameter  :: nbox_param=1    ! Need to read this in from namelist and then allocate arrays
