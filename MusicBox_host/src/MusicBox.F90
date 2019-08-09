@@ -1,9 +1,9 @@
 module MusicBox_main
 
 !  use ccpp_kinds, only: r8 => kind_phys
-  use ccpp_kinds, only: kind_phys
+use ccpp_kinds,             only: kind_phys
 use environ_conditions_mod, only: environ_conditions_create, environ_conditions
-use read_envConditions, only: read_envConditions_init, read_envConditions_timestep, read_envConditions_update_timestep
+use read_envConditions,     only: read_envConditions_init, read_envConditions_timestep, read_envConditions_update_timestep
 
 use json_loader,            only: json_loader_read
 use output_file,            only: output_file_type
@@ -16,7 +16,6 @@ use MusicBox_mod,           only: nlayer, nlevel, zenith, albedo, press_mid, pre
 use MusicBox_mod,           only: alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol
 use MusicBox_mod,           only: prates, dt, density, mbar
 use MusicBox_mod,           only: cnst_info
-
 
 implicit none
 
@@ -33,22 +32,21 @@ subroutine MusicBox_sub()
 ! Main driver routine for MusicBox - The box model of MICM
 !-----------------------------------------------------------
 
-    use MusicBox_ccpp_cap, only: MusicBox_ccpp_physics_initialize
-    use MusicBox_ccpp_cap, only: MusicBox_ccpp_physics_timestep_initial
-    use MusicBox_ccpp_cap, only: MusicBox_ccpp_physics_run
-    use MusicBox_ccpp_cap, only: MusicBox_ccpp_physics_timestep_final
-    use MusicBox_ccpp_cap, only: MusicBox_ccpp_physics_finalize
-    use MusicBox_ccpp_cap, only: ccpp_physics_suite_list
-    use MusicBox_ccpp_cap, only: ccpp_physics_suite_part_list
+  use MusicBox_ccpp_cap, only: MusicBox_ccpp_physics_initialize
+  use MusicBox_ccpp_cap, only: MusicBox_ccpp_physics_timestep_initial
+  use MusicBox_ccpp_cap, only: MusicBox_ccpp_physics_run
+  use MusicBox_ccpp_cap, only: MusicBox_ccpp_physics_timestep_final
+  use MusicBox_ccpp_cap, only: MusicBox_ccpp_physics_finalize
+  use MusicBox_ccpp_cap, only: ccpp_physics_suite_list
+  use MusicBox_ccpp_cap, only: ccpp_physics_suite_part_list
 
-    implicit none
+  implicit none
 
-    integer                         :: col_start, col_end
-    integer                         :: index
-    character(len=128), allocatable :: part_names(:)
-    character(len=512)              :: errmsg
-    integer                         :: errflg
-
+  integer                         :: col_start, col_end
+  integer                         :: index
+  character(len=128), allocatable :: part_names(:)
+  character(len=512)              :: errmsg
+  integer                         :: errflg
 
   integer,parameter  :: nbox_param=1    ! Need to read this in from namelist and then allocate arrays
   
@@ -63,13 +61,15 @@ subroutine MusicBox_sub()
   ! run-time options
   character(len=120) :: env_conds_file = '../data/env_conditions.nc'
   character(len=120) :: outfile_name = 'test_output.nc'
-  real, parameter :: NOT_SET = -huge(1.0)
-  real :: env_lat(nbox_param) = NOT_SET
-  real :: env_lon(nbox_param) = NOT_SET
-  real :: env_lev(nbox_param) = NOT_SET ! mbar
-  real :: user_begin_time = NOT_SET ! seconds
-  real :: user_end_time = NOT_SET
-  real :: user_dtime = NOT_SET
+
+  ! These need to be plain reals for the reading routine
+  real, parameter    :: NOT_SET = -huge(1.0)
+  real               :: env_lat(nbox_param) = NOT_SET
+  real               :: env_lon(nbox_param) = NOT_SET
+  real               :: env_lev(nbox_param) = NOT_SET ! mbar
+  real               :: user_begin_time = NOT_SET ! seconds
+  real               :: user_end_time = NOT_SET
+  real               :: user_dtime = NOT_SET
   
   character(len=*), parameter   :: nml_options = '../MusicBox_options'
   character(len=120), parameter :: jsonfile    = '../molec_info.json'
@@ -135,7 +135,7 @@ subroutine MusicBox_sub()
   ! Set up the various dimensions
 
   nlayer    = nlevel - 1
-  ntuvRates     = 113
+  ntuvRates = 113
 
   !---------------------------
   ! allocate host model arrays
@@ -158,7 +158,7 @@ subroutine MusicBox_sub()
   ! down right above time_step_init
 
   TimeStart = sim_beg_time
-  TimeEnd = TimeStart + dt
+  TimeEnd   = TimeStart + dt
 
   !---------------------------
   ! Use the suite information to setup the run
@@ -263,6 +263,10 @@ subroutine MusicBox_sub()
    !---------------------------
    ! Finalize all of the schemes
    call MusicBox_ccpp_physics_finalize('MusicBox_suite', errmsg, errflg)
+  if (errflg /= 0) then
+    write(6, *) trim(errmsg)
+    stop
+  end if
 
 
     if (errflg /= 0) then

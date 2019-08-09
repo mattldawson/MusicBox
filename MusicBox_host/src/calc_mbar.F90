@@ -43,10 +43,6 @@ contains
     character(len=512), intent(out) :: errmsg
     integer, intent(out)            :: errflg
 
-    real(kind_phys) :: n2_vmr
-    real(kind_phys), parameter :: molar_mass_n2 = 28.0134_kind_phys ! g/mole
-    real(kind_phys), parameter :: kboltz= 1.38064852e-16_kind_phys ! boltzmann constant (erg/K)
-   
     !--- initialize CCPP error handling variables
     errmsg = ''
     errflg = 0

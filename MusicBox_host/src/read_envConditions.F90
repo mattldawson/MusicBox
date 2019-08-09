@@ -35,12 +35,8 @@ contains
    real(kind_phys), allocatable     :: file_times(:)
 
 
-    integer                         :: index
-    character(len=128), allocatable :: part_names(:)
     character(len=512)              :: errmsg
     integer                         :: errflg
-
-
 
   integer,parameter  :: nbox_param=1    ! Need to read this in from namelist and then allocate arrays
   
@@ -114,6 +110,7 @@ contains
   nlevels = colEnvConds(1)%nlevels()
   photo_lev     = theEnvConds(1)%levnum()
 
+  deallocate(file_times)
 
  end subroutine read_envConditions_init
 

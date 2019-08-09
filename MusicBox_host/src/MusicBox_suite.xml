@@ -3,7 +3,6 @@
 <suite name="MusicBox_suite" version="1.0">
   <group name="physics">
     <scheme>relhum_mod</scheme>
-    <scheme>calc_molar_mass</scheme>
     <scheme>calc_density</scheme>
     <scheme>calc_mbar</scheme>
     <scheme>k_rateConst</scheme>
