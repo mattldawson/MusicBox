@@ -95,24 +95,12 @@
   units = count
   dimensions = ()
   type = integer
-[nlevels]
-  standard_name = num_levels_for_photolysis
-  long_name = number of column layers
-  units = count
-  dimensions = ()
-  type = integer
-[nlevelsminus1]
-  standard_name = num_levels_for_photolysis_minus_1
-  long_name = number of column layers minus 1
-  units = count
-  dimensions = ()
-  type = integer
-[ Musicpver ]
+[ nlayer ]
   standard_name = vertical_layer_dimension
   units = count
   type = integer
   dimensions = ()
-[ Musicpverp ]
+[ nlevel ]
   standard_name = vertical_level_dimension
   type = integer
   units = count
@@ -205,14 +193,6 @@
   dimensions = (vertical_level_dimension)
   type = real
   kind = kind_phys
-[ file_times ]
-  standard_name = file_times
-  units = seconds
-  dimensions = (number_of_model_times)
-  type = real
-  kind = kind_phys
-  intent = out
-  allocatable = True
 [vmr]
   standard_name = concentration
   long_name = species concentration

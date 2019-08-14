@@ -21,9 +21,8 @@ module MusicBox_mod
    integer,parameter  :: realkind = kind_phys
    integer            :: photo_lev
    integer            :: nspecies
-   integer            :: nlevels
-   integer            :: nlevelsMinus1
-   integer            :: Musicpver, Musicpverp
+   integer            :: nlayer
+   integer            :: nlevel
    integer            :: nbox
    integer            :: nkRxt       ! number gas phase reactions
    integer            :: njRxt       ! number of photochemical reactions
@@ -39,7 +38,6 @@ module MusicBox_mod
    real(kind_phys), allocatable :: prates(:,:)
    real(kind_phys), allocatable :: press_mid(:)
    real(kind_phys), allocatable :: press_int(:)
-   real(kind_phys), allocatable :: file_times(:)
    real(kind_phys), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
 
    type(const_props_type), allocatable :: cnst_info(:)
