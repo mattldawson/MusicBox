@@ -4,7 +4,6 @@ module calc_mbar
   use const_props_mod, only : const_props_type
   implicit none
   
-  integer :: o2_ndx, n2_ndx
   real(kind_phys), allocatable :: molar_mass(:)
   
 contains
@@ -47,7 +46,7 @@ contains
     errmsg = ''
     errflg = 0
 
-     mbar = sum( vmr(:)*molar_mass(:) )
+    mbar = sum( vmr(:)*molar_mass(:) )
     
   end subroutine calc_mbar_run
 

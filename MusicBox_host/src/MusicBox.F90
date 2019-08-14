@@ -2,7 +2,6 @@ module MusicBox_main
 
 !  use ccpp_kinds, only: r8 => kind_phys
 use ccpp_kinds,             only: kind_phys
-use environ_conditions_mod, only: environ_conditions_create, environ_conditions
 use read_envConditions,     only: read_envConditions_init, read_envConditions_timestep, read_envConditions_update_timestep
 
 use json_loader,            only: json_loader_read
@@ -180,100 +179,93 @@ subroutine MusicBox_sub()
 
   time_loop:  do while (timestart <= sim_end_time)
 
-    !---------------------------
-    ! Initialize the timestep
+     !---------------------------
+     ! Initialize the timestep
 
-    call MusicBox_ccpp_physics_timestep_initial('MusicBox_suite', errmsg, errflg)
-    if (errflg /= 0) then
-       write(6, *) trim(errmsg)
-       stop
-    end if
+     call MusicBox_ccpp_physics_timestep_initial('MusicBox_suite', errmsg, errflg)
+     if (errflg /= 0) then
+        write(6, *) trim(errmsg)
+        stop
+     end if
 
-    !---------------------------
-    ! set the timestep for the output file
+     !---------------------------
+     ! set the timestep for the output file
 
-    call outfile%advance(TimeStart)
+     call outfile%advance(TimeStart)
 
-    !---------------------------
-    ! Loop over the boxes
+     !---------------------------
+     ! Loop over the boxes
 
-    Box_loop: do ibox=1,nbox
+     Box_loop: do ibox=1,nbox
 
 
-       !---------------------------
-       ! Read in the environmental conditions  at TimeStart
+        !---------------------------
+        ! Read in the environmental conditions  at TimeStart
+ 
+        call read_envConditions_timestep(TimeStart,ibox, nlevel, photo_lev, vmrboxes, zenith, albedo, &
+             press_mid, press_int, alt,  temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, vmr, box_h2o, &
+             box_temp, box_press)
 
-       call read_envConditions_timestep(TimeStart,ibox, nlevel, photo_lev, vmrboxes, zenith, albedo, &
-            press_mid, press_int, alt, &
-            temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, vmr, box_h2o, box_temp, box_press)
+        !---------------------------
+        ! Call the schemes for the timestep
+        col_start=1
+        col_end=1
 
-       !---------------------------
-       ! Call the schemes for the timestep
-       col_start=1
-       col_end=1
+        call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, errmsg, errflg)
+        if (errflg /= 0) then
+           write(6, *) trim(errmsg)
+           call ccpp_physics_suite_part_list('MusicBox_suite', part_names, errmsg, errflg)
+           write(6, *) 'Available suite parts are:'
+           do index = 1, size(part_names)
+             write(6, *) trim(part_names(index))
+           end do
+           stop
+        end if
 
-       call MusicBox_ccpp_physics_run('MusicBox_suite', 'physics', col_start, col_end, errmsg, errflg)
-       if (errflg /= 0) then
+        !---------------------------
+        ! Update the environmental conditions for the timestep
+        call read_envConditions_update_timestep(ibox, vmr, vmrboxes)
+
+        !---------------------------
+        ! write out the timestep values
+
+        call outfile%out( 'RelHum', relhum )
+        call outfile%out( 'Zenith', zenith )
+
+        write(*,'(a, e12.4, f6.2, f6.2)') ' total density, pressure, temperature :', density, box_press, box_temp
+        call outfile%out( 'Density', density )
+        call outfile%out( 'Mbar', mbar )
+
+        call outfile%out( cnst_info, vmrboxes(:,ibox) )
+        write(*,'(a,1p,g0)') 'Concentration @ hour = ',TimeStart/3600.
+        write(*,'(1p,5(1x,g0))') vmrboxes(:,ibox),sum(vmrboxes(:,ibox))
+
+      end do Box_loop
+
+      !---------------------------
+      ! Advance the timestep
+      TimeStart = TimeEnd
+      TimeEnd = TimeStart + dt
+
+      !---------------------------
+      ! call the timestep_final scheme routines
+      call MusicBox_ccpp_physics_timestep_final('MusicBox_suite', errmsg, errflg)
+      if (errflg /= 0) then
          write(6, *) trim(errmsg)
-         call ccpp_physics_suite_part_list('MusicBox_suite', part_names, errmsg, errflg)
-         write(6, *) 'Available suite parts are:'
-         do index = 1, size(part_names)
-           write(6, *) trim(part_names(index))
-         end do
+         write(6,'(a)') 'An error occurred in ccpp_timestep_final, Exiting...'
          stop
-       end if
+      end if
 
-       !---------------------------
-       ! Update the environmental conditions for the timestep
-       call read_envConditions_update_timestep(ibox, vmr, vmrboxes)
+  end do time_loop
 
-       !---------------------------
-       ! write out the timestep values
-
-       call outfile%out( 'RelHum', relhum )
-       call outfile%out( 'Zenith', zenith )
-
-       write(*,'(a, e12.4, f6.2, f6.2)') ' total density, pressure, temperature :', density, box_press, box_temp
-       call outfile%out( 'Density', density )
-       call outfile%out( 'Mbar', mbar )
-
-       call outfile%out( cnst_info, vmrboxes(:,ibox) )
-       write(*,'(a,1p,g0)') 'Concentration @ hour = ',TimeStart/3600.
-       write(*,'(1p,5(1x,g0))') vmrboxes(:,ibox),sum(vmrboxes(:,ibox))
-
-    end do Box_loop
-
-    !---------------------------
-    ! Advance the timestep
-    TimeStart = TimeEnd
-    TimeEnd = TimeStart + dt
-
-    !---------------------------
-    ! call the timestep_final scheme routines
-    call MusicBox_ccpp_physics_timestep_final('MusicBox_suite', errmsg, errflg)
-    if (errflg /= 0) then
-      write(6, *) trim(errmsg)
-      write(6,'(a)') 'An error occurred in ccpp_timestep_final, Exiting...'
-      stop
-    end if
-
-   end do time_loop
-
-
-   !---------------------------
-   ! Finalize all of the schemes
-   call MusicBox_ccpp_physics_finalize('MusicBox_suite', errmsg, errflg)
+  !---------------------------
+  ! Finalize all of the schemes
+  call MusicBox_ccpp_physics_finalize('MusicBox_suite', errmsg, errflg)
   if (errflg /= 0) then
-    write(6, *) trim(errmsg)
-    stop
+     write(6, *) trim(errmsg)
+     write(6,'(a)') 'An error occurred in ccpp_finalize, Exiting...'
+     stop
   end if
-
-
-    if (errflg /= 0) then
-      write(6, *) trim(errmsg)
-      write(6,'(a)') 'An error occurred in ccpp_finalize, Exiting...'
-      stop
-    end if
 
   call outfile%close()
 
@@ -288,7 +280,6 @@ subroutine MusicBox_sub()
   deallocate(so2vmrcol)
   deallocate(no2vmrcol)
   if (allocated(prates)) deallocate(prates)
-
 
 end subroutine MusicBox_sub
 

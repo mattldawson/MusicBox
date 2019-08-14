@@ -4,10 +4,7 @@
 module calc_density
 !  USE ccpp_kinds, ONLY: rk => kind_phys
   USE ccpp_kinds, ONLY: kind_phys
-  use const_props_mod, only : const_props_type
   implicit none
-  
-  integer :: o2_ndx, n2_ndx
   
 contains
 
