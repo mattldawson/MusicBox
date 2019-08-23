@@ -15,11 +15,13 @@ SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{NETCDF})
 #-----------------------------------------------------------------------------
 
 #NOTE -- FILES WITH DDTs MUST APPEAR BEFORE THEY ARE USED
-LIST (APPEND SCHEME_FILES  "MusicBox_ddt_files.txt" "../../MICM_chemistry/src/MICM_scheme_files.txt" "MusicBox_scheme_files.txt" )
 
-LIST(APPEND HOST_FILES  "const_props_mod" "MusicBox_mod" )
-LIST(APPEND SUITE_FILES "MusicBox_suite.xml")
-LIST(APPEND UTILITY_FILES "MusicBox_utility_files.txt" "../../MICM_chemistry/src/MICM_utility_files.txt")
+LIST(APPEND DDT_FILES      "MusicBox_ddt_files.txt" )
+LIST (APPEND SCHEME_FILES  ${DDT_FILES} "../../MICM_chemistry/src/MICM_scheme_files.txt" "MusicBox_scheme_files.txt" )
+LIST(APPEND HOST_FILES     "MusicBox_mod" )
+LIST(APPEND SUITE_FILES    "MusicBox_suite.xml")
+LIST(APPEND UTILITY_FILES  "MusicBox_utility_files.txt" "../../MICM_chemistry/src/MICM_utility_files.txt")
+
 # HOST is the name of the executable we will build.
 SET(HOST "${CMAKE_PROJECT_NAME}")
 # HOST_PROGRAM is the name of the program source files (Fortran and metadata)
@@ -136,22 +138,30 @@ FOREACH(FILE ${SCHEME_FILENAMES})
   target_sources(${HOST} PUBLIC ${ABS_PATH})
 ENDFOREACH(FILE)
 
-FOREACH(FILE ${HOST_FILES})
-  LIST(APPEND HOST_METADATA "${FILE}.meta")
+FOREACH (FILE ${DDT_FILES})
+  FILE(STRINGS ${FILE} FILENAMES)
+  LIST(APPEND DDT_FILENAMES ${FILENAMES})
+ENDFOREACH(FILE)
+string(REPLACE ".meta" ";" DDT_FILENAMES "${DDT_FILENAMES}")
+
+LIST(APPEND DDT_HOST_FILES ${DDT_FILENAMES} ${HOST_FILES})
+
+FOREACH(FILE ${DDT_HOST_FILES})
+  LIST(APPEND DDT_HOST_METADATA "${FILE}.meta")
   # target_sources prefers absolute pathnames
   get_filename_component(ABS_PATH "${FILE}.F90" ABSOLUTE)
   LIST(APPEND HOST_SOURCE   "${ABS_PATH}")
 ENDFOREACH(FILE)
 target_sources(${HOST} PUBLIC ${HOST_SOURCE})
-string(REPLACE ";" ".meta," HOST_METADATA "${HOST_FILES}")
-set(HOST_METADATA "${HOST_METADATA}.meta,${HOST_PROGRAM}.meta")
+string(REPLACE ";" ".meta," DDT_HOST_METADATA "${DDT_HOST_FILES}")
+set(DDT_HOST_METADATA "${DDT_HOST_METADATA}.meta,${HOST_PROGRAM}.meta")
 
 string(REPLACE ";" "," SUITE_XML "${SUITE_FILES}")
 
 # Run ccpp_capgen
 set(CAPGEN_CMD "${CCPP_FRAMEWORK}/ccpp_capgen.py")
 list(APPEND CAPGEN_CMD "--host-files")
-list(APPEND CAPGEN_CMD "${HOST_METADATA}")
+list(APPEND CAPGEN_CMD "${DDT_HOST_METADATA}")
 list(APPEND CAPGEN_CMD "--scheme-files")
 list(APPEND CAPGEN_CMD "${SCHEME_METADATA}")
 list(APPEND CAPGEN_CMD "--suites")

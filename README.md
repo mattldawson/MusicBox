@@ -54,5 +54,15 @@ python3 eat_it.py --help
 
 The steps to adding a new MusicBox scheme are as follows:
 * Create XXX.F90 and XXX.meta files (the fortran code and its accompanying metadata file)
+* Use "type = scheme" in the metadata file
 * Add the XXX.meta file to MusicBox_scheme_files.txt
 * Add the scheme to MusicBox_suite.xml in the order in which it is to be run
+
+## Adding a new ddt
+The steps to adding a new ddt to MusicBox are as follows:
+* Create XXX.F90 and XXX.meta files (a fortran module that contains the ddt and its accompanying metadata file)
+* The metdata file will use "name = Name_of_your_ddt" and "type = ddt". 
+* Each element in the ddt will be documented with its local name, standard name, type, etc.
+* Add the XXX.meta file to MusicBox_ddt_files.txt
+* Add the ddt to MusicBox_mod.F90 and MusicBox_mod.meta
+* The ddt can then be passed in/out and "use"d within any module 
