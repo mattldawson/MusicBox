@@ -7,11 +7,12 @@ module json_loader
   
 contains
 
-  subroutine json_loader_read( jsonfile, cnst_info, ncnst, nrxtn, nphot )
+  subroutine json_loader_read( jsonfile, cnst_info, ncnst, nrxtn, nphot, jnames )
     
     character(len=*), intent(in) :: jsonfile
     type(const_props_type), allocatable :: cnst_info(:)
     integer, intent(out) :: ncnst, nrxtn, nphot
+    character(len=16), allocatable :: jnames(:)
     
     ! local vars
     type(json_file) :: json       !! the JSON structure read from the file
@@ -73,7 +74,7 @@ contains
                 deallocate(string)
                 call cnst_info(n)%set_wght(rval)
              else
-                write(*,*) ' ERROR: Did not find child ',n
+                write(*,*) ' ERROR: Did not find molecules child ',n
                 call abort()
              endif
           enddo
@@ -83,6 +84,19 @@ contains
        photolysis: if (name=='photolysis') then
           nphot = core%count(child2)
           !write(*,*)  '  nphot : ', nphot
+
+          allocate( jnames(nphot) )
+          do n = 1,nphot
+             call core%get_child(child2, n, child3, found)
+             if (found) then
+                call core%get(child3,'rate',string)
+                jnames(n) = string
+             else
+                write(*,*) ' ERROR: Did not find photolysis child ',n
+                call abort()
+             endif
+          end do
+
        end if photolysis
        
        reactions: if (name=='reactions') then

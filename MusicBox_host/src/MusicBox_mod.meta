@@ -144,6 +144,22 @@
   dimensions = (vertical_layer_dimension)
   type = real
   kind = kind_phys
+[cldfrc]
+  standard_name = cloud_fraction
+  long_name = cloud fraction
+  units = none
+  dimensions = (vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = in
+[cldwat]
+  standard_name = cloud_water_dens
+  long_name = cloud water mass density
+  units = g/m3
+  dimensions = (vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = in
 [o2vmrcol]
   standard_name = o2_vmr_col
   long_name = O2 volume mixing ratio column
@@ -172,13 +188,14 @@
   dimensions = (vertical_layer_dimension)
   type = real
   kind = kind_phys
-[prates]
-  standard_name = photolysis_rates_col
-  long_name = photolysis rates column
-  units = s-1
-  dimensions = (vertical_level_dimension,number_of_tuv_jrates)
-  type = real
-  kind = kind_phys
+[jnames]
+  standard_name = photodissociation_labels
+  long_name = TUV reaction rate names
+  units = none
+  dimensions = (number_of_photolysis_reactions)
+  type = character
+  kind = len=16
+  intent = in
 [press_mid]
   standard_name = layer_pressure
   long_name = mid-point layer pressure
@@ -193,6 +210,14 @@
   dimensions = (vertical_level_dimension)
   type = real
   kind = kind_phys
+[press_top]
+  standard_name = top_interface_pressure
+  long_name = pressure at the top of the model
+  units = Pa
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
 [vmr]
   standard_name = concentration
   long_name = species concentration

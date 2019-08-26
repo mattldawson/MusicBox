@@ -17,6 +17,7 @@ module MusicBox_mod
    real(kind_phys)    :: albedo
    real(kind_phys)    :: density, mbar
    real(kind_phys)    :: TimeStart, TimeEnd, dt
+   real(kind_phys)    :: press_top
 
    integer,parameter  :: realkind = kind_phys
    integer            :: photo_lev
@@ -35,11 +36,13 @@ module MusicBox_mod
    real(kind_phys), allocatable :: o3vmrcol(:)
    real(kind_phys), allocatable :: so2vmrcol(:)
    real(kind_phys), allocatable :: no2vmrcol(:)
-   real(kind_phys), allocatable :: prates(:,:)
+   real(kind_phys), allocatable :: cldfrc(:)
+   real(kind_phys), allocatable :: cldwat(:)
    real(kind_phys), allocatable :: press_mid(:)
    real(kind_phys), allocatable :: press_int(:)
    real(kind_phys), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
 
    type(const_props_type), allocatable :: cnst_info(:)
+   character(len=16), allocatable :: jnames(:)
 
 end module MusicBox_mod
