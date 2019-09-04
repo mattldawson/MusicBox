@@ -12,7 +12,7 @@ contains
     character(len=*), intent(in) :: jsonfile
     type(const_props_type), allocatable :: cnst_info(:)
     integer, intent(out) :: ncnst, nrxtn, nphot
-    character(len=16), allocatable :: jnames(:)
+    character(len=16), allocatable, intent(out) :: jnames(:)
     
     ! local vars
     type(json_file) :: json       !! the JSON structure read from the file
