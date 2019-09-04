@@ -101,7 +101,7 @@
   type = integer
   dimensions = ()
 [ nlevel ]
-  standard_name = vertical_level_dimension
+  standard_name = vertical_interface_dimension
   type = integer
   units = count
   dimensions = ()
@@ -207,7 +207,7 @@
   standard_name = layer_interface_pressure
   long_name = layer interface pressure
   units = Pa
-  dimensions = (vertical_level_dimension)
+  dimensions = (vertical_interface_dimension)
   type = real
   kind = kind_phys
 [press_top]
