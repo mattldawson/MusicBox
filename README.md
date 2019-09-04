@@ -20,14 +20,21 @@ get the MusicBox source code:
  manage_externals/checkout_externals
 ```    
 get input data (environmental conditions), and configure a tag from the cafe-dev web server:
+
 ```
+ cd MusicBox_host/data 
+ wget  ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_c190109.nc; mv MusicBox_env_cond_c190109.nc env_conditions.nc
+ -- or --
+ wget  ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_1col_c190109.nc; mv MusicBox_env_cond_1col_c190109.nc env_conditions.nc
+ cd ../../
+
  cd Mechanism_collection
  python3 burrito.py -tag_id 265
  python3 eat_it.py -source_dir configured_tags/265
 ```
 build steps:
 ```
- cd ../MusicBox_host
+ cd MusicBox_host
  source etc/CENTOS_setup.sh -- or -- source etc/Cheyenne_setup_intel.sh
 
  rm -rf build; mkdir build; cd build
@@ -35,7 +42,6 @@ build steps:
  cmake3 ../CMakeLists.txt -S ../src -B . -DCMAKE_BUILD_TYPE=Debug (with debug)
  -- or --
  cmake3 ../CMakeLists.txt -S ../src -B .  (no debug)
-
 
  make
 ```

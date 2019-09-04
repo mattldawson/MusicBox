@@ -98,7 +98,7 @@
           "O2"
         ],
         "id": "5757",
-        "rate": "jo2_b=userdefined,",
+        "rate": "jo2_b",
         "wrf_rate": null,
         "tuv_id": "1",
         "tuv_coeff": "1",

@@ -1,3 +1,5 @@
 &tuv_opts
  input_data_root = '../../MICM_chemistry/src/tuv/inputs'
+ wavelength_grid_file = 'wavelength_grid.nc'
+ is_full_tuv = .true.
 /

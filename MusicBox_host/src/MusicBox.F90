@@ -9,12 +9,15 @@ use output_file,            only: output_file_type
 
 ! MusicBox host model data
 use MusicBox_mod,           only: box_press, box_temp, relhum, box_h2o, photo_lev, nspecies, vmr
-use MusicBox_mod,           only: nbox, ntimes, ntuvRates
+use MusicBox_mod,           only: nbox, ntimes
 use MusicBox_mod,           only: nkRxt, njRxt, TimeStart, TimeEnd
 use MusicBox_mod,           only: nlayer, nlevel, zenith, albedo, press_mid, press_int
 use MusicBox_mod,           only: alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol
-use MusicBox_mod,           only: prates, dt, density, mbar
+use MusicBox_mod,           only: dt, density, mbar
 use MusicBox_mod,           only: cnst_info
+use MusicBox_mod,           only: jnames
+use MusicBox_mod,           only: press_top
+use MusicBox_mod,           only: cldfrc, cldwat
 
 implicit none
 
@@ -38,6 +41,8 @@ subroutine MusicBox_sub()
   use MusicBox_ccpp_cap, only: MusicBox_ccpp_physics_finalize
   use MusicBox_ccpp_cap, only: ccpp_physics_suite_list
   use MusicBox_ccpp_cap, only: ccpp_physics_suite_part_list
+
+  use tuv_photolysis,    only: tuv_photolysis_readnl
 
   implicit none
 
@@ -70,6 +75,7 @@ subroutine MusicBox_sub()
   real               :: user_end_time = NOT_SET
   real               :: user_dtime = NOT_SET
   
+  character(len=*), parameter   :: photo_opts_file = '../Photolysis_options'
   character(len=*), parameter   :: nml_options = '../MusicBox_options'
   character(len=120), parameter :: jsonfile    = '../molec_info.json'
 
@@ -86,6 +92,12 @@ subroutine MusicBox_sub()
   open(unit=10,file=nml_options)
   read(unit=10,nml=options)
   close(10)
+
+  call tuv_photolysis_readnl(photo_opts_file, errmsg, errflg)
+  if (errflg /= 0) then
+    write(6, *) trim(errmsg)
+    stop
+  end if
 
   !---------------------------
   ! error checking of namelist settings
@@ -109,8 +121,8 @@ subroutine MusicBox_sub()
   !---------------------------
   ! Read in the molecular information
 
-  call json_loader_read( jsonfile, cnst_info, nSpecies, nkRxt, njRxt )
-    
+  call json_loader_read( jsonfile, cnst_info, nSpecies, nkRxt, njRxt, jnames )
+
   !---------------------------
   ! Create the fields for the output netCDF file
 
@@ -125,16 +137,15 @@ subroutine MusicBox_sub()
   !---------------------------
   ! Initialize the envrionmental conditions
 
-   allocate(vmrboxes(nSpecies,nbox))
+  allocate(vmrboxes(nSpecies,nbox))
 
-   call  read_envConditions_init(nbox, nSpecies, env_conds_file, env_lat, env_lon, env_lev, user_begin_time, &
+  call read_envConditions_init(nbox, nSpecies, env_conds_file, env_lat, env_lon, env_lev, user_begin_time, &
              user_end_time, user_dtime, cnst_info, vmrboxes, dt, sim_beg_time, sim_end_time, nlevel, photo_lev)
 
   !---------------------------
   ! Set up the various dimensions
 
-  nlayer    = nlevel - 1
-  ntuvRates = 113
+  nlayer = nlevel
 
   !---------------------------
   ! allocate host model arrays
@@ -149,7 +160,8 @@ subroutine MusicBox_sub()
   allocate(o3vmrcol(nlevel))
   allocate(so2vmrcol(nlevel))
   allocate(no2vmrcol(nlevel))
-  allocate(prates(nlevel,ntuvRates))
+  allocate(cldwat(nlevel))
+  allocate(cldfrc(nlevel))
 
   !---------------------------
   ! Set the times (note this needs to be set prior to call ccpp_initialize)
@@ -206,6 +218,10 @@ subroutine MusicBox_sub()
              press_mid, press_int, alt,  temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, vmr, box_h2o, &
              box_temp, box_press)
 
+        cldwat = 0._kind_phys
+        cldfrc = 0._kind_phys
+        press_top = press_int(1)
+        
         !---------------------------
         ! Call the schemes for the timestep
         col_start=1
@@ -279,7 +295,8 @@ subroutine MusicBox_sub()
   deallocate(o3vmrcol)
   deallocate(so2vmrcol)
   deallocate(no2vmrcol)
-  if (allocated(prates)) deallocate(prates)
+  deallocate(cldwat)
+  deallocate(cldfrc)
 
 end subroutine MusicBox_sub
 

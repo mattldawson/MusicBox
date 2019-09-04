@@ -108,7 +108,7 @@ contains
   enddo
 
   nlevels = colEnvConds(1)%nlevels()
-  photo_lev     = theEnvConds(1)%levnum()
+  photo_lev = theEnvConds(1)%levnum()
 
   deallocate(file_times)
 
