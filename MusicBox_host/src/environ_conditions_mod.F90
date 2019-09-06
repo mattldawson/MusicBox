@@ -28,7 +28,7 @@ module environ_conditions_mod
      procedure :: dtime => environ_conditions_dtime
      procedure :: ntimes => environ_conditions_ntimes
      procedure :: get_times => environ_conditions_times
-     procedure :: nlevels => environ_conditions_nlevels
+     procedure :: nlayers => environ_conditions_nlayers
      procedure :: levnum => environ_conditions_levnum
      procedure :: environ_conditions_update_ndx
      procedure :: environ_conditions_update_flt
@@ -214,13 +214,13 @@ contains
     
   end function environ_conditions_times
   
-  function environ_conditions_nlevels(this) result(nlevs)
+  function environ_conditions_nlayers(this) result(nlyrs)
     class(environ_conditions), intent(in) :: this
 
-    integer :: nlevs
-    nlevs = this%inputfile%get_nlevels()
+    integer :: nlyrs
+    nlyrs = this%inputfile%get_nlevels()
     
-  end function environ_conditions_nlevels
+  end function environ_conditions_nlayers
   
   function environ_conditions_dtime(this) result(dtime)
     class(environ_conditions), intent(in) :: this

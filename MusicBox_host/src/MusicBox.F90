@@ -140,28 +140,28 @@ subroutine MusicBox_sub()
   allocate(vmrboxes(nSpecies,nbox))
 
   call read_envConditions_init(nbox, nSpecies, env_conds_file, env_lat, env_lon, env_lev, user_begin_time, &
-             user_end_time, user_dtime, cnst_info, vmrboxes, dt, sim_beg_time, sim_end_time, nlevel, photo_lev)
+             user_end_time, user_dtime, cnst_info, vmrboxes, dt, sim_beg_time, sim_end_time, nlayer, photo_lev)
 
   !---------------------------
   ! Set up the various dimensions
 
-  nlayer = nlevel
+  nlevel = nlayer+1 ! number if vertical interface levels
 
   !---------------------------
   ! allocate host model arrays
 
   allocate(vmr(nSpecies))
 
-  allocate(alt(nlevel))
-  allocate(press_mid(nlevel))
-  allocate(press_int(nlevel+1))
-  allocate(temp(nlevel))
-  allocate(o2vmrcol(nlevel))
-  allocate(o3vmrcol(nlevel))
-  allocate(so2vmrcol(nlevel))
-  allocate(no2vmrcol(nlevel))
-  allocate(cldwat(nlevel))
-  allocate(cldfrc(nlevel))
+  allocate(alt(nlayer))
+  allocate(press_mid(nlayer))
+  allocate(press_int(nlevel))
+  allocate(temp(nlayer))
+  allocate(o2vmrcol(nlayer))
+  allocate(o3vmrcol(nlayer))
+  allocate(so2vmrcol(nlayer))
+  allocate(no2vmrcol(nlayer))
+  allocate(cldwat(nlayer))
+  allocate(cldfrc(nlayer))
 
   !---------------------------
   ! Set the times (note this needs to be set prior to call ccpp_initialize)
@@ -214,7 +214,7 @@ subroutine MusicBox_sub()
         !---------------------------
         ! Read in the environmental conditions  at TimeStart
  
-        call read_envConditions_timestep(TimeStart,ibox, nlevel, photo_lev, vmrboxes, zenith, albedo, &
+        call read_envConditions_timestep(TimeStart,ibox, nlayer, photo_lev, vmrboxes, zenith, albedo, &
              press_mid, press_int, alt,  temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, vmr, box_h2o, &
              box_temp, box_press)
 
