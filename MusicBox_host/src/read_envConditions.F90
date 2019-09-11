@@ -13,7 +13,7 @@ type(environ_conditions),allocatable :: colEnvConds(:)
 contains
 
  subroutine  read_envConditions_init(nbox, nSpecies, env_conds_file, env_lat, env_lon, env_lev, user_begin_time, &
-             user_end_time, user_dtime, cnst_info, vmrboxes, dt, sim_beg_time, sim_end_time, nlevels, photo_lev)
+             user_end_time, user_dtime, cnst_info, vmrboxes, dt, sim_beg_time, sim_end_time, nlayers, photo_lev)
 
    real, parameter :: NOT_SET = -huge(1.0)
 
@@ -30,7 +30,7 @@ contains
 
    real(kind_phys), intent(out)        :: dt
    real(kind_phys), intent(out)        :: sim_beg_time, sim_end_time
-   integer, intent(out)                :: nlevels, photo_lev
+   integer, intent(out)                :: nlayers, photo_lev
 
    real(kind_phys), allocatable     :: file_times(:)
 
@@ -107,19 +107,19 @@ contains
      enddo
   enddo
 
-  nlevels = colEnvConds(1)%nlevels()
+  nlayers = colEnvConds(1)%nlayers()
   photo_lev = theEnvConds(1)%levnum()
 
   deallocate(file_times)
 
  end subroutine read_envConditions_init
 
- subroutine  read_envConditions_timestep(TimeStart,ibox, nlevels, photo_lev, vmrboxes, zenith, albedo, &
+ subroutine  read_envConditions_timestep(TimeStart,ibox, nlayers, photo_lev, vmrboxes, zenith, albedo, &
                press_mid, press_int, alt, &
                temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, vmr, box_h2o, box_temp, box_press)
 
    real(kind_phys), intent(in)                :: TimeStart
-   integer,         intent(in)                :: ibox, nlevels
+   integer,         intent(in)                :: ibox, nlayers
    integer,         intent(in)                :: photo_lev
    real(kind=kind_phys), intent(in)           :: vmrboxes(:,:)   ! vmr for all boxes
    real(kind_phys), intent(out)               :: zenith, albedo, box_h2o, box_temp, box_press
@@ -137,14 +137,14 @@ contains
  
    zenith              = colEnvConds(ibox)%getsrf('SZA')
    albedo              = colEnvConds(ibox)%getsrf('ASDIR')
-   press_mid(:nlevels) = colEnvConds(ibox)%press_mid(nlevels)
-   press_int(:nlevels) = colEnvConds(ibox)%press_int(nlevels)
-   alt(:nlevels)       = colEnvConds(ibox)%getcol('Z3',nlevels)
-   temp(:nlevels)      = colEnvConds(ibox)%getcol('T',nlevels)
-   o2vmrcol(:nlevels)  = colEnvConds(ibox)%getcol('O2',nlevels)
-   o3vmrcol(:nlevels)  = colEnvConds(ibox)%getcol('O3',nlevels)
-   so2vmrcol(:nlevels) = colEnvConds(ibox)%getcol('SO2',nlevels)
-   no2vmrcol(:nlevels) = colEnvConds(ibox)%getcol('NO2',nlevels)
+   press_mid(:nlayers) = colEnvConds(ibox)%press_mid(nlayers)
+   press_int(:nlayers) = colEnvConds(ibox)%press_int(nlayers)
+   alt(:nlayers)       = colEnvConds(ibox)%getcol('Z3',nlayers)
+   temp(:nlayers)      = colEnvConds(ibox)%getcol('T',nlayers)
+   o2vmrcol(:nlayers)  = colEnvConds(ibox)%getcol('O2',nlayers)
+   o3vmrcol(:nlayers)  = colEnvConds(ibox)%getcol('O3',nlayers)
+   so2vmrcol(:nlayers) = colEnvConds(ibox)%getcol('SO2',nlayers)
+   no2vmrcol(:nlayers) = colEnvConds(ibox)%getcol('NO2',nlayers)
 
    box_h2o             = theEnvConds(ibox)%getvar('H2O')
 
