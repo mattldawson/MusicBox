@@ -18,7 +18,9 @@ module MusicBox_mod
    real(kind_phys)    :: density, mbar
    real(kind_phys)    :: TimeStart, TimeEnd, dt
    real(kind_phys)    :: press_top
-
+   real(kind_phys)    :: box_aer_sad(4)
+   real(kind_phys)    :: box_aer_diam(4)
+   
    integer,parameter  :: realkind = kind_phys
    integer            :: photo_lev
    integer            :: nspecies

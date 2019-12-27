@@ -5,17 +5,17 @@
  ! column location:
  env_lat = 0.    ! latitude degrees north
  env_lon = 0.  ! longitude degrees east
- env_lev = 0.1   ! press level hPa
+ env_lev = 1000.  ! press level hPa
 
  ! input file path
- env_conds_file = '../data/env_conditions.nc'
+ env_conds_file = '../data/f.e21.FW2000climo.f09_f09_mg17.n03.cam.h2.0001-01-01-00000.nc'
 
  ! output file path
  outfile_name = '../MusicBox_output.nc'
 
 ! optional settings which override the defaults determined from env_conds_file
- user_begin_time = 0.   ! sec
- user_dtime = 150.     ! sec
+! user_begin_time = 0.   ! sec
+! user_dtime = 150.     ! sec
 
 ! user_end_time = 43200. ! sec
 ! user_dtime = 1800.     ! sec

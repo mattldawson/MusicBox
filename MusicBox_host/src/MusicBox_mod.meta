@@ -231,3 +231,18 @@
   dimensions = (number_of_chemical_constituents)
   ddt_type = const_props_type
 
+[box_aer_sad]
+  standard_name = aer_surf_area_dens
+  long_name = Aerosol Surface Area Density
+  units = cm2/cm3
+  dimensions = (number_of_aerosol_modes)
+  type = real
+  kind = kind_phys
+[box_aer_sad]
+  standard_name = aer_diam
+  long_name = Aerosol Diameter
+  units = cm
+  dimensions = (number_of_aerosol_modes)
+  type = real
+  kind = kind_phys
+

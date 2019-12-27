@@ -9,6 +9,7 @@ use output_file,            only: output_file_type
 
 ! MusicBox host model data
 use MusicBox_mod,           only: box_press, box_temp, relhum, box_h2o, photo_lev, nspecies, vmr
+use MusicBox_mod,           only: box_aer_sad, box_aer_diam
 use MusicBox_mod,           only: nbox, ntimes
 use MusicBox_mod,           only: nkRxt, njRxt, TimeStart, TimeEnd
 use MusicBox_mod,           only: nlayer, nlevel, zenith, albedo, press_mid, press_int
@@ -216,7 +217,7 @@ subroutine MusicBox_sub()
  
         call read_envConditions_timestep(TimeStart,ibox, nlayer, photo_lev, vmrboxes, zenith, albedo, &
              press_mid, press_int, alt,  temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, vmr, box_h2o, &
-             box_temp, box_press)
+             box_temp, box_press, box_aer_sad, box_aer_diam)
 
         cldwat = 0._kind_phys
         cldfrc = 0._kind_phys
@@ -248,7 +249,9 @@ subroutine MusicBox_sub()
         call outfile%out( 'RelHum', relhum )
         call outfile%out( 'Zenith', zenith )
 
-        write(*,'(a, e12.4, f6.2, f6.2)') ' total density, pressure, temperature :', density, box_press, box_temp
+        write(*,'(a, e12.4, f12.2, f8.2)') ' total density, pressure, temperature :', density, box_press, box_temp
+        write(*,'(a, 4e12.4)') ' aerosol surface area density (cm2/cm3):', box_aer_sad
+        write(*,'(a, 4e12.4)') ' aerosol diameter (cm) :', box_aer_diam
         call outfile%out( 'Density', density )
         call outfile%out( 'Mbar', mbar )
 

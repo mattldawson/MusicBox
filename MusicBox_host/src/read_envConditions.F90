@@ -116,7 +116,7 @@ contains
 
  subroutine  read_envConditions_timestep(TimeStart,ibox, nlayers, photo_lev, vmrboxes, zenith, albedo, &
                press_mid, press_int, alt, &
-               temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, vmr, box_h2o, box_temp, box_press)
+               temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, vmr, box_h2o, box_temp, box_press, box_aer_sad, box_aer_diam )
 
    real(kind_phys), intent(in)                :: TimeStart
    integer,         intent(in)                :: ibox, nlayers
@@ -125,6 +125,7 @@ contains
    real(kind_phys), intent(out)               :: zenith, albedo, box_h2o, box_temp, box_press
    real(kind_phys), dimension(:), intent(out) :: press_mid, press_int, alt, temp, o2vmrcol, o3vmrcol
    real(kind_phys), dimension(:), intent(out) :: so2vmrcol, no2vmrcol, vmr
+   real(kind_phys), dimension(:), intent(out) :: box_aer_sad, box_aer_diam
 
    !---------------------------
    ! Update the time
@@ -148,6 +149,16 @@ contains
 
    box_h2o             = theEnvConds(ibox)%getvar('H2O')
 
+   box_aer_sad(1) = theEnvConds(ibox)%getvar('SFC_HET_1')
+   box_aer_sad(2) = theEnvConds(ibox)%getvar('SFC_HET_2')
+   box_aer_sad(3) = theEnvConds(ibox)%getvar('SFC_HET_3')
+   box_aer_sad(4) = theEnvConds(ibox)%getvar('SFC_HET_4')
+   
+   box_aer_diam(1) = theEnvConds(ibox)%getvar('DM_HET_1')
+   box_aer_diam(2) = theEnvConds(ibox)%getvar('DM_HET_2')
+   box_aer_diam(3) = theEnvConds(ibox)%getvar('DM_HET_3')
+   box_aer_diam(4) = theEnvConds(ibox)%getvar('DM_HET_4')
+   
    vmr(:)              = vmrboxes(:,ibox)
    box_temp            = temp(photo_lev)
    box_press           = press_mid(photo_lev)
