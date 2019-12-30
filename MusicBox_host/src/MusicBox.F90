@@ -9,7 +9,7 @@ use output_file,            only: output_file_type
 
 ! MusicBox host model data
 use MusicBox_mod,           only: box_press, box_temp, relhum, box_h2o, photo_lev, nspecies, vmr
-use MusicBox_mod,           only: box_aer_sad, box_aer_diam
+use MusicBox_mod,           only: box_aer_sad, box_aer_diam, n_aer_modes
 use MusicBox_mod,           only: nbox, ntimes
 use MusicBox_mod,           only: nkRxt, njRxt, TimeStart, TimeEnd
 use MusicBox_mod,           only: nlayer, nlevel, zenith, albedo, press_mid, press_int
@@ -163,7 +163,9 @@ subroutine MusicBox_sub()
   allocate(no2vmrcol(nlayer))
   allocate(cldwat(nlayer))
   allocate(cldfrc(nlayer))
-
+  allocate(box_aer_sad(n_aer_modes))
+  allocate(box_aer_diam(n_aer_modes))
+  
   !---------------------------
   ! Set the times (note this needs to be set prior to call ccpp_initialize)
   ! Once Rosenbrock_init is separated into init and time_step_init, this may go 
@@ -300,6 +302,8 @@ subroutine MusicBox_sub()
   deallocate(no2vmrcol)
   deallocate(cldwat)
   deallocate(cldfrc)
+  deallocate(box_aer_sad)
+  deallocate(box_aer_diam)
 
 end subroutine MusicBox_sub
 

@@ -18,9 +18,7 @@ module MusicBox_mod
    real(kind_phys)    :: density, mbar
    real(kind_phys)    :: TimeStart, TimeEnd, dt
    real(kind_phys)    :: press_top
-   real(kind_phys)    :: box_aer_sad(4)
-   real(kind_phys)    :: box_aer_diam(4)
-   
+
    integer,parameter  :: realkind = kind_phys
    integer            :: photo_lev
    integer            :: nspecies
@@ -31,6 +29,7 @@ module MusicBox_mod
    integer            :: njRxt       ! number of photochemical reactions
    integer            :: ntimes      ! number of time steps
    integer            :: ntuvRates
+   integer, parameter :: n_aer_modes = 4 ! assume 4 aerosol modes for now
 
    real(kind_phys), allocatable :: alt(:)
    real(kind_phys), allocatable :: temp(:)
@@ -43,6 +42,8 @@ module MusicBox_mod
    real(kind_phys), allocatable :: press_mid(:)
    real(kind_phys), allocatable :: press_int(:)
    real(kind_phys), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
+   real(kind_phys), allocatable :: box_aer_sad(:)
+   real(kind_phys), allocatable :: box_aer_diam(:)
 
    type(const_props_type), allocatable :: cnst_info(:)
    character(len=16), allocatable :: jnames(:)

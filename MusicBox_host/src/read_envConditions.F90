@@ -127,6 +127,9 @@ contains
    real(kind_phys), dimension(:), intent(out) :: so2vmrcol, no2vmrcol, vmr
    real(kind_phys), dimension(:), intent(out) :: box_aer_sad, box_aer_diam
 
+   character(len=32) :: fld_name
+   integer :: nmodes, n
+   
    !---------------------------
    ! Update the time
 
@@ -149,15 +152,15 @@ contains
 
    box_h2o             = theEnvConds(ibox)%getvar('H2O')
 
-   box_aer_sad(1) = theEnvConds(ibox)%getvar('SFC_HET_1')
-   box_aer_sad(2) = theEnvConds(ibox)%getvar('SFC_HET_2')
-   box_aer_sad(3) = theEnvConds(ibox)%getvar('SFC_HET_3')
-   box_aer_sad(4) = theEnvConds(ibox)%getvar('SFC_HET_4')
-   
-   box_aer_diam(1) = theEnvConds(ibox)%getvar('DM_HET_1')
-   box_aer_diam(2) = theEnvConds(ibox)%getvar('DM_HET_2')
-   box_aer_diam(3) = theEnvConds(ibox)%getvar('DM_HET_3')
-   box_aer_diam(4) = theEnvConds(ibox)%getvar('DM_HET_4')
+   nmodes = size(box_aer_sad)
+   do n = 1,nmodes
+      fld_name = ' '
+      write(fld_name,'(a,i1)') 'SFC_HET_',n
+      box_aer_sad(n) = theEnvConds(ibox)%getvar(trim(fld_name))
+      fld_name = ' '
+      write(fld_name,'(a,i1)') 'DM_HET_',n
+      box_aer_diam(n) = theEnvConds(ibox)%getvar(trim(fld_name))
+   end do
    
    vmr(:)              = vmrboxes(:,ibox)
    box_temp            = temp(photo_lev)
