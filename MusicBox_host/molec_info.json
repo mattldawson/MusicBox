@@ -1,17 +1,17 @@
 {
   "mechanism": {
     "tag_info": {
-      "id": "265",
-      "given_name": "Minimal_Chapman",
+      "id": "268",
+      "given_name": "Chapman_json",
       "initials": "ajc",
       "branchname": "Chapman",
       "branch_id": "65",
-      "date": "2019-07-24 11:21:46.789289-06",
+      "date": "2019-12-23 11:12:09.069934-07",
       "buggy": false,
-      "filename": "MZ265_Chapman_20190724",
+      "filename": "MZ268_Chapman_20191223",
       "previousComments": {
         "comments": [
-          "ajc : 2019-07-24 : Minimal Chapman cycle for MICM testing"
+          "ajc : 2019-12-23 : chapman with json definition of rate constants"
         ]
       }
     },
@@ -161,11 +161,12 @@
     ],
     "reactions": [
       {
-        "rate": " 2.150000e-11_r8 * exp(110.00_r8 / TEMP) ",
+        "rate": null,
         "reactants": [
           "O1D",
           "N2"
         ],
+        "rate_constant_constructor": "Arrhenius%initialize(A=2.15e-11 , C=-110 , D=300 , B=0 , E=0)",
         "reactant_count": 2,
         "troe": false,
         "products": [
@@ -180,11 +181,12 @@
         ]
       },
       {
-        "rate": " 3.300000e-11_r8 * exp(55.00_r8 / TEMP) ",
+        "rate": null,
         "reactants": [
           "O1D",
           "O2"
         ],
+        "rate_constant_constructor": "Arrhenius%initialize(A=3.3e-11 , C=-55 , D=300 , B=0 , E=0)",
         "reactant_count": 2,
         "troe": false,
         "products": [
@@ -199,11 +201,12 @@
         ]
       },
       {
-        "rate": " 8.000000e-12_r8 * exp(-2060.00_r8 / TEMP) ",
+        "rate": null,
         "reactants": [
           "O",
           "O3"
         ],
+        "rate_constant_constructor": "Arrhenius%initialize(A=8e-12 , C=2060 , D=300 , B=0 , E=0)",
         "reactant_count": 2,
         "troe": false,
         "products": [
@@ -214,11 +217,12 @@
         ]
       },
       {
-        "rate": "usr_O_O2( temp )",
+        "rate": null,
         "reactants": [
           "O",
           "O2"
         ],
+        "rate_constant_constructor": "Troe_JPL%initialize(A_k0=6.00e-34 , B_k0=2.4 , C_k0=0 , A_kinf=1 , B_kinf=0 , C_kinf=0 , F_C=1)",
         "reactant_count": 3,
         "troe": true,
         "products": [
