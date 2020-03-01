@@ -1,17 +1,17 @@
 {
   "mechanism": {
     "tag_info": {
-      "id": "268",
-      "given_name": "Chapman_json",
+      "id": "272",
+      "given_name": "Chapman with MICM_j",
       "initials": "ajc",
       "branchname": "Chapman",
       "branch_id": "65",
-      "date": "2019-12-23 11:12:09.069934-07",
+      "date": "2020-02-25 14:07:46.204967-07",
       "buggy": false,
-      "filename": "MZ268_Chapman_20191223",
+      "filename": "MZ272_Chapman_20200225",
       "previousComments": {
         "comments": [
-          "ajc : 2019-12-23 : chapman with json definition of rate constants"
+          "ajc : 2020-02-25 : Reconstruct Chapman using new labels for TUV Photodecomps"
         ]
       }
     },
@@ -97,12 +97,11 @@
         "reactants": [
           "O2"
         ],
-        "id": "5757",
+        "id": "6147",
         "rate": "jo2_b",
-        "wrf_rate": null,
-        "tuv_id": "1",
-        "tuv_coeff": "1",
-        "tuv_reaction": "O2 -> O + O",
+        "tuv_id": "2",
+        "tuv_coeff": "1.0",
+        "tuv_reaction": "O2 + hv -> O(3P) + O(3P)",
         "reactant_count": 1,
         "troe": false,
         "products": [
@@ -116,11 +115,10 @@
         "reactants": [
           "O3"
         ],
-        "id": "5759",
+        "id": "6150",
         "rate": "jo3_a",
-        "wrf_rate": null,
-        "tuv_id": "2",
-        "tuv_coeff": "1",
+        "tuv_id": "5",
+        "tuv_coeff": "1.0",
         "tuv_reaction": "O3 -> O2 + O(1D)",
         "reactant_count": 1,
         "troe": false,
@@ -139,11 +137,10 @@
         "reactants": [
           "O3"
         ],
-        "id": "5758",
+        "id": "6151",
         "rate": "jo3_b",
-        "wrf_rate": null,
-        "tuv_id": "3",
-        "tuv_coeff": "1",
+        "tuv_id": "6",
+        "tuv_coeff": "1.0",
         "tuv_reaction": "O3 -> O2 + O(3P)",
         "reactant_count": 1,
         "troe": false,
@@ -166,7 +163,17 @@
           "O1D",
           "N2"
         ],
-        "rate_constant_constructor": "Arrhenius%initialize(A=2.15e-11 , C=-110 , D=300 , B=0 , E=0)",
+        "rate_call": "Arrhenius(Arrhenius_parameters, environmental_state)",
+        "rate_constant": {
+          "parameters": {
+            "A": "2.150000e-11",
+            "C": "-110.00",
+            "D": "300.0",
+            "B": "0.0",
+            "E": "0.0"
+          },
+          "reaction_class": "Arrhenius"
+        },
         "reactant_count": 2,
         "troe": false,
         "products": [
@@ -186,7 +193,17 @@
           "O1D",
           "O2"
         ],
-        "rate_constant_constructor": "Arrhenius%initialize(A=3.3e-11 , C=-55 , D=300 , B=0 , E=0)",
+        "rate_call": "Arrhenius(Arrhenius_parameters, environmental_state)",
+        "rate_constant": {
+          "parameters": {
+            "A": "3.300000e-11",
+            "C": "-55.00",
+            "D": "300.0",
+            "B": "0.0",
+            "E": "0.0"
+          },
+          "reaction_class": "Arrhenius"
+        },
         "reactant_count": 2,
         "troe": false,
         "products": [
@@ -206,7 +223,17 @@
           "O",
           "O3"
         ],
-        "rate_constant_constructor": "Arrhenius%initialize(A=8e-12 , C=2060 , D=300 , B=0 , E=0)",
+        "rate_call": "Arrhenius(Arrhenius_parameters, environmental_state)",
+        "rate_constant": {
+          "parameters": {
+            "A": "8.000000e-12",
+            "C": "2060.00",
+            "D": "300.0",
+            "B": "0.0",
+            "E": "0.0"
+          },
+          "reaction_class": "Arrhenius"
+        },
         "reactant_count": 2,
         "troe": false,
         "products": [
@@ -222,7 +249,15 @@
           "O",
           "O2"
         ],
-        "rate_constant_constructor": "Troe_JPL%initialize(A_k0=6.00e-34 , B_k0=2.4 , C_k0=0 , A_kinf=1 , B_kinf=0 , C_kinf=0 , F_C=1)",
+        "rate_call": "Troe_low_pressure(Troe_low_pressure_parameters, environmental_state)",
+        "rate_constant": {
+          "parameters": {
+            "A_k0": "6.0e-34",
+            "B_k0": "2.4",
+            "C_k0": "0.0"
+          },
+          "reaction_class": "Troe_low_pressure"
+        },
         "reactant_count": 3,
         "troe": true,
         "products": [

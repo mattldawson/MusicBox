@@ -13,6 +13,7 @@ module MusicBox_mod
    real(kind_phys)    :: box_temp
    real(kind_phys)    :: relhum
    real(kind_phys)    :: box_h2o
+   real(kind_phys)    :: box_o2
    real(kind_phys)    :: zenith
    real(kind_phys)    :: albedo
    real(kind_phys)    :: density, mbar

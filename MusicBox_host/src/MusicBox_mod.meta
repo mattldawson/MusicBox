@@ -29,6 +29,13 @@
   dimensions = ()
   type = real
   kind = kind_phys
+[box_o2]
+  standard_name = oxygen
+  long_name = molecular_oxygen
+  units = mole/mole
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [zenith]
   standard_name = solar_zenith
   long_name = solar zenith angle

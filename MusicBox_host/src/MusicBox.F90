@@ -8,7 +8,7 @@ use json_loader,            only: json_loader_read
 use output_file,            only: output_file_type
 
 ! MusicBox host model data
-use MusicBox_mod,           only: box_press, box_temp, relhum, box_h2o, photo_lev, nspecies, vmr
+use MusicBox_mod,           only: box_press, box_temp, relhum, box_h2o, photo_lev, nspecies, vmr, box_o2
 use MusicBox_mod,           only: box_aer_sad, box_aer_diam, n_aer_modes
 use MusicBox_mod,           only: nbox, ntimes
 use MusicBox_mod,           only: nkRxt, njRxt, TimeStart, TimeEnd
@@ -219,7 +219,7 @@ subroutine MusicBox_sub()
  
         call read_envConditions_timestep(TimeStart,ibox, nlayer, photo_lev, vmrboxes, zenith, albedo, &
              press_mid, press_int, alt,  temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, vmr, box_h2o, &
-             box_temp, box_press, box_aer_sad, box_aer_diam)
+             box_temp, box_press, box_aer_sad, box_aer_diam, box_o2)
 
         cldwat = 0._kind_phys
         cldfrc = 0._kind_phys

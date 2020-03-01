@@ -99,7 +99,6 @@ contains
         call cnst_info(n)%print()
         cnst_name = cnst_info(n)%get_name()
         vmrboxes(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.00_kind_phys)
-
         write(*,fmt="(' cnst name : ',a20,' init value : ',e13.6)") cnst_name, vmrboxes(n,ibox)
         if (cnst_name == 'CL2') then
            wghts(n) = 2._kind_phys
@@ -116,13 +115,13 @@ contains
 
  subroutine  read_envConditions_timestep(TimeStart,ibox, nlayers, photo_lev, vmrboxes, zenith, albedo, &
                press_mid, press_int, alt, &
-               temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, vmr, box_h2o, box_temp, box_press, box_aer_sad, box_aer_diam )
+               temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, vmr, box_h2o, box_temp, box_press, box_aer_sad, box_aer_diam, box_o2)
 
    real(kind_phys), intent(in)                :: TimeStart
    integer,         intent(in)                :: ibox, nlayers
    integer,         intent(in)                :: photo_lev
    real(kind=kind_phys), intent(in)           :: vmrboxes(:,:)   ! vmr for all boxes
-   real(kind_phys), intent(out)               :: zenith, albedo, box_h2o, box_temp, box_press
+   real(kind_phys), intent(out)               :: zenith, albedo, box_h2o, box_temp, box_press, box_o2
    real(kind_phys), dimension(:), intent(out) :: press_mid, press_int, alt, temp, o2vmrcol, o3vmrcol
    real(kind_phys), dimension(:), intent(out) :: so2vmrcol, no2vmrcol, vmr
    real(kind_phys), dimension(:), intent(out) :: box_aer_sad, box_aer_diam
@@ -151,6 +150,7 @@ contains
    no2vmrcol(:nlayers) = colEnvConds(ibox)%getcol('NO2',nlayers)
 
    box_h2o             = theEnvConds(ibox)%getvar('H2O')
+   box_o2             = theEnvConds(ibox)%getvar('O2')
 
    nmodes = size(box_aer_sad)
    do n = 1,nmodes
