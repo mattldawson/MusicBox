@@ -28,6 +28,7 @@ module MusicBox_mod
    integer            :: nbox
    integer            :: nkRxt       ! number gas phase reactions
    integer            :: njRxt       ! number of photochemical reactions
+   integer            :: nRxn        ! number of reactions (total)
    integer            :: ntimes      ! number of time steps
    integer            :: ntuvRates
    integer, parameter :: n_aer_modes = 4 ! assume 4 aerosol modes for now
@@ -43,10 +44,14 @@ module MusicBox_mod
    real(kind_phys), allocatable :: press_mid(:)
    real(kind_phys), allocatable :: press_int(:)
    real(kind_phys), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
+   real(kind_phys), allocatable :: reaction_rates(:)
+   real(kind_phys), allocatable :: reaction_rate_constants(:)
    real(kind_phys), allocatable :: box_aer_sad(:)
    real(kind_phys), allocatable :: box_aer_diam(:)
 
    type(const_props_type), allocatable :: cnst_info(:)
-   character(len=16), allocatable :: jnames(:)
+
+   character(len=16 ), allocatable :: jnames(:)
+   character(len=128), allocatable :: reaction_names(:)
 
 end module MusicBox_mod

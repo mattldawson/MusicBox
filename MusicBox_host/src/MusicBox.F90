@@ -4,6 +4,7 @@ module MusicBox_main
 use ccpp_kinds,             only: kind_phys
 use read_envConditions,     only: read_envConditions_init, read_envConditions_timestep, read_envConditions_update_timestep
 
+use kinetics_utilities,     only: reaction_names
 use json_loader,            only: json_loader_read
 use output_file,            only: output_file_type
 
@@ -11,7 +12,7 @@ use output_file,            only: output_file_type
 use MusicBox_mod,           only: box_press, box_temp, relhum, box_h2o, photo_lev, nspecies, vmr, box_o2
 use MusicBox_mod,           only: box_aer_sad, box_aer_diam, n_aer_modes
 use MusicBox_mod,           only: nbox, ntimes
-use MusicBox_mod,           only: nkRxt, njRxt, TimeStart, TimeEnd
+use MusicBox_mod,           only: nkRxt, njRxt, nRxn, TimeStart, TimeEnd
 use MusicBox_mod,           only: nlayer, nlevel, zenith, albedo, press_mid, press_int
 use MusicBox_mod,           only: alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol
 use MusicBox_mod,           only: dt, density, mbar
@@ -50,6 +51,7 @@ subroutine MusicBox_sub()
   integer                         :: col_start, col_end
   integer                         :: index
   character(len=128), allocatable :: part_names(:)
+  character(len=128), allocatable :: rxn_names(:)
   character(len=512)              :: errmsg
   integer                         :: errflg
 
@@ -123,18 +125,8 @@ subroutine MusicBox_sub()
   ! Read in the molecular information
 
   call json_loader_read( jsonfile, cnst_info, nSpecies, nkRxt, njRxt, jnames )
+  nRxn = njRxt + nkRxt ! total number of reactions
 
-  !---------------------------
-  ! Create the fields for the output netCDF file
-
-  call outfile%create(outfile_name)
-  call outfile%add(cnst_info)
-  call outfile%add('Zenith','solar zenith angle','degrees')
-  call outfile%add('Density','total number density','molecules/cm3')
-  call outfile%add('Mbar','mean molar mass','g/mole')
-  call outfile%add('RelHum','relative humidity','')
-  call outfile%define() ! cannot add more fields after this call
-  
   !---------------------------
   ! Initialize the envrionmental conditions
 
@@ -165,7 +157,10 @@ subroutine MusicBox_sub()
   allocate(cldfrc(nlayer))
   allocate(box_aer_sad(n_aer_modes))
   allocate(box_aer_diam(n_aer_modes))
-  
+  allocate(reaction_rates(nRxn))
+  allocate(reaction_rate_constants(nRxn))
+  allocate(reaction_name(nRxn))
+
   !---------------------------
   ! Set the times (note this needs to be set prior to call ccpp_initialize)
   ! Once Rosenbrock_init is separated into init and time_step_init, this may go 
@@ -182,6 +177,22 @@ subroutine MusicBox_sub()
     stop
   end if
 
+  !---------------------------
+  ! Create the fields for the output netCDF file
+
+  call outfile%create(outfile_name)
+  call outfile%add(cnst_info)
+  call outfile%add('Zenith','solar zenith angle','degrees')
+  call outfile%add('Density','total number density','molecules/cm3')
+  call outfile%add('Mbar','mean molar mass','g/mole')
+  call outfile%add('RelHum','relative humidity','')
+  rxn_names = reaction_names()
+  nRxn = size(rxn_names)
+  do i_rxn = 1, nRxn
+    call outfile%add(trim("rate_"//rxn_names(i_rxn)),trim('Rate for reaction '//rxn_names(i_rxn)),'1/s')
+    call outfile%add(trim("rate_const_"//rxn_names(i_rxn)),trim('Rate constant for reaction '//rxn_names(i_rxn)),'')
+  end do
+  call outfile%define() ! cannot add more fields after this call
 
 
 ! For testing short runs   
@@ -260,6 +271,11 @@ subroutine MusicBox_sub()
         call outfile%out( cnst_info, vmrboxes(:,ibox) )
         write(*,'(a,1p,g0)') 'Concentration @ hour = ',TimeStart/3600.
         write(*,'(1p,5(1x,g0))') vmrboxes(:,ibox),sum(vmrboxes(:,ibox))
+
+        do i_rxn = 1, size(rxn_names)
+          call outfile%out( trim("rate_"//rxn_names(i_rxn)), reaction_rates(i_rxn) )
+          call outfile%out( trim("rate_constant_"//rxn_names(i_rxn)), reaction_rate_constants(i_rxn) )
+        end do
 
       end do Box_loop
 
