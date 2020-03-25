@@ -53,5 +53,8 @@ module MusicBox_mod
 
    character(len=16 ), allocatable :: jnames(:)
    character(len=128), allocatable :: reaction_names(:)
+   character(len=*), parameter     :: options_filepath = ""
+
+   logical :: print_log_message = .false.
 
 end module MusicBox_mod

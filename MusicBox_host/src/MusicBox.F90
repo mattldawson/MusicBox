@@ -4,7 +4,8 @@ module MusicBox_main
 use ccpp_kinds,             only: kind_phys
 use read_envConditions,     only: read_envConditions_init, read_envConditions_timestep, read_envConditions_update_timestep
 
-use kinetics_utilities,     only: reaction_names
+use kinetics_utilities,     only: rxn_names => reaction_names
+
 use json_loader,            only: json_loader_read
 use output_file,            only: output_file_type
 
@@ -20,6 +21,7 @@ use MusicBox_mod,           only: cnst_info
 use MusicBox_mod,           only: jnames
 use MusicBox_mod,           only: press_top
 use MusicBox_mod,           only: cldfrc, cldwat
+use MusicBox_mod,           only: reaction_names, reaction_rates, reaction_rate_constants
 
 implicit none
 
@@ -57,7 +59,7 @@ subroutine MusicBox_sub()
 
   integer,parameter  :: nbox_param=1    ! Need to read this in from namelist and then allocate arrays
   
-  integer            :: i,n
+  integer            :: i,n,i_rxn
   real(kind=kind_phys), allocatable :: vmrboxes(:,:)   ! vmr for all boxes
 
   type(output_file_type) :: outfile
@@ -159,7 +161,7 @@ subroutine MusicBox_sub()
   allocate(box_aer_diam(n_aer_modes))
   allocate(reaction_rates(nRxn))
   allocate(reaction_rate_constants(nRxn))
-  allocate(reaction_name(nRxn))
+  allocate(reaction_names(nRxn))
 
   !---------------------------
   ! Set the times (note this needs to be set prior to call ccpp_initialize)
@@ -186,11 +188,11 @@ subroutine MusicBox_sub()
   call outfile%add('Density','total number density','molecules/cm3')
   call outfile%add('Mbar','mean molar mass','g/mole')
   call outfile%add('RelHum','relative humidity','')
-  rxn_names = reaction_names()
-  nRxn = size(rxn_names)
+  reaction_names(:) = rxn_names(:)
+  nRxn = size(reaction_names)
   do i_rxn = 1, nRxn
-    call outfile%add(trim("rate_"//rxn_names(i_rxn)),trim('Rate for reaction '//rxn_names(i_rxn)),'1/s')
-    call outfile%add(trim("rate_const_"//rxn_names(i_rxn)),trim('Rate constant for reaction '//rxn_names(i_rxn)),'')
+    call outfile%add(trim("rate_"//reaction_names(i_rxn)),trim('Rate for reaction '//reaction_names(i_rxn)),'1/s')
+    call outfile%add(trim("rate_const_"//reaction_names(i_rxn)),trim('Rate constant for reaction '//reaction_names(i_rxn)),'')
   end do
   call outfile%define() ! cannot add more fields after this call
 
@@ -273,8 +275,8 @@ subroutine MusicBox_sub()
         write(*,'(1p,5(1x,g0))') vmrboxes(:,ibox),sum(vmrboxes(:,ibox))
 
         do i_rxn = 1, size(rxn_names)
-          call outfile%out( trim("rate_"//rxn_names(i_rxn)), reaction_rates(i_rxn) )
-          call outfile%out( trim("rate_constant_"//rxn_names(i_rxn)), reaction_rate_constants(i_rxn) )
+          call outfile%out( trim("rate_"//reaction_names(i_rxn)), reaction_rates(i_rxn) )
+          call outfile%out( trim("rate_constant_"//reaction_names(i_rxn)), reaction_rate_constants(i_rxn) )
         end do
 
       end do Box_loop
