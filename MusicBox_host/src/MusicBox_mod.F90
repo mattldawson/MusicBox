@@ -53,7 +53,7 @@ module MusicBox_mod
 
    character(len=16 ), allocatable :: jnames(:)
    character(len=128), allocatable :: reaction_names(:)
-   character(len=*), parameter     :: options_filepath = ""
+   character(len=*), parameter     :: options_filepath = "../../MICM_chemistry/src/solver_options.nml"
 
    logical :: print_log_message = .false.
 

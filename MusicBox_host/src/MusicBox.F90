@@ -4,8 +4,6 @@ module MusicBox_main
 use ccpp_kinds,             only: kind_phys
 use read_envConditions,     only: read_envConditions_init, read_envConditions_timestep, read_envConditions_update_timestep
 
-use kinetics_utilities,     only: rxn_names => reaction_names
-
 use json_loader,            only: json_loader_read
 use output_file,            only: output_file_type
 
@@ -188,14 +186,11 @@ subroutine MusicBox_sub()
   call outfile%add('Density','total number density','molecules/cm3')
   call outfile%add('Mbar','mean molar mass','g/mole')
   call outfile%add('RelHum','relative humidity','')
-  reaction_names(:) = rxn_names(:)
-  nRxn = size(reaction_names)
   do i_rxn = 1, nRxn
     call outfile%add(trim("rate_"//reaction_names(i_rxn)),trim('Rate for reaction '//reaction_names(i_rxn)),'1/s')
-    call outfile%add(trim("rate_const_"//reaction_names(i_rxn)),trim('Rate constant for reaction '//reaction_names(i_rxn)),'')
+    call outfile%add(trim("rate_constant_"//reaction_names(i_rxn)),trim('Rate constant for reaction '//reaction_names(i_rxn)),'')
   end do
   call outfile%define() ! cannot add more fields after this call
-
 
 ! For testing short runs   
 !   ntimes = 10
@@ -274,7 +269,7 @@ subroutine MusicBox_sub()
         write(*,'(a,1p,g0)') 'Concentration @ hour = ',TimeStart/3600.
         write(*,'(1p,5(1x,g0))') vmrboxes(:,ibox),sum(vmrboxes(:,ibox))
 
-        do i_rxn = 1, size(rxn_names)
+        do i_rxn = 1, nRxn
           call outfile%out( trim("rate_"//reaction_names(i_rxn)), reaction_rates(i_rxn) )
           call outfile%out( trim("rate_constant_"//reaction_names(i_rxn)), reaction_rate_constants(i_rxn) )
         end do
