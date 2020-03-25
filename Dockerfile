@@ -10,6 +10,7 @@ RUN dnf -y update \
         python \
         git \
         nodejs \
+        ncview \
     && dnf clean all
 
 # Copy the MusicBox code
@@ -27,13 +28,8 @@ RUN git clone https://github.com/NCAR/MechanismToCode.git
 RUN cd MusicBox \
     && manage_externals/checkout_externals
 
-# update the URLs for MechanismToCode
-RUN sed -i 's/acom-conleyimac2.acom.ucar.edu/localhost/' Musicbox/Mechanism_collection/get_tag.py \
-      && sed -i 's/acom-conleyimac2.acom.ucar.edu/localhost/' MusicBox/Mechanism_collection/preprocess_tag.py
-
 # Command line arguments
 ARG TAG_ID=false
-ARG ENV_FTP_URL=false
 
 # Get a tag and build the model
 RUN if [ "$TAG_ID" = "false" ] ; then \
@@ -43,19 +39,14 @@ RUN if [ "$TAG_ID" = "false" ] ; then \
       && nohup bash -c "node combined.js &" && sleep 4 \
       && cd ../MusicBox/Mechanism_collection \
       && python3 get_tag.py -tag_id $TAG_ID \
-      && python3 preprocess_tag.py -source_dir configured_tags/$TAG_ID \
+      && python3 preprocess_tag.py -mechanism_source_path configured_tags/$TAG_ID -preprocessor localhost:3000 \
+      && python3 stage_tag.py -source_dir_kinetics configured_tags/$TAG_ID \
       && cd ../MusicBox_host \
       && mkdir build \
       && cd build \
-      && cmake3 ../ -S ../src -B . \
+      && cmake -D NETCDF_LIBRARIES="/usr/lib64/libnetcdff.so;/usr/lib64/libnetcdf.so" \
+               -D NETCDF_INCLUDES_F90="/usr/lib64/gfortran/modules" \
+               -D NETCDF_INCLUDES="/usr/lib64/gfortran/modules" \
+               ../src \
       && make \
-      ; fi
-
-# Grab environmental data
-RUN if [ "$ENV_FTP_URL" = "false" ] ; then \
-      echo "No environmental data URL specified" ; else \
-      echo "Grabbing environmental data at $ENV_FTP_URL" \
-      && cd MusicBox_host/data \
-      && wget "$ENV_FTP_URL" \
-      && mv *.nc env_conditions.nc \
       ; fi
