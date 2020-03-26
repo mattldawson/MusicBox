@@ -1,5 +1,6 @@
 MICM_chemistry/
 Mechanism_collection/
 MusicBox_host/MusicBox_output.nc
+MusicBox_host/molec_info.json
 MusicBox_host/data/env_conditions.nc
 ccpp-framework/

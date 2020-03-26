@@ -127,6 +127,11 @@
   units = count
   dimensions = ()
   type = integer
+[nRxn]
+  standard_name=number_of_reactions
+  units = count
+  dimensions = ()
+  type = integer
 [ ntimes ]
   standard_name = number_of_model_times
   type = integer
@@ -203,6 +208,12 @@
   type = character
   kind = len=16
   intent = in
+[reaction_names]
+  standard_name = reaction_names
+  units = none
+  dimensions = (number_of_reactions)
+  type = character
+  kind = len=128
 [press_mid]
   standard_name = layer_pressure
   long_name = mid-point layer pressure
@@ -232,6 +243,20 @@
   dimensions = (number_of_chemical_constituents)
   type = real
   kind = kind_phys
+[reaction_rates]
+  standard_name = reaction_rates
+  long_name = reaction rates
+  units = molecules cm-3 s-1
+  dimensions = (number_of_reactions)
+  type = real
+  kind = kind_phys
+[reaction_rate_constants]
+  standard_name = reaction_rate_constants
+  long_name = reaction rate constants
+  units = various
+  dimensions = (number_of_reactions)
+  type = real
+  kind = kind_phys
 [cnst_info]
   standard_name = chemistry_constituent_info
   long_name = chemistry_constituent_info
@@ -256,4 +281,16 @@
   dimensions = (number_of_aerosol_modes)
   type = real
   kind = kind_phys
-
+[options_filepath]
+  standard_name = options_filepath
+  long_name = Options file path
+  units = none
+  dimensions = ()
+  type = character
+  kind = len=*
+[print_log_message]
+  standard_name = print_log_message
+  long_name = Flag to print log messages
+  units = none
+  dimensions = ()
+  type = logical

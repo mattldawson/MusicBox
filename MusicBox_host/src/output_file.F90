@@ -56,6 +56,7 @@ contains
     call check( nf90_def_var(this%ncid, 'time', NF90_DOUBLE, (/ this%rec_dimid /), this%time_varid) )
     call check( nf90_put_att(this%ncid, this%time_varid, "units", "sec") )
     this%indx = 0
+    this%rec_num = 0
 
   end subroutine output_file_create
 
