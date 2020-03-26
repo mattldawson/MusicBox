@@ -17,20 +17,16 @@ get the MusicBox source code:
 ```
  git clone https://github.com/NCAR/MusicBox
  cd MusicBox
- manage_externals/checkout_externals
-```    
+ ./manage_externals/checkout_externals
+```
 get input data (environmental conditions), and configure a tag from the cafe-dev web server:
 
 ```
- cd MusicBox_host/data 
- wget  ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_c191230.nc; mv MusicBox_env_cond_c191230.nc env_conditions.nc
- -- or --
- wget  ftp://ftp.acom.ucar.edu/micm_environmental_conditions/MusicBox_env_cond_1col_c191230.nc; mv MusicBox_env_cond_1col_c191230.nc env_conditions.nc
- cd ../../
-
  cd Mechanism_collection
- python3 burrito.py -tag_id 265
- python3 eat_it.py -source_dir configured_tags/265
+ python3 get_environmental_conditions.py
+ python3 get_tag.py -tag_id 272
+ python3 preprocess_tag.py -mechanism_source_path configured_tags/272
+ python3 stage_tag.py -soure_dir_kinetics configured_tags/272
 ```
 build steps:
 ```
@@ -39,9 +35,9 @@ build steps:
 
  rm -rf build; mkdir build; cd build
 
- cmake3 ../CMakeLists.txt -S ../src -B . -DCMAKE_BUILD_TYPE=Debug (with debug)
+ cmake3 ../src/CMakeLists.txt -S ../src -B . -DCMAKE_BUILD_TYPE=Debug (with debug)
  -- or --
- cmake3 ../CMakeLists.txt -S ../src -B .  (no debug)
+ cmake3 ../src/CMakeLists.txt -S ../src -B .  (no debug)
 
  make
 ```
