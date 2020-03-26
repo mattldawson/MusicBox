@@ -187,7 +187,7 @@ subroutine MusicBox_sub()
   call outfile%add('Mbar','mean molar mass','g/mole')
   call outfile%add('RelHum','relative humidity','')
   do i_rxn = 1, nRxn
-    call outfile%add(trim("rate_"//reaction_names(i_rxn)),trim('Rate for reaction '//reaction_names(i_rxn)),'1/s')
+    call outfile%add(trim("rate_"//reaction_names(i_rxn)),trim('Rate for reaction '//reaction_names(i_rxn)),'molecules cm-3 s-1')
     call outfile%add(trim("rate_constant_"//reaction_names(i_rxn)),trim('Rate constant for reaction '//reaction_names(i_rxn)),'')
   end do
   call outfile%define() ! cannot add more fields after this call
