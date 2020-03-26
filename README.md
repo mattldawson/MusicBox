@@ -68,3 +68,14 @@ The steps to adding a new ddt to MusicBox are as follows:
 * Add the XXX.meta file to MusicBox_ddt_files.txt
 * Add the ddt to MusicBox_mod.F90 and MusicBox_mod.meta
 * The ddt can then be passed in/out and "use"d within any module 
+
+## Run MusicBox using Docker
+
+To build and run MusicBox using Docker:
+```
+docker build -t music-box-test . --build-arg TAG_ID=272
+docker run -it music-box-test bash
+cd MusicBox/MusicBox_host/build
+./MusicBox
+```
+Results will be in `MusicBox/MusicBox_host/MusicBox_output.nc`
