@@ -15,7 +15,7 @@ module output_file
 
   private
   
-  integer, parameter :: MAXVARS=500
+  integer, parameter :: MAXVARS=2000
   
   type, public :: output_file_type
      private
@@ -86,7 +86,7 @@ contains
 
     this%indx = this%indx + 1
     if (this%indx > MAXVARS) then
-       print*,'CANNOT add more variables'
+       print*,'More variables being output than allowed by MAXVARS in output_file.F90'
        stop
     end if
     
