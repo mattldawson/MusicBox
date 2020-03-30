@@ -3,15 +3,30 @@ A Box (point) Chemistry kinetic solver using the CCPP framework and MICM
 
 Please see https://wiki.ucar.edu/display/MusicBox/Quick+Start for details
 
-## Simple, fragile script
-If you want to run with cafe-devel tag 265
+## Using Docker 
+### Install docker on your machine, preferably on one that is on the NCAR network (or can VPN onto that network)
+https://docs.docker.com/docker-for-mac/install/
+### For graphics
+If you have no way to plot your data on your machine, this installation includes ncview but you will need to allow xwindows to operate
+```On a Mac
+Open XQuartz, 
+set Preferences->Security->Allow connections from network clients to true, 
+restart XQuartz, 
 ```
- git clone https://github.com/NCAR/MusicBox
- cd MusicBox
- run_it.py -tag_id 265
+### Build and run model
 ```
+docker build -t music-box-test . --build-arg TAG_ID=272
+xhost + 127.0.0.1
+docker run -it -e DISPLAY=host.docker.internal:0 music-box-test bash
+cd MusicBox/MusicBox_host/build
+./MusicBox
+ncview ../MusicBox_output.nc
+```
+If you have your own way to display data, the xhost command, the -e DISPLAY, and the ncview commands do not need to be executed.
 
-## More robust process
+
+
+## Manual process for those wanting to run the code outside Docker
 
 get the MusicBox source code:
 ```
