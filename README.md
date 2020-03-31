@@ -94,3 +94,14 @@ cd MusicBox/MusicBox_host/build
 ./MusicBox
 ```
 Results will be in `MusicBox/MusicBox_host/MusicBox_output.nc`
+
+## Building the documentation
+
+Install [Doxygen](http://www.doxygen.nl/) if you don't already have it.
+
+To build the MusicBox documentation, from the root MusicBox folder:
+```
+cd doc
+doxygen
+```
+then open `doc/build/html/index.html` in a browser

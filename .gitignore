@@ -1,3 +1,5 @@
+**/.DS_Store
+doc/build
 MICM_chemistry/
 Mechanism_collection/
 MusicBox_host/MusicBox_output.nc
