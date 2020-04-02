@@ -7,8 +7,11 @@ module output_file
 
   use netcdf, only: nf90_create, NF90_CLOBBER, nf90_def_dim, NF90_UNLIMITED, nf90_def_var
   use netcdf, only: nf90_close, nf90_put_var, nf90_enddef, NF90_DOUBLE, nf90_put_att
-  use netcdf, only: nf90_noerr, nf90_strerror
-  
+  use netcdf, only: nf90_noerr, nf90_strerror, NF90_MAX_VAR_DIMS, nf90_inq_varid
+  use netcdf, only: nf90_inquire_variable, nf90_inq_dimid, nf90_inquire_dimension
+
+  use music_box_util, only: assert_msg, to_string
+
   use const_props_mod, only: const_props_type
   
   implicit none
@@ -29,13 +32,17 @@ module output_file
    contains
      procedure :: create => output_file_create
      procedure :: define => output_file_define
+     procedure :: add_dimension => output_file_add_dimension
      procedure :: output_file_add_cnsts
      procedure :: output_file_add_var
      generic   :: add => output_file_add_cnsts, output_file_add_var
      procedure :: advance => output_file_adv
+     procedure :: set_variable
      procedure :: output_file_out_cnsts
      procedure :: output_file_out_var
-     generic   :: out => output_file_out_cnsts, output_file_out_var
+     procedure :: output_file_out_grid_var
+     generic   :: out => output_file_out_cnsts, output_file_out_var,             &
+                         output_file_out_grid_var
      procedure :: close => output_file_close
      procedure :: varindx
   end type output_file_type
@@ -61,6 +68,33 @@ contains
   end subroutine output_file_create
 
 !--------------------------------------------------------------------------------
+! add a dimension to the netcdf file
+!--------------------------------------------------------------------------------
+  subroutine output_file_add_dimension(this, dim_name, dim_long_name, dim_size,  &
+      units)
+
+    !> Output file (already created)
+    class(output_file_type), intent(inout) :: this
+    !> Unique name for the dimension
+    character(len=*), intent(in) :: dim_name
+    !> Description of the dimension
+    character(len=*), intent(in) :: dim_long_name
+    !> Number of dimension elements
+    integer, intent(in) :: dim_size
+    !> Units for the dimension
+    character(len=*), intent(in) :: units
+
+    integer :: dimid, varid
+
+    call check( nf90_def_dim( this%ncid, dim_name, dim_size, dimid ) )
+    call check( nf90_def_var( this%ncid, dim_name, NF90_DOUBLE, (/ dimid /),  &
+                              varid ) )
+    call check( nf90_put_att( this%ncid, varid, "units", units ) )
+    call check( nf90_put_att( this%ncid, varid, "longname", dim_long_name ) )
+
+  end subroutine output_file_add_dimension
+
+!--------------------------------------------------------------------------------
 ! set metadat for a collection of constituents
 !--------------------------------------------------------------------------------
   subroutine output_file_add_cnsts( this, cnsts_props )
@@ -80,21 +114,39 @@ contains
 !--------------------------------------------------------------------------------
 ! set metadat for a single variable
 !--------------------------------------------------------------------------------
-  subroutine output_file_add_var( this, varname, longname, varunits )
+  subroutine output_file_add_var( this, varname, longname, varunits, dimnames )
     class(output_file_type), intent(inout) :: this
     character(len=*), intent(in) :: varname, longname, varunits
+    !> Dimension names (defaults to dimensions of time)
+    !! Dimension names must exist in netcdf file and if 'time' is included, it
+    !! must be the last name)
+    character(len=*), optional, intent(in) :: dimnames(:)
+
+    integer :: i_dim
+    integer, allocatable :: dimids(:)
 
     this%indx = this%indx + 1
     if (this%indx > MAXVARS) then
        print*,'More variables being output than allowed by MAXVARS in output_file.F90'
        stop
     end if
-    
-    call check( nf90_def_var(this%ncid, varname, NF90_DOUBLE, (/ this%rec_dimid /), this%varid(this%indx)) )
+
+    if (present(dimnames)) then
+      allocate(dimids(size(dimnames)))
+      do i_dim = 1, size(dimnames)
+        call check( nf90_inq_dimid(this%ncid, dimnames(i_dim), dimids(i_dim)) )
+      end do
+    else
+      allocate(dimids(1))
+      dimids(1) = this%rec_dimid
+    end if
+
+    call check( nf90_def_var(this%ncid, varname, NF90_DOUBLE, dimids, this%varid(this%indx)) )
     call check( nf90_put_att(this%ncid, this%varid(this%indx), "units", varunits) )
     call check( nf90_put_att(this%ncid, this%varid(this%indx), "longname", longname) )
-    
+
     this%varname(this%indx) = varname
+    deallocate(dimids)
 
   end subroutine output_file_add_var
 
@@ -119,6 +171,39 @@ contains
                 start = (/ this%rec_num /), count = (/ 1 /)) )
     
   end subroutine output_file_adv
+
+!--------------------------------------------------------------------------------
+! set every element of a netcdf real variable
+! \todo add overloaded subroutines for higher dimension variables
+!--------------------------------------------------------------------------------
+  subroutine set_variable(this, var_name, values)
+
+    !> output file
+    class(output_file_type), intent(inout) :: this
+    !> netCDF variable name (must exist in output file)
+    character(len=*), intent(in) :: var_name
+    !> new values for variable
+    !! (array size/shape must match that of netCDF vaiable)
+    real(kind_phys), intent(in) :: values(:)
+
+    integer :: var_id, ndims, dim_size
+    integer :: dimids(NF90_MAX_VAR_DIMS)
+
+    call check( nf90_inq_varid(this%ncid, var_name, var_id ) )
+    call check( nf90_inquire_variable(this%ncid, var_id, ndims = ndims,          &
+                                      dimids = dimids ) )
+    call assert_msg(708577727, ndims.eq.1,                                       &
+                    "NetCDF variable dimension mismatch for '"//var_name//       &
+                    "' expected "//trim(to_string(ndims))//" but got 1" )
+    call check( nf90_inquire_dimension(this%ncid, dimids(1), len = dim_size) )
+    call assert_msg(134717026, dim_size.eq.size(values),                         &
+                    "NetCDF variable size mismatch for '"//var_name//            &
+                    "' expected "//trim(to_string(dimids(1)))//" but got "//     &
+                    trim(to_string(size(values))) )
+    call check( nf90_put_var(this%ncid, var_id, values, start = (/ 1 /),         &
+                count = (/ size(values) /) ) )
+
+  end subroutine set_variable
 
 !--------------------------------------------------------------------------------
 ! output a collection of constituents VMR
@@ -151,7 +236,28 @@ contains
 
   end subroutine output_file_out_var
   
-  
+!--------------------------------------------------------------------------------
+! output a gridded variable
+!--------------------------------------------------------------------------------
+  subroutine output_file_out_grid_var( this, var_name, grid_indices, val )
+
+    !> netcdf ouput file
+    class(output_file_type), intent(inout) :: this
+    !> netcdf variable name (must exist in output file)
+    character(len=*), intent(in) :: var_name
+    !> grid indices for the variable to set
+    !! (must follow order used in set_var(), and the last index will be set
+    !!  to the current time index)
+    integer, intent(inout) :: grid_indices(:)
+    !> variable value to set for the current time step
+    real(kind_phys), intent(in) :: val
+
+    grid_indices(size(grid_indices)) = this%rec_num
+    call check( nf90_put_var(this%ncid, this%varindx(var_name), val,             &
+                             grid_indices ) )
+
+  end subroutine output_file_out_grid_var
+
 !--------------------------------------------------------------------------------
 ! finaize the netcdf file
 !--------------------------------------------------------------------------------
