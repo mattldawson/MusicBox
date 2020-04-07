@@ -7,11 +7,9 @@ A Box (point) Gas Chemistry solver developed and maintained in the ACOM laborato
 ## Install [git](https://git-scm.com)
 
 ## Get the MusicBox source code
-You need to copy the code base from the github repostory.  The manage_externals tool is an NCAR-specific tool used to collect other repositories on which this code base depends.
 ```
  git clone https://github.com/NCAR/MusicBox
  cd MusicBox
- ./manage_externals/checkout_externals
 ```
 
 ## Run MusicBox using Docker
@@ -26,6 +24,7 @@ Results will be in `MusicBox/MusicBox_host/MusicBox_output.nc`
 Do not exit the container yet.
 
 ## Look at the Results
+In a separate terminal window run the following
 ```
 docker ps
 ```
