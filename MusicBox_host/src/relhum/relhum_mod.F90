@@ -14,20 +14,23 @@ contains
 !> \section arg_table_relhum_mod_run  Argument Table
 !! \htmlinclude arg_table_relhum_mod_run.html
 !!
-  subroutine relhum_mod_run( boxtemp, boxpress, boxh2ovmr, boxrelhum )
+  subroutine relhum_mod_run( temperature__K, pressure__Pa, H2O_number_density__num_m3, &
+     number_density_air__num_m3,  relative_humidity__pct )
 
-    real(kind_phys), intent(in) :: boxtemp
-    real(kind_phys), intent(in) :: boxpress
-    real(kind_phys), intent(in) :: boxh2ovmr
-    real(kind_phys), intent(out) :: boxrelhum
+    real(kind_phys), intent(in) :: temperature__K
+    real(kind_phys), intent(in) :: pressure__Pa
+    real(kind_phys), intent(in) :: H2O_number_density__num_m3
+    real(kind_phys), intent(in) :: number_density_air__num_m3
+    real(kind_phys), intent(out) :: relative_humidity__pct
 
     real(kind_phys) :: satv
     real(kind_phys) :: satq
 
-    call qsat(boxtemp, boxpress, satv, satq)
+    call qsat(temperature__K, pressure__Pa, satv, satq)
 
-    boxrelhum = .622_kind_phys * boxh2ovmr / satq
-    boxrelhum = max( 0._kind_phys,min( 1._kind_phys, boxrelhum ) )
+    relative_humidity__pct = .622_kind_phys * H2O_number_density__num_m3 &
+                              / number_density_air__num_m3 / satq
+    relative_humidity__pct = max( 0._kind_phys,min( 1._kind_phys, relative_humidity__pct ) )
   end subroutine relhum_mod_run
 
 !> \section arg_table_relhum_mod_final  Argument Table

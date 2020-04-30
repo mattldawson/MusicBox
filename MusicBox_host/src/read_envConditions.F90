@@ -3,7 +3,8 @@ module read_envConditions
 use environ_conditions_mod, only: environ_conditions_create, environ_conditions
 use ccpp_kinds, only: kind_phys
 use const_props_mod,   only: const_props_type
-
+use calc_density, only: calc_density_run
+use input_file, only: MAX_ATT_LEN
 
 implicit none
 
@@ -13,7 +14,8 @@ type(environ_conditions),allocatable :: colEnvConds(:)
 contains
 
  subroutine  read_envConditions_init(nbox, nSpecies, env_conds_file, env_lat, env_lon, env_lev, user_begin_time, &
-             user_end_time, user_dtime, cnst_info, vmrboxes, dt, sim_beg_time, sim_end_time, nlayers, photo_lev)
+             user_end_time, user_dtime, cnst_info, gas_number_density_boxes__num_m3, dt, sim_beg_time, sim_end_time, &
+             nlayers, photo_lev)
 
    real, parameter :: NOT_SET = -huge(1.0)
 
@@ -25,7 +27,8 @@ contains
    real, intent(in)                     :: user_begin_time, user_end_time, user_dtime
 
    type(const_props_type), intent(in)   :: cnst_info(:)
-   real(kind=kind_phys), intent(inout)  :: vmrboxes(:,:)   ! vmr for all boxes
+   ! Gas species number density for each grid cell (#/m3) (n_species, n_boxes)
+   real(kind=kind_phys), intent(inout)  :: gas_number_density_boxes__num_m3(:,:)
    
 
    real(kind_phys), intent(out)        :: dt
@@ -48,6 +51,11 @@ contains
 
   integer :: file_ntimes
   integer :: ibox
+
+  character(len=MAX_ATT_LEN) :: concentration_units
+  real(kind=kind_phys) :: air_density__num_m3
+  real(kind=kind_phys) :: temperature__K
+  real(kind=kind_phys), allocatable :: pressure__Pa(:)
 
   !---------------------------
   ! allocate host model arrays
@@ -91,25 +99,49 @@ contains
      sim_end_time = file_times(file_ntimes)
   end if
 
-
-  !---------------------------
-  ! Retrieve the vmr for all species and boxes
-  do n = 1,nSpecies
-     do ibox=1,nbox
-        call cnst_info(n)%print()
-        cnst_name = cnst_info(n)%get_name()
-        vmrboxes(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.00_kind_phys)
-        write(*,fmt="(' cnst name : ',a20,' init value : ',e13.6)") cnst_name, vmrboxes(n,ibox)
-        if (cnst_name == 'CL2') then
-           wghts(n) = 2._kind_phys
-        end if
-     enddo
-  enddo
-
   nlayers = colEnvConds(1)%nlayers()
   photo_lev = theEnvConds(1)%levnum()
 
-  deallocate(file_times)
+  !---------------------------
+  ! Retrieve the vmr for all species and boxes
+
+  allocate( pressure__Pa( nlayers ) )
+
+  do n = 1,nSpecies
+    call cnst_info(n)%print()
+    cnst_name = cnst_info(n)%get_name()
+    concentration_units = theEnvConds(1)%getunits( cnst_name )
+    if( trim( concentration_units ) .eq. 'molecules/m3' ) then
+      do ibox=1,nbox
+        gas_number_density_boxes__num_m3(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.00_kind_phys)
+        write(*,fmt="(' cnst name : ',a20,' init value : ',e13.6,' molecules/m3')") &
+          cnst_name, gas_number_density_boxes__num_m3(n,ibox)
+        if (cnst_name == 'CL2') then
+          wghts(n) = 2._kind_phys
+        end if
+      enddo
+    else if( trim( concentration_units ) .eq. 'molec/molec' .or. &
+             trim( concentration_units ) .eq. 'mol/mol' ) then
+      do ibox=1,nbox
+        pressure__Pa( :nlayers ) = colEnvConds(ibox)%press_mid( nlayers )
+        temperature__K           = theEnvConds(ibox)%getvar( "T" )
+        call calc_density_run( pressure__Pa( theEnvConds(ibox)%levnum() ), temperature__K, &
+                               air_density__num_m3, errmsg, errflg )
+        gas_number_density_boxes__num_m3(n,ibox) = air_density__num_m3 * &
+                                             theEnvConds(ibox)%getvar(cnst_name,default_value=0.00_kind_phys)
+        write(*,fmt="(' cnst name : ',a20,' init value : ',e13.6,' molecules/m3')") &
+          cnst_name, gas_number_density_boxes__num_m3(n,ibox)
+        if (cnst_name == 'CL2') then
+          wghts(n) = 2._kind_phys
+        end if
+      enddo
+    else
+      write(*,*) "Invalid input concentration units: '"//trim( concentration_units )//"'"
+      stop 3
+    end if
+  enddo
+
+  deallocate( file_times     )
 
  end subroutine read_envConditions_init
 

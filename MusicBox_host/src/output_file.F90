@@ -72,9 +72,9 @@ contains
 
     do n = 1,ncnst
        call this%output_file_add_var( cnsts_props(n)%get_name(), &
-            trim(cnsts_props(n)%get_desc())//' volume mixing ratio', "molec/molec")
+            trim(cnsts_props(n)%get_desc())//' number density', "molecules/m3")
     end do
-    
+
   end subroutine output_file_add_cnsts
 
 !--------------------------------------------------------------------------------
@@ -121,21 +121,22 @@ contains
   end subroutine output_file_adv
 
 !--------------------------------------------------------------------------------
-! output a collection of constituents VMR
+! output a collection of constituents number density [#/m3]
 !--------------------------------------------------------------------------------
-  subroutine output_file_out_cnsts( this, cnsts_props, vmr )
+  subroutine output_file_out_cnsts( this, cnsts_props, gas_number_density__num_m3 )
     class(output_file_type), intent(inout) :: this
     class(const_props_type), intent(in) :: cnsts_props(:)
-    real(kind_phys), intent(in) :: vmr(:)
-    
+    real(kind_phys), intent(in) :: gas_number_density__num_m3(:)
+
     integer :: ncnst, n
-    
+
     ncnst = size(cnsts_props)
 
     do n = 1,ncnst
-       call this%output_file_out_var( cnsts_props(n)%get_name(), vmr(n) )
+       call this%output_file_out_var( cnsts_props(n)%get_name(), &
+                                      gas_number_density__num_m3(n) )
     end do
-    
+
   end subroutine output_file_out_cnsts
 
 !--------------------------------------------------------------------------------

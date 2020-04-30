@@ -33,15 +33,15 @@
 [ccpp-arg-table]
   name = calc_mbar_run
   type = scheme
-[vmr]
-  standard_name = concentration
-  long_name = species concentration
-  units = mole/mole
+[gas_number_density__num_m3]
+  standard_name = gas_number_density
+  long_name = Gas species number density
+  units = molecules/m3
   dimensions = (number_of_chemical_constituents)
   type = real
   kind = kind_phys
-  intent = inout
-[mbar]
+  intent = in
+[mean_molecular_mass__g_mol]
   standard_name = mean_molec_mass
   long_name = mean molecular mass
   units = g/mole

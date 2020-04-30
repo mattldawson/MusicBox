@@ -8,13 +8,18 @@ use json_loader,            only: json_loader_read
 use output_file,            only: output_file_type
 
 ! MusicBox host model data
-use MusicBox_mod,           only: box_press, box_temp, relhum, box_h2o, photo_lev, nspecies, vmr, box_o2
+use MusicBox_mod,           only: box_press, box_temp, relhum, box_h2o, photo_lev, nspecies, box_o2
+use MusicBox_mod,           only: gas_number_density__num_m3
 use MusicBox_mod,           only: box_aer_sad, box_aer_diam, n_aer_modes
 use MusicBox_mod,           only: nbox, ntimes
 use MusicBox_mod,           only: nkRxt, njRxt, nRxn, TimeStart, TimeEnd
 use MusicBox_mod,           only: nlayer, nlevel, zenith, albedo, press_mid, press_int
-use MusicBox_mod,           only: alt, temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol
-use MusicBox_mod,           only: dt, density, mbar
+use MusicBox_mod,           only: alt, temp
+use MusicBox_mod,           only: O2_number_density_column__num_m3
+use MusicBox_mod,           only: O3_number_density_column__num_m3
+use MusicBox_mod,           only: SO2_number_density_column__num_m3
+use MusicBox_mod,           only: NO2_number_density_column__num_m3
+use MusicBox_mod,           only: dt, number_density_air__num_m3, mbar
 use MusicBox_mod,           only: cnst_info
 use MusicBox_mod,           only: jnames
 use MusicBox_mod,           only: press_top
@@ -58,7 +63,9 @@ subroutine MusicBox_sub()
   integer,parameter  :: nbox_param=1    ! Need to read this in from namelist and then allocate arrays
   
   integer            :: i,n,i_rxn
-  real(kind=kind_phys), allocatable :: vmrboxes(:,:)   ! vmr for all boxes
+
+  ! Gas species number density for each grid cell (#/m3) (n_species, n_boxes)
+  real(kind=kind_phys), allocatable :: gas_number_density_boxes__num_m3(:,:)
 
   type(output_file_type) :: outfile
 
@@ -130,10 +137,11 @@ subroutine MusicBox_sub()
   !---------------------------
   ! Initialize the envrionmental conditions
 
-  allocate(vmrboxes(nSpecies,nbox))
+  allocate(gas_number_density_boxes__num_m3(nSpecies,nbox))
 
   call read_envConditions_init(nbox, nSpecies, env_conds_file, env_lat, env_lon, env_lev, user_begin_time, &
-             user_end_time, user_dtime, cnst_info, vmrboxes, dt, sim_beg_time, sim_end_time, nlayer, photo_lev)
+             user_end_time, user_dtime, cnst_info, gas_number_density_boxes__num_m3, dt, sim_beg_time, &
+             sim_end_time, nlayer, photo_lev)
 
   !---------------------------
   ! Set up the various dimensions
@@ -143,16 +151,16 @@ subroutine MusicBox_sub()
   !---------------------------
   ! allocate host model arrays
 
-  allocate(vmr(nSpecies))
+  allocate(gas_number_density__num_m3(nSpecies))
 
   allocate(alt(nlayer))
   allocate(press_mid(nlayer))
   allocate(press_int(nlevel))
   allocate(temp(nlayer))
-  allocate(o2vmrcol(nlayer))
-  allocate(o3vmrcol(nlayer))
-  allocate(so2vmrcol(nlayer))
-  allocate(no2vmrcol(nlayer))
+  allocate(O2_number_density_column__num_m3(nlayer))
+  allocate(O3_number_density_column__num_m3(nlayer))
+  allocate(SO2_number_density_column__num_m3(nlayer))
+  allocate(NO2_number_density_column__num_m3(nlayer))
   allocate(cldwat(nlayer))
   allocate(cldfrc(nlayer))
   allocate(box_aer_sad(n_aer_modes))
@@ -183,11 +191,11 @@ subroutine MusicBox_sub()
   call outfile%create(outfile_name)
   call outfile%add(cnst_info)
   call outfile%add('Zenith','solar zenith angle','degrees')
-  call outfile%add('Density','total number density','molecules/cm3')
+  call outfile%add('Density','total number density','molecules/m3')
   call outfile%add('Mbar','mean molar mass','g/mole')
   call outfile%add('RelHum','relative humidity','')
   do i_rxn = 1, nRxn
-    call outfile%add(trim("rate_"//reaction_names(i_rxn)),trim('Rate for reaction '//reaction_names(i_rxn)),'molecules cm-3 s-1')
+    call outfile%add(trim("rate_"//reaction_names(i_rxn)),trim('Rate for reaction '//reaction_names(i_rxn)),'molecules m-3 s-1')
     call outfile%add(trim("rate_constant_"//reaction_names(i_rxn)),trim('Rate constant for reaction '//reaction_names(i_rxn)),'')
   end do
   call outfile%define() ! cannot add more fields after this call
@@ -225,9 +233,13 @@ subroutine MusicBox_sub()
         !---------------------------
         ! Read in the environmental conditions  at TimeStart
  
-        call read_envConditions_timestep(TimeStart,ibox, nlayer, photo_lev, vmrboxes, zenith, albedo, &
-             press_mid, press_int, alt,  temp, o2vmrcol, o3vmrcol, so2vmrcol, no2vmrcol, vmr, box_h2o, &
-             box_temp, box_press, box_aer_sad, box_aer_diam, box_o2)
+        call read_envConditions_timestep(TimeStart,ibox, nlayer, photo_lev, &
+             gas_number_density_boxes__num_m3, zenith, albedo, &
+             press_mid, press_int, alt,  temp, &
+             O2_number_density_column__num_m3, O3_number_density_column__num_m3, &
+             SO2_number_density_column__num_m3, NO2_number_density_column__num_m3, &
+             gas_number_density__num_m3, box_h2o, box_temp, box_press, box_aer_sad, &
+             box_aer_diam, box_o2)
 
         cldwat = 0._kind_phys
         cldfrc = 0._kind_phys
@@ -251,7 +263,7 @@ subroutine MusicBox_sub()
 
         !---------------------------
         ! Update the environmental conditions for the timestep
-        call read_envConditions_update_timestep(ibox, vmr, vmrboxes)
+        call read_envConditions_update_timestep(ibox, gas_number_density__num_m3, gas_number_density_boxes__num_m3)
 
         !---------------------------
         ! write out the timestep values
@@ -259,15 +271,16 @@ subroutine MusicBox_sub()
         call outfile%out( 'RelHum', relhum )
         call outfile%out( 'Zenith', zenith )
 
-        write(*,'(a, e12.4, f12.2, f8.2)') ' total density, pressure, temperature :', density, box_press, box_temp
+        write(*,'(a, e12.4, f12.2, f8.2)') ' total density, pressure, temperature :', number_density_air__num_m3, &
+          box_press, box_temp
         write(*,'(a, 4e12.4)') ' aerosol surface area density (cm2/cm3):', box_aer_sad
         write(*,'(a, 4e12.4)') ' aerosol diameter (cm) :', box_aer_diam
-        call outfile%out( 'Density', density )
+        call outfile%out( 'Density', number_density_air__num_m3 )
         call outfile%out( 'Mbar', mbar )
 
-        call outfile%out( cnst_info, vmrboxes(:,ibox) )
+        call outfile%out( cnst_info, gas_number_density_boxes__num_m3(:,ibox) )
         write(*,'(a,1p,g0)') 'Concentration @ hour = ',TimeStart/3600.
-        write(*,'(1p,5(1x,g0))') vmrboxes(:,ibox),sum(vmrboxes(:,ibox))
+        write(*,'(1p,5(1x,g0))') gas_number_density_boxes__num_m3(:,ibox),sum(gas_number_density_boxes__num_m3(:,ibox))
 
         do i_rxn = 1, nRxn
           call outfile%out( trim("rate_"//reaction_names(i_rxn)), reaction_rates(i_rxn) )
@@ -303,16 +316,16 @@ subroutine MusicBox_sub()
 
   call outfile%close()
 
-  deallocate(vmr)
-  deallocate(vmrboxes)
+  deallocate(gas_number_density__num_m3)
+  deallocate(gas_number_density_boxes__num_m3)
   deallocate(alt)
   deallocate(press_mid)
   deallocate(press_int)
   deallocate(temp)
-  deallocate(o2vmrcol)
-  deallocate(o3vmrcol)
-  deallocate(so2vmrcol)
-  deallocate(no2vmrcol)
+  deallocate(O2_number_density_column__num_m3)
+  deallocate(O3_number_density_column__num_m3)
+  deallocate(SO2_number_density_column__num_m3)
+  deallocate(NO2_number_density_column__num_m3)
   deallocate(cldwat)
   deallocate(cldfrc)
   deallocate(box_aer_sad)

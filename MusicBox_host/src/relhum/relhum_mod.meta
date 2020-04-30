@@ -1,15 +1,15 @@
 [ccpp-arg-table]
   name = relhum_mod_run
   type = scheme
-[boxtemp]
+[temperature__K]
   standard_name = temperature
   long_name = ambient temperature
   units = K
-  dimensions = () 
-  type = real 
+  dimensions = ()
+  type = real
   kind  = kind_phys
   intent = in
-[boxpress] 
+[pressure__Pa]
   standard_name = pressure
   long_name = ambient pressure
   units = Pa
@@ -17,15 +17,23 @@
   type = real
   kind = kind_phys
   intent = in
-[boxh2ovmr]
-  standard_name = water_vapor
-  long_name = water_vapor
-  units = mole/mole
+[H2O_number_density__num_m3]
+  standard_name = water_number_density
+  long_name = Number density of water
+  units = molecules/m3
   dimensions = ()
   type = real
   kind = kind_phys
   intent = in
-[boxrelhum]
+[number_density_air__num_m3]
+  standard_name = number_density_air
+  long_name = total number density
+  units = molecules/m3
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+[relative_humidity__pct]
   standard_name = relative_humidity
   long_name = relative humidity
   units = percent

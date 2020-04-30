@@ -1,7 +1,7 @@
 [ccpp-arg-table]
   name = calc_density_run
   type = scheme
-[press]
+[pressure__Pa]
   standard_name = pressure
   long_name = ambient pressure
   units = Pa
@@ -9,7 +9,7 @@
   type = real
   kind = kind_phys
   intent = in
-[temperature]
+[temperature__K]
   standard_name = temperature
   long_name = ambient temperature
   units = K
@@ -17,10 +17,10 @@
   type = real
   kind = kind_phys
   intent = in
-[density]
-  standard_name = total_number_density
+[number_density_air__num_m3]
+  standard_name = number_density_air
   long_name = total number density
-  units = molecules/cm3
+  units = molecules/m3
   dimensions = ()
   type = real
   kind = kind_phys

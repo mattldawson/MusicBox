@@ -20,6 +20,7 @@ module environ_conditions_mod
      integer :: num_times
      real, allocatable :: times(:)
    contains
+     procedure :: getunits => environ_conditions_getunits
      procedure :: getvar => environ_conditions_getvar
      procedure :: getcol => environ_conditions_getcol
      procedure :: getsrf => environ_conditions_getsrf
@@ -108,6 +109,16 @@ contains
     end if
     
   end subroutine environ_conditions_update_flt
+
+  function environ_conditions_getunits(this, var) result(units)
+    use input_file, only: MAX_ATT_LEN
+    class(environ_conditions), intent(inout) :: this
+    character(len=*), intent(in) :: var
+    character(len=MAX_ATT_LEN) :: units
+
+    units = this%inputfile%get_units(var)
+
+  end function environ_conditions_getunits
 
   function environ_conditions_getvar(this, var, default_value) result(thevalue)
     class(environ_conditions), intent(inout) :: this

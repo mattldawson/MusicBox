@@ -3,9 +3,10 @@ module calc_mbar
   USE ccpp_kinds, ONLY: kind_phys
   use const_props_mod, only : const_props_type
   implicit none
-  
+
+  !> Molecular weight [g/mol]
   real(kind_phys), allocatable :: molar_mass(:)
-  
+
 contains
 
 !> \section arg_table_calc_mbar_init Argument Table
@@ -35,19 +36,26 @@ contains
 !> \section arg_table_calc_mbar_run Argument Table
 !! \htmlinclude calc_mbar_run.html
 !!
-  subroutine calc_mbar_run( vmr, mbar, errmsg, errflg )
+  subroutine calc_mbar_run( gas_number_density__num_m3, mean_molecular_mass__g_mol, errmsg, errflg )
 
-    real(kind_phys), intent(inout)         :: vmr(:)
-    real(kind_phys), intent(out)           :: mbar
+    !> Gas species number density [#/m3]
+    real(kind_phys), intent(in)     :: gas_number_density__num_m3(:)
+    !> Mean molecular mass [g/mol]
+    real(kind_phys), intent(out)    :: mean_molecular_mass__g_mol
+    !> Error message
     character(len=512), intent(out) :: errmsg
+    !> Error flag
     integer, intent(out)            :: errflg
+
+    integer :: total_number_density
 
     !--- initialize CCPP error handling variables
     errmsg = ''
     errflg = 0
 
-    mbar = sum( vmr(:)*molar_mass(:) )
-    
+    total_number_density = sum( gas_number_density__num_m3(:) )
+    mean_molecular_mass__g_mol = sum( gas_number_density__num_m3(:)*molar_mass(:) ) / total_number_density
+
   end subroutine calc_mbar_run
 
 !> \section arg_table_calc_mbar_finalize Argument Table

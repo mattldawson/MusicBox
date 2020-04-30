@@ -16,7 +16,8 @@ module MusicBox_mod
    real(kind_phys)    :: box_o2
    real(kind_phys)    :: zenith
    real(kind_phys)    :: albedo
-   real(kind_phys)    :: density, mbar
+   real(kind_phys)    :: number_density_air__num_m3
+   real(kind_phys)    :: mbar
    real(kind_phys)    :: TimeStart, TimeEnd, dt
    real(kind_phys)    :: press_top
 
@@ -35,15 +36,15 @@ module MusicBox_mod
 
    real(kind_phys), allocatable :: alt(:)
    real(kind_phys), allocatable :: temp(:)
-   real(kind_phys), allocatable :: o2vmrcol(:)
-   real(kind_phys), allocatable :: o3vmrcol(:)
-   real(kind_phys), allocatable :: so2vmrcol(:)
-   real(kind_phys), allocatable :: no2vmrcol(:)
+   real(kind_phys), allocatable :: O2_number_density_column__num_m3(:)
+   real(kind_phys), allocatable :: O3_number_density_column__num_m3(:)
+   real(kind_phys), allocatable :: SO2_number_density_column__num_m3(:)
+   real(kind_phys), allocatable :: NO2_number_density_column__num_m3(:)
    real(kind_phys), allocatable :: cldfrc(:)
    real(kind_phys), allocatable :: cldwat(:)
    real(kind_phys), allocatable :: press_mid(:)
    real(kind_phys), allocatable :: press_int(:)
-   real(kind_phys), allocatable :: vmr(:)          ! "working" concentration passed thru CPF
+   real(kind_phys), allocatable :: gas_number_density__num_m3(:) ! "working" concentration passed thru CPF
    real(kind_phys), allocatable :: reaction_rates(:)
    real(kind_phys), allocatable :: reaction_rate_constants(:)
    real(kind_phys), allocatable :: box_aer_sad(:)
