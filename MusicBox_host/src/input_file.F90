@@ -109,7 +109,7 @@ contains
     integer :: status
     
     status = nf90_open(filename, nf90_nowrite, this%ncid)
-    if(status /= nf90_noerr) call handle_err(status)
+    if(status /= nf90_noerr) call handle_err(status, "openning "//filename)
 
     call set_coordinate(this%ncid, 'lat',  this%nlats,  this%lats )
     call set_coordinate(this%ncid, 'lon',  this%nlons,  this%lons )
@@ -134,9 +134,9 @@ contains
       allocate(coordvar(ndim))
 
       status = nf90_inq_varid(fileid, coordname, varid)
-      if(status /= nf90_noerr) call handle_err(status)
+      if(status /= nf90_noerr) call handle_err(status, "set_hybrid_coord varid: "//coordname)
       status = nf90_get_var(fileid, varid, coordvar)
-      if(status /= nf90_noerr) call handle_err(status)
+      if(status /= nf90_noerr) call handle_err(status, "set_hybrid_coord get_var: "//coordname)
     end subroutine set_hybrid_coord
     
 
@@ -150,18 +150,18 @@ contains
       integer :: dimid, varid
 
       status = nf90_inq_dimid(fileid, dimname, dimid)
-      if (status /= nf90_noerr) call handle_err(status)
+      if (status /= nf90_noerr) call handle_err(status, "set_coordinate dimid: "//dimname)
       
       status = nf90_inquire_dimension(fileid, dimid, len = ndim)
-      if (status /= nf90_noerr) call handle_err(status)
+      if (status /= nf90_noerr) call handle_err(status, "set_coordinate inquire_dimension: "//dimname)
 
       allocate(coordvar(ndim))
 
       status = nf90_inq_varid(fileid, dimname, varid)
-      if(status /= nf90_noerr) call handle_err(status)
+      if(status /= nf90_noerr) call handle_err(status, "set_coordinate varid: "//dimname)
 
       status = nf90_get_var(fileid, varid, coordvar)
-      if(status /= nf90_noerr) call handle_err(status)
+      if(status /= nf90_noerr) call handle_err(status, "set_coordinate get_var: "//dimname)
  
     end subroutine set_coordinate
   
@@ -243,26 +243,43 @@ contains
   
   end function input_file_slice
 
-  function input_file_get_units(this, varname) result(units)
+  function input_file_get_units(this, varname, default_value) result(units)
     class(input_file_type), intent(inout) :: this
 
     character(len=*), intent(in) :: varname
+
+    !> An assumption for unspecified units
+    character(len=*), intent(in), optional :: default_value
 
     character(len=MAX_ATT_LEN) :: units
 
     integer :: status, varid, length
     
     status = nf90_inq_varid(this%ncid, varname, varid)
-    if(status /= nf90_noerr) call handle_err(status)
+    if(status /= nf90_noerr) then
+      if(present(default_value)) then
+        units = default_value
+        return
+      else
+        call handle_err(status, "get_units varid: "//varname)
+      end if
+    end if
     status = nf90_inquire_attribute(this%ncid, varid, "units", len = length)
-    if(status /= nf90_noerr) call handle_err(status)
+    if(status /= nf90_noerr) then
+      if(present(default_value)) then
+        units = default_value
+        return
+      else
+        call handle_err(status, "get_units inquire_attribute: "//varname)
+      end if
+    end if
     if (length>MAX_ATT_LEN) then
        write(*,*) 'ERROR: input_file_get_units: units length too long on var '//trim(varname)//'... Length = ',length
        stop
     end if
     
     status = nf90_get_att(this%ncid, varid, "units", units)
-    if(status /= nf90_noerr) call handle_err(status)
+    if(status /= nf90_noerr) call handle_err(status, "get_units get_att: "//varname)
    
   end function input_file_get_units
 
@@ -288,11 +305,11 @@ contains
        status = nf90_get_var(this%ncid, varid, data, &
             start = (/ slice%beglon, slice%beglat, slice%beglev, slice%begtime /),     &
             count = (/ slice%nlons,  slice%nlats,  slice%nlevs,  slice%ntimes /))
-       if(status /= nf90_noerr) call handle_err(status)
+       if(status /= nf90_noerr) call handle_err(status, "extract_slice get_var: "//varname)
     elseif (present(default_value)) then
        data = default_value
     else
-       call handle_err(status)
+       call handle_err(status, "extract_slice varid: "//varname)
     end if
 
   end function input_file_extract_slice
@@ -313,21 +330,23 @@ contains
     data = -1.e36
     
     status = nf90_inq_varid(this%ncid, varname, varid)
-    if(status /= nf90_noerr) call handle_err(status)
+    if(status /= nf90_noerr) call handle_err(status, "extract_slice3d varid: "//varname)
 
     status = nf90_get_var(this%ncid, varid, data, &
                             start = (/ slice%beglon, slice%beglat, slice%begtime /),     &
                             count = (/ slice%nlons,  slice%nlats,  slice%ntimes /))
 
-    if(status /= nf90_noerr) call handle_err(status)
+    if(status /= nf90_noerr) call handle_err(status, "extract_slice3d get_var: "//varname)
     
   end function input_file_extract_slice3d
 
-  subroutine handle_err(status)
+  subroutine handle_err(status, errmsg)
 
     integer, intent(in) :: status
+    character(len=*), optional :: errmsg
 
     write(*,*) 'ERROR input_file; status = ', status
+    if( present( errmsg ) )write(*,*) '  error message: '//errmsg
     call exit(status)
     
   end subroutine handle_err

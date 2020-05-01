@@ -1,7 +1,8 @@
+**/.DS_Store
 MICM_chemistry*
 MICM_chemistry/
 Mechanism_collection/
 MusicBox_host/MusicBox_output.nc
 MusicBox_host/molec_info.json
-MusicBox_host/data/env_conditions.nc
+MusicBox_host/data/*.nc
 ccpp-framework/

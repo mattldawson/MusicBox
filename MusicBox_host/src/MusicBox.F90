@@ -30,6 +30,10 @@ implicit none
 
 public MusicBox_sub
 
+  ! save a file of photolysis rate constants that can be used as input
+  ! to the box model.
+  logical, parameter :: OUTPUT_PHOTO_RATES = .false.
+
 contains
 
   !> \section arg_table_MusicBox_sub  Argument Table
@@ -58,7 +62,7 @@ subroutine MusicBox_sub()
   character(len=128), allocatable :: part_names(:)
   character(len=128), allocatable :: rxn_names(:)
   character(len=512)              :: errmsg
-  integer                         :: errflg
+  integer                         :: errflg = 0
 
   integer,parameter  :: nbox_param=1    ! Need to read this in from namelist and then allocate arrays
   
@@ -67,10 +71,11 @@ subroutine MusicBox_sub()
   ! Gas species number density for each grid cell (#/m3) (n_species, n_boxes)
   real(kind=kind_phys), allocatable :: gas_number_density_boxes__num_m3(:,:)
 
-  type(output_file_type) :: outfile
+  type(output_file_type) :: outfile, out_photo_file
 
   integer :: ibox
   real(kind_phys) :: sim_beg_time, sim_end_time
+  integer :: box_grid_indices(4) = (/ 1, 1, 1, 0 /)  ! NetCDF output indices for grid cell (level, lon, lat, time)
 
   ! run-time options
   character(len=120) :: env_conds_file = '../data/env_conditions.nc'
@@ -93,7 +98,7 @@ subroutine MusicBox_sub()
   namelist /options/ outfile_name, env_conds_file
   namelist /options/ env_lat, env_lon, env_lev
   namelist /options/ user_begin_time, user_end_time, user_dtime
-  
+
   nbox = nbox_param
 
   !---------------------------
@@ -102,12 +107,6 @@ subroutine MusicBox_sub()
   open(unit=10,file=nml_options)
   read(unit=10,nml=options)
   close(10)
-
-  call tuv_photolysis_readnl(photo_opts_file, errmsg, errflg)
-  if (errflg /= 0) then
-    write(6, *) trim(errmsg)
-    stop
-  end if
 
   !---------------------------
   ! error checking of namelist settings
@@ -142,6 +141,16 @@ subroutine MusicBox_sub()
   call read_envConditions_init(nbox, nSpecies, env_conds_file, env_lat, env_lon, env_lev, user_begin_time, &
              user_end_time, user_dtime, cnst_info, gas_number_density_boxes__num_m3, dt, sim_beg_time, &
              sim_end_time, nlayer, photo_lev)
+
+  !---------------------------
+  ! Set up the photolysis module
+  !! \todo Move photolysis to a CCPP scheme
+
+  call tuv_photolysis_readnl(photo_opts_file, nbox, jnames, env_lat, env_lon, env_lev, errmsg, errflg)
+  if (errflg /= 0) then
+    write(6, *) trim(errmsg)
+    stop
+  end if
 
   !---------------------------
   ! Set up the various dimensions
@@ -200,6 +209,26 @@ subroutine MusicBox_sub()
   end do
   call outfile%define() ! cannot add more fields after this call
 
+  if (OUTPUT_PHOTO_RATES) then
+    call out_photo_file%create('photolysis_rate_constants_out.nc')
+    call out_photo_file%add_dimension('lat', 'latitude', size(env_lat), 'degree')
+    call out_photo_file%add_dimension('lon', 'longitude', size(env_lon), 'degree')
+    call out_photo_file%add_dimension('lev', 'hybrid level at midpoints', size(env_lev), 'hPa')
+    call out_photo_file%add_dimension('ilev', 'hybrid level at interfaces', size(env_lev)+1, 'hPa')
+    call out_photo_file%add('hyai', 'hybrid A coefficient at layer interfaces','', (/ 'ilev' /))
+    call out_photo_file%add('hyam', 'hybrid A coefficient at layer midpoints','',  (/ 'lev'  /))
+    call out_photo_file%add('hybi', 'hybrid B coefficient at layer interfaces','', (/ 'ilev' /))
+    call out_photo_file%add('hybm', 'hybrid B coefficient at layer midpoints','',  (/ 'lev'  /))
+    do i_rxn = 1, size(jnames)
+      call out_photo_file%add("photo_rate_constant_"//trim(jnames(i_rxn)), "Photolysis rate constant for reaction "// &
+                              trim(reaction_names(i_rxn)), "s-1", (/ 'lat ', 'lon ', 'lev ', 'time' /))
+    end do
+    call out_photo_file%define()
+    call out_photo_file%set_variable('lat', real(env_lat, kind=kind_phys))
+    call out_photo_file%set_variable('lon', real(env_lon, kind=kind_phys))
+    call out_photo_file%set_variable('lev', real(env_lev, kind=kind_phys))
+  end if
+
 ! For testing short runs   
 !   ntimes = 10
 
@@ -223,6 +252,7 @@ subroutine MusicBox_sub()
      ! set the timestep for the output file
 
      call outfile%advance(TimeStart)
+     if (OUTPUT_PHOTO_RATES) call out_photo_file%advance(TimeStart)
 
      !---------------------------
      ! Loop over the boxes
@@ -287,6 +317,14 @@ subroutine MusicBox_sub()
           call outfile%out( trim("rate_constant_"//reaction_names(i_rxn)), reaction_rate_constants(i_rxn) )
         end do
 
+        if (OUTPUT_PHOTO_RATES) then
+          !! \todo this only works if the tuv rates stay matched to reaction_rate_constants(1:njRxt)
+          do i_rxn = 1, njRxt
+            call out_photo_file%out( "photo_rate_constant_"//trim(jnames(i_rxn)), box_grid_indices, &
+                                     reaction_rate_constants(i_rxn) )
+          end do
+        end if
+
       end do Box_loop
 
       !---------------------------
@@ -315,6 +353,8 @@ subroutine MusicBox_sub()
   end if
 
   call outfile%close()
+
+  if (OUTPUT_PHOTO_RATES) call out_photo_file%close()
 
   deallocate(gas_number_density__num_m3)
   deallocate(gas_number_density_boxes__num_m3)

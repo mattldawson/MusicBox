@@ -110,7 +110,8 @@ contains
   do n = 1,nSpecies
     call cnst_info(n)%print()
     cnst_name = cnst_info(n)%get_name()
-    concentration_units = theEnvConds(1)%getunits( cnst_name )
+    !! \todo revisit how to handle input species concentrations without specified units
+    concentration_units = theEnvConds(1)%getunits( cnst_name, default_value="mol/mol" )
     if( trim( concentration_units ) .eq. 'molecules/m3' ) then
       do ibox=1,nbox
         gas_number_density_boxes__num_m3(n,ibox) = theEnvConds(ibox)%getvar(cnst_name,default_value=0.00_kind_phys)

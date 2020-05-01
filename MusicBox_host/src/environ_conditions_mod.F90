@@ -50,14 +50,14 @@ contains
     character(len=MAX_ATT_LEN) :: units
     
     allocate(env_cond)
-    
+
     call env_cond%inputfile%open( infilepath )
     if (present(lev)) then
        env_cond%slice = env_cond%inputfile%set_slice( beglat=lat,endlat=lat, beglon=lon,endlon=lon, beglev=lev,endlev=lev)
     else
        env_cond%slice = env_cond%inputfile%set_slice( beglat=lat,endlat=lat, beglon=lon,endlon=lon )
     end if
-     
+
     env_cond%slice%ntimes = 1
 
     env_cond%num_times = env_cond%inputfile%get_ntimes()
@@ -67,6 +67,8 @@ contains
     if (index(units,'days')>0) then
        ! convert to seconds
        env_cond%times = 24._kind_phys*3600._kind_phys* env_cond%inputfile%get_times()
+    else if (index(units,'sec')>0) then
+       env_cond%times = env_cond%inputfile%get_times()
     else
        write(*,*) 'ERROR: Do not recognize time units in file: '//trim(infilepath)
        call abort()
@@ -110,13 +112,19 @@ contains
     
   end subroutine environ_conditions_update_flt
 
-  function environ_conditions_getunits(this, var) result(units)
+  function environ_conditions_getunits(this, var, default_value) result(units)
     use input_file, only: MAX_ATT_LEN
     class(environ_conditions), intent(inout) :: this
     character(len=*), intent(in) :: var
     character(len=MAX_ATT_LEN) :: units
+    !> An assumption for unspecified units
+    character(len=*), intent(in), optional :: default_value
 
-    units = this%inputfile%get_units(var)
+    if (present(default_value)) then
+      units = this%inputfile%get_units(var, default_value = default_value)
+    else
+      units = this%inputfile%get_units(var)
+    end if
 
   end function environ_conditions_getunits
 
