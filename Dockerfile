@@ -1,4 +1,4 @@
-FROM fedora:27
+FROM fedora:30
 
 RUN dnf -y update \
     && dnf -y install \
@@ -6,6 +6,7 @@ RUN dnf -y update \
         gcc-c++ \
         netcdf-fortran-devel \
         cmake \
+        make \
         wget \
         python \
         git \
@@ -47,6 +48,6 @@ RUN if [ "$TAG_ID" = "false" ] ; then \
       && cmake -D NETCDF_LIBRARIES="/usr/lib64/libnetcdff.so;/usr/lib64/libnetcdf.so" \
                -D NETCDF_INCLUDES_F90="/usr/lib64/gfortran/modules" \
                -D NETCDF_INCLUDES="/usr/lib64/gfortran/modules" \
-               ../src \
+               .. \
       && make \
       ; fi

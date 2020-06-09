@@ -3,30 +3,24 @@
 ! option) any later version. See the file COPYING for details.
 
 !> \file
-!> The music_box_util module.
+!> The music_box_assert module.
 
-!> Common utility subroutines
-module music_box_util
+!> Assertion functions
+module music_box_assert
 
   implicit none
 
   !> Error output id
   integer, parameter :: ERROR_ID = 0
-  !> Length of string for to_string conversions
-  integer, parameter :: MB_UTIL_CONVERT_STRING_LEN = 100
-
-  !> Interface to to_string functions
-  !! \todo add more type_to_string functions as needed
-  interface to_string
-    module procedure integer_to_string
-  end interface to_string
 
 contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   !> Assert condition to be true or fail with message
-  subroutine assert_msg(code, condition, error_message)
+  subroutine assert_msg( code, condition, error_message )
+
+    use music_box_string,              only : to_char
 
     !> Unique code for the assertion
     integer, intent(in) :: code
@@ -35,9 +29,9 @@ contains
     !> Message to display on failure
     character(len=*), intent(in) :: error_message
 
-    if(.not.condition) then
-      write(ERROR_ID,*) "ERROR (MusicBox-"//trim(to_string(code))//"): "//    &
-                        trim(error_message)
+    if( .not. condition ) then
+      write(ERROR_ID,*) "ERROR (MusicBox-"//trim( to_char( code ) )//"): "//  &
+                        error_message
       stop 3
     end if
 
@@ -46,33 +40,38 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   !> Assert condition to be true or fail
-  subroutine assert(code, condition)
+  subroutine assert( code, condition )
 
     !> Unique code for the assertion
     integer, intent(in) :: code
     !> Condition to evaluate
     logical, intent(in) :: condition
 
-    call assert_msg(code, condition, 'assertion failed')
+    call assert_msg( code, condition, 'assertion failed' )
 
   end subroutine assert
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  !> Convert an integer to a char array
-  character(len=MB_UTIL_CONVERT_STRING_LEN) function integer_to_string(val)
+  !> Assert condition to be true or print a warning message
+  subroutine assert_warn_msg( code, condition, warning_message )
 
-    !> Value to convert
-    integer, intent(in) :: val
+    use music_box_string,              only : to_char
 
-    character(len=MB_UTIL_CONVERT_STRING_LEN) :: ret_val
+    !> Unique code for the assertion
+    integer, intent(in) :: code
+    !> Condition to evaluate
+    logical, intent(in) :: condition
+    !> Message to display on failure
+    character(len=*), intent(in) :: warning_message
 
-    ret_val = ""
-    write(ret_val, '(i30)') val
-    integer_to_string = adjustl(ret_val)
+    if( .not. condition ) then
+      write(ERROR_ID,*) "WARNING (MusicBox-"//trim( to_char( code ) )//"): "//&
+                        warning_message
+    end if
 
-  end function integer_to_string
+  end subroutine assert_warn_msg
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-end module music_box_util
+end module music_box_assert

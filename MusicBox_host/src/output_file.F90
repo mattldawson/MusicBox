@@ -10,7 +10,8 @@ module output_file
   use netcdf, only: nf90_noerr, nf90_strerror, NF90_MAX_VAR_DIMS, nf90_inq_varid
   use netcdf, only: nf90_inquire_variable, nf90_inq_dimid, nf90_inquire_dimension
 
-  use music_box_util, only: assert_msg, to_string
+  use music_box_assert, only: assert_msg
+  use music_box_string, only: to_char
 
   use const_props_mod, only: const_props_type
   
@@ -194,12 +195,12 @@ contains
                                       dimids = dimids ) )
     call assert_msg(708577727, ndims.eq.1,                                       &
                     "NetCDF variable dimension mismatch for '"//var_name//       &
-                    "' expected "//trim(to_string(ndims))//" but got 1" )
+                    "' expected "//trim(to_char(ndims))//" but got 1" )
     call check( nf90_inquire_dimension(this%ncid, dimids(1), len = dim_size) )
     call assert_msg(134717026, dim_size.eq.size(values),                         &
                     "NetCDF variable size mismatch for '"//var_name//            &
-                    "' expected "//trim(to_string(dimids(1)))//" but got "//     &
-                    trim(to_string(size(values))) )
+                    "' expected "//trim(to_char(dimids(1)))//" but got "//       &
+                    trim(to_char(size(values))) )
     call check( nf90_put_var(this%ncid, var_id, values, start = (/ 1 /),         &
                 count = (/ size(values) /) ) )
 
