@@ -17,19 +17,19 @@ module music_box_string
   type :: string_t
   private
     !> the string
-    character(len=:), allocatable :: val
+    character(len=:), allocatable :: val_
   contains
     !> \defgroup StringAssign String assignment
     !! @{
-    procedure, private :: string_assign_string
-    procedure, private :: string_assign_char
-    procedure, private :: string_assign_int
-    procedure, private :: string_assign_real
-    procedure, private :: string_assign_double
-    procedure, private :: string_assign_logical
-    generic :: assignment(=) => string_assign_string, string_assign_char,     &
-                                string_assign_int, string_assign_real,        &
-                                string_assign_double, string_assign_logical
+    procedure, private, pass(to) :: string_assign_char
+    procedure, private, pass(to) :: string_assign_int
+    procedure, private, pass(to) :: string_assign_real
+    procedure, private, pass(to) :: string_assign_double
+    procedure, private, pass(to) :: string_assign_logical
+    procedure, private, pass(from) :: assign_string
+    generic :: assignment(=) => string_assign_char, string_assign_int,        &
+                                string_assign_real, string_assign_double,     &
+                                string_assign_logical, assign_string
     !> @}
     !> \defgroup StringJoin Join a string
     !! @{
@@ -81,11 +81,11 @@ module music_box_string
     procedure :: to_lower
     !> Substring
     procedure :: substring
+    !> Split a string on a sub-string
+    procedure :: split
+    !> Convert the string to a character array
+    procedure :: to_char => string_to_char
   end type string_t
-
-  interface assignment(=)
-    module procedure char_assign_string
-  end interface
 
   interface operator(//)
     module procedure char_join_string
@@ -123,20 +123,6 @@ contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  !> Assign a string from a string
-  subroutine string_assign_string( to, from )
-
-    !> String to assign
-    class(string_t), intent(out) :: to
-    !> New string value
-    class(string_t), intent(in) :: from
-
-    to%val = from%val
-
-  end subroutine string_assign_string
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
   !> Assign a string from a character array
   subroutine string_assign_char( to, from )
 
@@ -145,7 +131,7 @@ contains
     !> New string value
     character(len=*), intent(in) :: from
 
-    to%val = trim( from )
+    to%val_ = trim( from )
 
   end subroutine string_assign_char
 
@@ -162,7 +148,7 @@ contains
     character(len=30) :: new_val
 
     write( new_val, '(i30)' ) from
-    to%val = adjustl( new_val )
+    to%val_ = adjustl( new_val )
 
   end subroutine string_assign_int
 
@@ -179,7 +165,7 @@ contains
     character(len=60) :: new_val
 
     write( new_val, '(g30.20)' ) from
-    to%val = adjustl( new_val )
+    to%val_ = adjustl( new_val )
 
   end subroutine string_assign_real
 
@@ -196,7 +182,7 @@ contains
     character(len=60) :: new_val
 
     write( new_val, '(g30.20)' ) from
-    to%val = adjustl( new_val )
+    to%val_ = adjustl( new_val )
 
   end subroutine string_assign_double
 
@@ -211,12 +197,76 @@ contains
     logical, intent(in) :: from
 
     if( from ) then
-      to%val = "true"
+      to%val_ = "true"
     else
-      to%val = "false"
+      to%val_ = "false"
     end if
 
   end subroutine string_assign_logical
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  !> Assign from a string
+  subroutine assign_string( to, from )
+
+    use music_box_assert,              only : die_msg, assert_msg
+
+    !> Object to assign
+    class(*), intent(inout) :: to
+    !> String
+    class(string_t), intent(in) :: from
+
+    integer :: ios, len_char, len_str
+
+    select type( to )
+      type is( string_t )
+        to%val_ = from%val_
+      type is( character(len=*) )
+        len_char = len( to )
+        len_str  = len( from%val_ )
+        if( len_char .lt. len_str ) then
+          to = from%val_(1:len_char)
+        else
+          to = from%val_
+        end if
+      type is( real )
+        call assert_msg( 621504169, len( from%val_ ) .le. 30,                 &
+                         "Error converting '"//from%val_//"' to real: "//     &
+                         "string too long" )
+        read( from%val_, '(f30.0)', iostat=ios ) to
+        call assert_msg( 102862672, ios .eq. 0,                               &
+                         "Error converting '"//from%val_//"' to real: "//     &
+                         "IOSTAT = "//trim( to_char( ios ) ) )
+      type is( double precision)
+        call assert_msg( 156176342, len( from%val_ ) .le. 30,                 &
+                         "Error converting '"//from%val_//"' to double: "//   &
+                         "string too long" )
+        read( from%val_, '(f30.0)', iostat=ios ) to
+        call assert_msg( 445821432, ios .eq. 0,                               &
+                         "Error converting '"//from%val_//"' to double: "//   &
+                         "IOSTAT = "//trim( to_char( ios ) ) )
+      type is( integer )
+        call assert_msg( 822629448, len( from%val_ ) .le. 20,                 &
+                         "Error converting '"//from%val_//"' to integer: "//  &
+                         "string too long" )
+        read( from%val_, '(i20)', iostat=ios ) to
+        call assert_msg( 484221174, ios .eq. 0,                               &
+                         "Error converting '"//from%val_//"' to integer: "//  &
+                         "IOSTAT = "//trim( to_char( ios ) ) )
+      type is( logical )
+        if( from .eq. "true" ) then
+          to = .true.
+        else if( from .eq. "false" ) then
+          to = .false.
+        else
+          call die_msg( 359920976, "Cannot convert '"//from%val_//            &
+                        "' to logical" )
+        end if
+      class default
+        call die_msg( 383270832, "Invalid type for assignment from string" )
+    end select
+
+  end subroutine assign_string
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -230,7 +280,7 @@ contains
     !> String to join
     class(string_t), intent(in) :: b
 
-    c%val = a%val//b%val
+    c%val_ = a%val_//b%val_
 
   end function string_join_string
 
@@ -246,7 +296,7 @@ contains
     !> Character array to join
     character(len=*), intent(in) :: b
 
-    c%val = a%val//trim( b )
+    c%val_ = a%val_//trim( b )
 
   end function string_join_char
 
@@ -265,7 +315,7 @@ contains
     character(len=30) :: new_val
 
     write( new_val, '(i30)' ) b
-    c%val = a%val//adjustl( new_val )
+    c%val_ = a%val_//adjustl( new_val )
 
   end function string_join_int
 
@@ -284,7 +334,7 @@ contains
     character(len=60) :: new_val
 
     write( new_val, '(g30.20)' ) b
-    c%val = a%val//adjustl( new_val )
+    c%val_ = a%val_//adjustl( new_val )
 
   end function string_join_real
 
@@ -303,7 +353,7 @@ contains
     character(len=60) :: new_val
 
     write( new_val, '(g30.20)' ) b
-    c%val = a%val//adjustl( new_val )
+    c%val_ = a%val_//adjustl( new_val )
 
   end function string_join_double
 
@@ -320,9 +370,9 @@ contains
     logical, intent(in) :: b
 
     if( b ) then
-      c%val = a%val//"true"
+      c%val_ = a%val_//"true"
     else
-      c%val = a%val//"false"
+      c%val_ = a%val_//"false"
     end if
 
   end function string_join_logical
@@ -337,7 +387,7 @@ contains
     !> String b
     class(string_t), intent(in) :: b
 
-    equals = trim( a%val ) .eq. trim( b%val )
+    equals = trim( a%val_ ) .eq. trim( b%val_ )
 
   end function string_equals_string
 
@@ -351,7 +401,7 @@ contains
     !> Character array b
     character(len=*), intent(in) :: b
 
-    equals = trim( a%val ) .eq. trim( b )
+    equals = trim( a%val_ ) .eq. trim( b )
 
   end function string_equals_char
 
@@ -368,7 +418,7 @@ contains
     character(len=30) :: comp_val
 
     write( comp_val, '(i30)' ) b
-    equals = trim( a%val ) .eq. adjustl( comp_val )
+    equals = trim( a%val_ ) .eq. adjustl( comp_val )
 
   end function string_equals_int
 
@@ -385,7 +435,7 @@ contains
     character(len=60) :: comp_val
 
     write( comp_val, '(g30.20)' ) b
-    equals = trim( a%val ) .eq. adjustl( comp_val )
+    equals = trim( a%val_ ) .eq. adjustl( comp_val )
 
   end function string_equals_real
 
@@ -402,7 +452,7 @@ contains
     character(len=60) :: comp_val
 
     write( comp_val, '(g30.20)' ) b
-    equals = trim( a%val ) .eq. adjustl( comp_val )
+    equals = trim( a%val_ ) .eq. adjustl( comp_val )
 
   end function string_equals_double
 
@@ -416,8 +466,8 @@ contains
     !> Logical b
     logical, intent(in) :: b
 
-    equals = ( trim( a%val ) .eq. "true"  .and.       b ) .or.                &
-             ( trim( a%val ) .eq. "false" .and. .not. b )
+    equals = ( trim( a%val_ ) .eq. "true"  .and.       b ) .or.                &
+             ( trim( a%val_ ) .eq. "false" .and. .not. b )
 
   end function string_equals_logical
 
@@ -525,7 +575,7 @@ contains
     !> I/O error message
     character(len=*), intent(inout) :: iomsg
 
-    write( unit, iostat=iostat, iomsg=iomsg ) this%val
+    write( unit, iostat=iostat, iomsg=iomsg ) this%val_
 
   end subroutine write_string_unformatted
 
@@ -548,7 +598,7 @@ contains
     !> I/O error message
     character(len=*), intent(inout) :: iomsg
 
-    write( unit, fmt=*, iostat=iostat, iomsg=iomsg ) this%val
+    write( unit, fmt=*, iostat=iostat, iomsg=iomsg ) this%val_
 
   end subroutine write_string_formatted
 
@@ -560,7 +610,7 @@ contains
     !> String
     class(string_t), intent(in) :: this
 
-    length = len( this%val )
+    length = len( this%val_ )
 
   end function length
 
@@ -581,10 +631,10 @@ contains
     character(26), parameter :: low = 'abcdefghijklmnopqrstuvwxyz'
     integer :: i_str, i_char
 
-    cap_string%val = this%val
-    do i_str = 1, len( cap_string%val )
-      i_char = index( low, cap_string%val(i_str:i_str) )
-      if( i_char .gt. 0 ) cap_string%val(i_str:i_str) = cap(i_char:i_char)
+    cap_string%val_ = this%val_
+    do i_str = 1, len( cap_string%val_ )
+      i_char = index( low, cap_string%val_(i_str:i_str) )
+      if( i_char .gt. 0 ) cap_string%val_(i_str:i_str) = cap(i_char:i_char)
     end do
 
   end function to_upper
@@ -606,10 +656,10 @@ contains
     character(26), parameter :: low = 'abcdefghijklmnopqrstuvwxyz'
     integer :: i_str, i_char
 
-    low_string%val = this%val
-    do i_str = 1, len( low_string%val )
-      i_char = index( cap, low_string%val(i_str:i_str) )
-      if( i_char .gt. 0 ) low_string%val(i_str:i_str) = low(i_char:i_char)
+    low_string%val_ = this%val_
+    do i_str = 1, len( low_string%val_ )
+      i_char = index( cap, low_string%val_(i_str:i_str) )
+      if( i_char .gt. 0 ) low_string%val_(i_str:i_str) = low(i_char:i_char)
     end do
 
   end function to_lower
@@ -630,37 +680,116 @@ contains
 
     integer :: l
 
-    if( start_index + length - 1 .gt. len( this%val ) ) then
-      l = len( this%val ) - start_index + 1
+    if( start_index + length - 1 .gt. len( this%val_ ) ) then
+      l = len( this%val_ ) - start_index + 1
     else
       l = length
     end if
-    substring%val = this%val(start_index:l+start_index-1)
+    substring%val_ = this%val_(start_index:l+start_index-1)
 
   end function substring
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  !> Assign a character array from a string
-  subroutine char_assign_string( to, from )
+  !> Split a string on a substring
+  function split( this, splitter, compress ) result( sub_strings )
 
-    !> Character array to assign
-    character(len=*), intent(out) :: to
-    !> String to assign
-    class(string_t), intent(in) :: from
+    !> Split string
+    type(string_t), allocatable :: sub_strings(:)
+    !> Full string
+    class(string_t), intent(in) :: this
+    !> String to split on
+    character(len=*), intent(in) :: splitter
+    !> Compress (default = false)
+    !!
+    !! No 0-length substrings will be returned (adjacent tokens will be
+    !! merged; tokens at the beginning and end of the original string will be
+    !! ignored)
+    logical, intent(in), optional :: compress
 
-    integer :: len_char, len_str
+    integer :: i, start_str, i_substr, sl, count
+    logical :: l_comp, is_string
 
-    len_char = len( to )
-    len_str  = len( from%val )
-
-    if( len_char .lt. len_str ) then
-      to = from%val(1:len_char)
+    if( .not. allocated( this%val_ ) ) return
+    if( present( compress ) ) then
+      l_comp = compress
     else
-      to = from%val
+      l_comp = .false.
     end if
 
-  end subroutine char_assign_string
+    sl        = len( splitter )
+    if( sl .eq. 0 ) then
+      allocate( sub_strings( 1 ) )
+      sub_strings(1)%val_ = this%val_
+      return
+    end if
+
+    count     = 0
+    i         = 1
+    start_str = 1
+    is_string = .not. l_comp
+    do while( i .le. len( this%val_ ) - sl + 1 )
+      if( this%val_(i:i+sl-1) .eq. splitter ) then
+        if( is_string ) then
+          count = count + 1
+        end if
+        i = i + sl
+        is_string = .not. l_comp
+      else
+        i = i + 1
+        is_string = .true.
+      end if
+    end do
+    if( is_string ) count = count + 1
+
+    allocate( sub_strings( count ) )
+
+    i         = 1
+    start_str = 1
+    i_substr  = 1
+    is_string = .not. l_comp
+    do while( i .le. len( this%val_ ) - sl + 1 )
+      if( this%val_(i:i+sl-1) .eq. splitter ) then
+        if( is_string ) then
+          if( i .eq. start_str ) then
+            sub_strings( i_substr ) = ""
+          else
+            sub_strings( i_substr ) = this%val_(start_str:i-1)
+          end if
+          i_substr = i_substr + 1
+        end if
+        i = i + sl
+        start_str = i
+        is_string = .not. l_comp
+      else
+        i = i + 1
+        is_string = .true.
+      end if
+    end do
+
+    if( is_string ) then
+      if( i .eq. start_str ) then
+        sub_strings( i_substr ) = ""
+      else
+        sub_strings( i_substr ) = this%val_( start_str:len( this%val_ ) )
+      end if
+    end if
+
+  end function split
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  !> Convert the string to a character array
+  function string_to_char( this ) result( char_array )
+
+    !> Converted string
+    character(len=:), allocatable :: char_array
+    !> String to convert
+    class(string_t), intent(in) :: this
+
+    char_array = this%val_
+
+  end function string_to_char
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -674,7 +803,7 @@ contains
     !> String to join
     class(string_t), intent(in) :: b
 
-    c%val = trim( a )//b%val
+    c%val_ = trim( a )//b%val_
 
   end function char_join_string
 
@@ -693,7 +822,7 @@ contains
     character(len=30) :: new_val
 
     write( new_val, '(i30)' ) a
-    c%val = trim( adjustl( new_val ) )//b%val
+    c%val_ = trim( adjustl( new_val ) )//b%val_
 
   end function int_join_string
 
@@ -712,7 +841,7 @@ contains
     character(len=60) :: new_val
 
     write( new_val, '(g30.20)' ) a
-    c%val = trim( adjustl( new_val ) )//b%val
+    c%val_ = trim( adjustl( new_val ) )//b%val_
 
   end function real_join_string
 
@@ -731,7 +860,7 @@ contains
     character(len=60) :: new_val
 
     write( new_val, '(g30.20)' ) a
-    c%val = trim( adjustl( new_val ) )//b%val
+    c%val_ = trim( adjustl( new_val ) )//b%val_
 
   end function double_join_string
 
@@ -748,9 +877,9 @@ contains
     class(string_t), intent(in) :: b
 
     if( a ) then
-      c%val = "true"//b%val
+      c%val_ = "true"//b%val_
     else
-      c%val = "false"//b%val
+      c%val_ = "false"//b%val_
     end if
 
   end function logical_join_string

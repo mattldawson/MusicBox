@@ -20,8 +20,6 @@ contains
   !> Assert condition to be true or fail with message
   subroutine assert_msg( code, condition, error_message )
 
-    use music_box_string,              only : to_char
-
     !> Unique code for the assertion
     integer, intent(in) :: code
     !> Condition to evaluate
@@ -29,9 +27,12 @@ contains
     !> Message to display on failure
     character(len=*), intent(in) :: error_message
 
+    character(len=50) :: err_code
+
     if( .not. condition ) then
-      write(ERROR_ID,*) "ERROR (MusicBox-"//trim( to_char( code ) )//"): "//  &
-                        error_message
+      write( err_code, '(i30)' ) code
+      write(ERROR_ID,*) "ERROR (MusicBox-"//trim( adjustl( err_code ) )//     &
+                        "): "//error_message
       stop 3
     end if
 
@@ -56,8 +57,6 @@ contains
   !> Assert condition to be true or print a warning message
   subroutine assert_warn_msg( code, condition, warning_message )
 
-    use music_box_string,              only : to_char
-
     !> Unique code for the assertion
     integer, intent(in) :: code
     !> Condition to evaluate
@@ -65,12 +64,67 @@ contains
     !> Message to display on failure
     character(len=*), intent(in) :: warning_message
 
+    character(len=50) :: err_code
+
     if( .not. condition ) then
-      write(ERROR_ID,*) "WARNING (MusicBox-"//trim( to_char( code ) )//"): "//&
-                        warning_message
+      write( err_code, '(i30)' ) code
+      write(ERROR_ID,*) "WARNING (MusicBox-"//trim( adjustl( err_code ) )//   &
+                        "): "//warning_message
     end if
 
   end subroutine assert_warn_msg
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  !> Error immediately
+  subroutine die_msg( code, error_message )
+
+    !> Unique code for the failure
+    integer, intent(in) :: code
+    !> Message to display with failure
+    character(len=*), intent(in) :: error_message
+
+    call assert_msg( code, .false., error_message )
+
+  end subroutine die_msg
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  !> Determine whether two real numbers are equal within a provided or
+  !! standard tolerance
+  logical function almost_equal( a, b, relative_tolerance,                    &
+      absolute_tolerance )
+
+    use ccpp_kinds,                    only : kind_phys
+
+    !> First number to compare
+    real(kind=kind_phys), intent(in) :: a
+    !> Second number to compare
+    real(kind=kind_phys), intent(in) :: b
+    !> Relative tolerance
+    real(kind=kind_phys), intent(in), optional :: relative_tolerance
+    !> Absolute tolerance
+    real(kind=kind_phys), intent(in), optional :: absolute_tolerance
+
+    real(kind=kind_phys) :: rel_tol, abs_tol
+
+    rel_tol = 1.0e-10
+    abs_tol = 1.0e-30
+    if( present( relative_tolerance ) ) rel_tol = relative_tolerance
+    if( present( absolute_tolerance ) ) abs_tol = absolute_tolerance
+
+    almost_equal = .false.
+    if( a .eq. b ) then
+      almost_equal = .true.
+    else
+      if( abs( a - b ) / ( abs( a ) + abs( b ) ) .lt. rel_tol ) then
+        almost_equal = .true.
+      else if( abs( a - b ) .le. abs_tol ) then
+        almost_equal = .true.
+      end if
+    end if
+
+  end function almost_equal
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

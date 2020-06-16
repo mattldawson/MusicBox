@@ -4,6 +4,7 @@
 !> Test module for the music_box_string module
 program test_util_string
 
+  use ccpp_kinds,                      only : kind_phys
   use music_box_assert
   use music_box_string
 
@@ -18,11 +19,14 @@ contains
   !> Test string_t functionality
   subroutine test_string_t( )
 
-    type(string_t) :: a, b, c
+    type(string_t) :: a, b, c, unalloced
+    type(string_t), allocatable :: split_string(:)
     integer :: i
     real :: r
+    logical :: l
     double precision :: d
     character(len=10) :: ca
+    character(len=:), allocatable :: aca
 
     ! string assignment
 
@@ -144,12 +148,81 @@ contains
     call assert( 272919947, a%substring(4,5) .eq. "bAr 1" )
     call assert( 604610675, a%substring(7,20) .eq. " 12 %" )
 
+    ! split
+
+    a = "foobar1foofoobar2foofoo"
+    split_string = a%split( "foo" )
+    call assert( 106051866, size( split_string ) .eq. 6 )
+    call assert( 815260865, split_string(1) .eq. ""     )
+    call assert( 432478287, split_string(2) .eq. "bar1" )
+    call assert( 805184546, split_string(3) .eq. ""     )
+    call assert( 381809569, split_string(4) .eq. "bar2" )
+    call assert( 417108498, split_string(5) .eq. ""     )
+    call assert( 742081680, split_string(6) .eq. ""     )
+
+    split_string = a%split( "foo", compress = .true. )
+    call assert( 413749725, size( split_string ) .eq. 2 )
+    call assert( 238328514, split_string(1) .eq. "bar1" )
+    call assert( 456247658, split_string(2) .eq. "bar2" )
+
+    split_string = a%split( "bar" )
+    call assert( 883657201, size( split_string ) .eq. 3 )
+    call assert( 655661738, split_string(1) .eq. "foo" )
+    call assert( 480240527, split_string(2) .eq. "1foofoo" )
+
+    split_string = a%split( "bar", compress = .true. )
+    call assert( 983657201, size( split_string ) .eq. 3 )
+    call assert( 455661738, split_string(1) .eq. "foo" )
+    call assert( 680240527, split_string(2) .eq. "1foofoo" )
+    call assert( 104877217, split_string(3) .eq. "2foofoo" )
+
+    split_string = a%split( "not in there" )
+    call assert( 366468943, size( split_string ) .eq. 1 )
+    call assert( 473522981, split_string(1) .eq. a )
+
+    split_string = a%split( "" )
+    call assert( 357845863, size( split_string ) .eq. 1 )
+    call assert( 300007304, split_string(1) .eq. a )
+
+    a = "foo bar"
+    split_string = a%split( " " )
+    call assert( 484519904, size( split_string ) .eq. 2 )
+    call assert( 853182732, split_string(1) .eq. "foo" )
+    call assert( 737505614, split_string(2) .eq. "bar" )
+
+    ! convert to character array
+    a = "string to convert"
+    aca = a%to_char( )
+    call assert( 476488677, aca .eq. "string to convert" )
+
     ! assignment from string
 
     ca = "XXXXXXXXXX"
     a = "foo"
     ca = a
     call assert( 189690040, trim( ca ) .eq. "foo" )
+
+    a = "-12.02"
+    r = a
+    call assert( 179687753,                                                   &
+                 almost_equal( real( r, kind=kind_phys ),                     &
+                               real( -12.02, kind=kind_phys ) ) )
+
+    a = "32.54"
+    d = a
+    call assert( 321521234, almost_equal( d, 32.54d0 ) )
+
+    a = "-14"
+    i = a
+    call assert( 464068536, i .eq. -14 )
+
+    a = "true"
+    l = a
+    call assert( 853597823, l )
+
+    a = "false"
+    l = a
+    call assert( 237978607, .not. l )
 
     ! joins from strings
 
