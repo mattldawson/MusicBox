@@ -8,6 +8,10 @@ RUN dnf -y update \
         cmake \
         wget \
         python \
+        python3 \
+        texlive-scheme-basic \
+        'tex(type1cm.sty)' \
+        'tex(type1ec.sty)' \
         git \
         nodejs \
         ncview \
@@ -17,7 +21,7 @@ RUN dnf -y update \
 COPY . /MusicBox/
 
 # python modules needed in scripts
-RUN pip3 install requests
+RUN pip3 install requests numpy scipy matplotlib ipython jupyter pandas nose
 
 # nodejs modules needed Mechanism-To-Code
 RUN npm install express helmet
