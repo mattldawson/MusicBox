@@ -19,12 +19,12 @@ COPY . /MusicBox/
 # python modules needed in scripts
 RUN pip3 install requests
 
-# nodejs modules needed Mechanism-To-Code
-RUN npm install express helmet
-
-# clone the Mechanism-To-Code tool
+# clone and install the Mechanism-To-Code preprocessor service
 RUN git clone https://github.com/NCAR/MechanismToCode.git
+RUN cd MechanismToCode \
+    && npm install
 
+# Collect the rest of the code based on CESM tools
 RUN cd MusicBox \
     && manage_externals/checkout_externals
 
