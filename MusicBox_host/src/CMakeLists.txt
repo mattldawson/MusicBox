@@ -27,6 +27,10 @@ SET(HOST "${CMAKE_PROJECT_NAME}")
 # HOST_PROGRAM is the name of the program source files (Fortran and metadata)
 SET(HOST_PROGRAM "MusicBox")
 
+# copy scripts to the build dir
+add_custom_target(copy_scripts ALL ${CMAKE_COMMAND} -E copy_directory
+  ${CMAKE_CURRENT_SOURCE_DIR}/../scripts ${CMAKE_BINARY_DIR})
+
 #-----------------------------------------------------------------------------
 #
 # Set where the CCPP Framework lives
