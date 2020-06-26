@@ -21,7 +21,7 @@ RUN dnf -y update \
 COPY . /MusicBox/
 
 # python modules needed in scripts
-RUN pip3 install requests numpy scipy matplotlib ipython jupyter pandas nose
+RUN pip3 install requests numpy scipy matplotlib ipython jupyter pandas nose Django pillow
 
 # clone and install the Mechanism-To-Code preprocessor service
 RUN git clone https://github.com/NCAR/MechanismToCode.git
@@ -54,3 +54,10 @@ RUN if [ "$TAG_ID" = "false" ] ; then \
                ../src \
       && make \
       ; fi
+
+# Prepare the MusicBox Interactive web server
+RUN mv MusicBox/music_box_interactive .
+
+EXPOSE 8000
+
+CMD ["python3", "music_box_interactive/manage.py", "runserver", "0.0.0.0:8000" ]

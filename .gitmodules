@@ -1,0 +1,3 @@
+[submodule "music_box_interactive"]
+	path = music_box_interactive
+	url = https://github.com/mattldawson/music_box_interactive.git
