@@ -57,6 +57,8 @@ RUN if [ "$TAG_ID" = "false" ] ; then \
 
 # Prepare the MusicBox Interactive web server
 RUN mv MusicBox/music_box_interactive .
+ENV MUSIC_BOX_BUILD_DIR=/MusicBox/MusicBox_host/build
+ENV MUSIC_BOX_OUTPUT_DIR=/MusicBox/MusicBox_host
 
 EXPOSE 8000
 

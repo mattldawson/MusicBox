@@ -1,5 +1,7 @@
 MICM_chemistry/
 Mechanism_collection/
+MusicBox_host/MODEL_RUNNING
+MusicBox_host/MODEL_RUN_COMPLETE
 MusicBox_host/MusicBox_output.nc
 MusicBox_host/data/env_conditions.nc
 MusicBox_host/build/

@@ -82,7 +82,9 @@ subroutine MusicBox_sub()
   real               :: user_begin_time = NOT_SET ! seconds
   real               :: user_end_time = NOT_SET
   real               :: user_dtime = NOT_SET
-  
+
+  character(len=*), parameter   :: done_file   = '../MODEL_RUN_COMPLETE'
+  character(len=*), parameter   :: running_file= '../MODEL_RUNNING'
   character(len=*), parameter   :: photo_opts_file = '../Photolysis_options'
   character(len=*), parameter   :: nml_options = '../MusicBox_options'
   character(len=120), parameter :: jsonfile    = '../molec_info.json'
@@ -91,6 +93,10 @@ subroutine MusicBox_sub()
   namelist /options/ outfile_name, env_conds_file
   namelist /options/ env_lat, env_lon, env_lev
   namelist /options/ user_begin_time, user_end_time, user_dtime
+
+  open(unit=10, file=running_file)
+  write(10,*) "running"
+  close(10)
 
   nbox = nbox_param
 
@@ -342,6 +348,10 @@ subroutine MusicBox_sub()
   call outfile%close()
 
   if (OUTPUT_PHOTO_RATES) call out_photo_file%close()
+
+  open(unit=10, file=done_file)
+  write(10,*) "done"
+  close(10)
 
   deallocate(vmr)
   deallocate(vmrboxes)
