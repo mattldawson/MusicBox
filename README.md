@@ -8,7 +8,7 @@ A Box (point) Gas Chemistry solver developed and maintained in the ACOM laborato
 
 ## Get the MusicBox source code
 ```
- git clone https://github.com/NCAR/MusicBox
+ git clone --recurse-submodules https://github.com/NCAR/MusicBox
  cd MusicBox
 ```
 
