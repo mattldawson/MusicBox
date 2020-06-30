@@ -12,6 +12,7 @@ RUN dnf -y update \
         texlive-scheme-basic \
         'tex(type1cm.sty)' \
         'tex(type1ec.sty)' \
+        dvipng \
         git \
         nodejs \
         ncview \
