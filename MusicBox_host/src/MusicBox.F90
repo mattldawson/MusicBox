@@ -2,7 +2,7 @@ module MusicBox_main
 
 !  use ccpp_kinds, only: r8 => kind_phys
 use ccpp_kinds,             only: kind_phys
-use read_envConditions,     only: read_envConditions_init, read_envConditions_timestep, read_envConditions_update_timestep
+use read_envConditions,     only: read_envConditions_init, read_envConditions_timestep
 
 use json_loader,            only: json_loader_read
 use output_file,            only: output_file_type
@@ -71,7 +71,8 @@ subroutine MusicBox_sub()
   integer :: box_grid_indices(4) = (/ 1, 1, 1, 0 /)  ! NetCDF output indices for grid cell (level, lon, lat, time)
 
   ! run-time options
-  character(len=120) :: env_conds_file = '../data/env_conditions.nc'
+  character(len=120) :: init_conds_file = 'NONE'
+  character(len=120) :: env_conds_file = 'NONE'
   character(len=120) :: outfile_name = 'test_output.nc'
 
   ! These need to be plain reals for the reading routine
@@ -88,7 +89,7 @@ subroutine MusicBox_sub()
   character(len=120), parameter :: jsonfile    = '../molec_info.json'
 
   ! read namelist run-time options
-  namelist /options/ outfile_name, env_conds_file
+  namelist /options/ outfile_name, init_conds_file, env_conds_file
   namelist /options/ env_lat, env_lon, env_lev
   namelist /options/ user_begin_time, user_end_time, user_dtime
 
@@ -131,7 +132,7 @@ subroutine MusicBox_sub()
 
   allocate(vmrboxes(nSpecies,nbox))
 
-  call read_envConditions_init(nbox, nSpecies, env_conds_file, env_lat, env_lon, env_lev, user_begin_time, &
+  call read_envConditions_init(nbox, nSpecies, init_conds_file, env_conds_file, env_lat, env_lon, env_lev, user_begin_time, &
              user_end_time, user_dtime, cnst_info, vmrboxes, dt, sim_beg_time, sim_end_time, nlayer, photo_lev)
 
   !---------------------------
@@ -221,10 +222,6 @@ subroutine MusicBox_sub()
     call out_photo_file%set_variable('lev', real(env_lev, kind=kind_phys))
   end if
 
-! For testing short runs   
-!   ntimes = 10
-
-
   !-----------------------------------------------------------
   !  loop over time
   !-----------------------------------------------------------
@@ -281,7 +278,7 @@ subroutine MusicBox_sub()
 
         !---------------------------
         ! Update the environmental conditions for the timestep
-        call read_envConditions_update_timestep(ibox, vmr, vmrboxes)
+        vmrboxes(:,ibox) = vmr(:)
 
         !---------------------------
         ! write out the timestep values

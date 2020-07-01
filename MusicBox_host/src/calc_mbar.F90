@@ -37,8 +37,8 @@ contains
 !!
   subroutine calc_mbar_run( vmr, mbar, errmsg, errflg )
 
-    real(kind_phys), intent(inout)         :: vmr(:)
-    real(kind_phys), intent(out)           :: mbar
+    real(kind_phys), intent(in)     :: vmr(:)
+    real(kind_phys), intent(out)    :: mbar
     character(len=512), intent(out) :: errmsg
     integer, intent(out)            :: errflg
 
