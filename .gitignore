@@ -7,3 +7,4 @@ MusicBox_host/MusicBox_output.nc
 MusicBox_host/molec_info.json
 MusicBox_host/data/*.nc
 ccpp-framework/
+manage_externals/
