@@ -293,14 +293,14 @@ subroutine MusicBox_sub()
         call outfile%out( 'Zenith', zenith )
 
         write(*,'(a, e12.4, f12.2, f8.2)') ' total density, pressure, temperature :', density, box_press, box_temp
-        write(*,'(a, 4e12.4)') ' aerosol surface area density (cm2/cm3):', box_aer_sad
-        write(*,'(a, 4e12.4)') ' aerosol diameter (cm) :', box_aer_diam
+        !write(*,'(a, 4e12.4)') ' aerosol surface area density (cm2/cm3):', box_aer_sad
+        !write(*,'(a, 4e12.4)') ' aerosol diameter (cm) :', box_aer_diam
         call outfile%out( 'Density', density )
         call outfile%out( 'Mbar', mbar )
 
         call outfile%out( cnst_info, vmrboxes(:,ibox) )
-        write(*,'(a,1p,g0)') 'Concentration @ hour = ',TimeStart/3600.
-        write(*,'(1p,5(1x,g0))') vmrboxes(:,ibox),sum(vmrboxes(:,ibox))
+        write(*,'(a,1p,g0)') 'Time [hour] = ',TimeStart/3600.
+        !write(*,'(1p,5(1x,g0))') vmrboxes(:,ibox),sum(vmrboxes(:,ibox))
 
         do i_rxn = 1, nRxn
           call outfile%out( trim("rate_"//reaction_names(i_rxn)), reaction_rates(i_rxn) )
