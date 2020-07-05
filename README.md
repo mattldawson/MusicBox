@@ -16,7 +16,7 @@ A Box (point) Gas Chemistry solver developed and maintained in the ACOM laborato
 In the MusicBox directory there is a Dockerfile. It contains a list of commands to build an environment (unix) and all the tools required to run the MusicBox application.  The following command-line tools build the environment, build the application, and then start the MusicBox server. (You will see a lot of text flying past, but everything is being installed in the Docker container and can be removed at after you're done using MusicBox.)
 
 ```
-docker build -t music-box-test . --build-arg TAG_ID=272
+docker build -t music-box-test . --build-arg TAG_ID=chapman
 docker run -p 8000:8000 -t music-box-test
 ```
 
