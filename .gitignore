@@ -1,6 +1,8 @@
 **/.DS_Store
 MICM_chemistry/
 Mechanism_collection/
+MusicBox_host/MODEL_RUNNING
+MusicBox_host/MODEL_RUN_COMPLETE
 MusicBox_host/MusicBox_output.nc
 MusicBox_host/molec_info.json
 MusicBox_host/data/*.nc
