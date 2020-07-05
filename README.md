@@ -24,7 +24,7 @@ Leave the terminal window open while you are working with MusicBox.
 
 ## Run MusicBox
 
-In a web browser, navigate to `localhost:8000` to access the MusicBox options.
+In a web browser, navigate to [localhost:8000](http://localhost:8000) to access the MusicBox options.
 
 ## Shut down the server
 
