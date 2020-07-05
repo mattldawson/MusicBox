@@ -243,19 +243,41 @@ contains
   
   end function input_file_slice
 
-  function input_file_get_units(this, varname) result(units)
+  function input_file_get_units(this, varname, abort) result(units)
     class(input_file_type), intent(inout) :: this
 
-    character(len=*), intent(in) :: varname
+    character(len=*),  intent(in) :: varname
+    logical, optional, intent(in) :: abort
 
     character(len=MAX_ATT_LEN) :: units
 
     integer :: status, varid, length
+
+    logical :: error_out
+
+    error_out=.true.
+    if (present(abort)) then
+       error_out=abort
+    endif
     
     status = nf90_inq_varid(this%ncid, varname, varid)
-    if(status /= nf90_noerr) call handle_err(status)
+    if(status /= nf90_noerr) then
+       if (error_out) then
+          call handle_err(status)
+       else
+          units='NONE'
+          return
+       endif
+    endif
     status = nf90_inquire_attribute(this%ncid, varid, "units", len = length)
-    if(status /= nf90_noerr) call handle_err(status)
+    if(status /= nf90_noerr) then
+       if (error_out) then
+          call handle_err(status)
+       else
+          units='NONE'
+          return
+       endif
+    endif
     if (length>MAX_ATT_LEN) then
        write(*,*) 'ERROR: input_file_get_units: units length too long on var '//trim(varname)//'... Length = ',length
        stop

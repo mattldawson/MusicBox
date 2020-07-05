@@ -40,7 +40,7 @@
   dimensions = (number_of_chemical_constituents)
   type = real
   kind = kind_phys
-  intent = inout
+  intent = in
 [mbar]
   standard_name = mean_molec_mass
   long_name = mean molecular mass

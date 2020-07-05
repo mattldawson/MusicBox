@@ -7,7 +7,7 @@ module environ_conditions_mod
 !   USE ccpp_kinds, ONLY: rk => kind_phys
   USE ccpp_kinds, ONLY: kind_phys
 
-  use input_file,  only: input_file_type
+  use input_file,  only: input_file_type, MAX_ATT_LEN
   use input_slice, only: slice_type
 
   implicit none
@@ -28,6 +28,7 @@ module environ_conditions_mod
      procedure :: dtime => environ_conditions_dtime
      procedure :: ntimes => environ_conditions_ntimes
      procedure :: get_times => environ_conditions_times
+     procedure :: get_units => environ_conditions_units
      procedure :: nlayers => environ_conditions_nlayers
      procedure :: levnum => environ_conditions_levnum
      procedure :: environ_conditions_update_ndx
@@ -39,7 +40,6 @@ contains
 
 
   function environ_conditions_create( infilepath, lat, lon, lev ) result(env_cond)
-    use input_file, only: MAX_ATT_LEN
     
     character(len=*), intent(in) :: infilepath
     real, intent(in) ::  lat, lon
@@ -110,6 +110,17 @@ contains
     end if
     
   end subroutine environ_conditions_update_flt
+
+  function environ_conditions_units(this, var, abort) result(theUnits)
+    class(environ_conditions), intent(inout) :: this
+    character(len=*),  intent(in) :: var
+    logical, optional, intent(in) :: abort
+    character(len=MAX_ATT_LEN) :: theUnits
+
+    theUnits = this%inputfile%get_units(var,abort=abort)
+
+  end function environ_conditions_units
+  
 
   function environ_conditions_getvar(this, var, default_value) result(thevalue)
     class(environ_conditions), intent(inout) :: this
