@@ -34,10 +34,11 @@ In the terminal window where you started MusicBox server in, type `ctrl-C` to sh
 
 ## Removing the Docker container
 
-If you're done with MusicBox and would like to remove the container that was built in the first step, in any terminal window run:
+If you're done with MusicBox and would like to remove the containers and the image we built, in any terminal window run:
 
 ```
 docker system prune
+docker rmi music-box-test
 ```
 
 # Configure, install, and run MusicBox
@@ -164,7 +165,12 @@ Remember that when you run:
 docker system prune
 ```
 
-... you remove **all** stopped containers. This will include both `music-box-test` and `my-music-box`, so be sure you are ready to delete all of your modifications before you run this.
+... you remove **all** stopped containers. So, if you have not committed your changes to an image, they will be lost. You can remove the images with:
+
+```
+docker rmi music-box-test
+docker rmi my-music-box
+```
 
 
 # Users guide and additional details are being developed in a wiki
