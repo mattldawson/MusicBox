@@ -7,6 +7,7 @@ A Box (point) Gas Chemistry solver developed and maintained in the ACOM laborato
 ## Install [git](https://git-scm.com)
 
 ## Get the MusicBox source code
+From a terminal window, type in the following commands.
 ```
  git clone --recurse-submodules https://github.com/NCAR/MusicBox
  cd MusicBox
