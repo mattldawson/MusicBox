@@ -3,7 +3,7 @@ A Box (point) Gas Chemistry solver developed and maintained in the ACOM laborato
 
 Instructions are provided for both a [demonstration](#install-and-run-test), and for those who wish to [develop](#guide-to-development-in-docker-context) MusicBox within the context of Docker.
 
-Please see the [MusicBox wiki](https://wiki.ucar.edu/display/MusicBox/Quick+Start) for details on running other examples and in other contexts.
+For other examples please see the [MusicBox wiki.](https://wiki.ucar.edu/display/MusicBox/Quick+Start)
 
 
 # Install and run test
