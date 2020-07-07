@@ -1,6 +1,8 @@
 # MusicBox
 A Box (point) Gas Chemistry solver developed and maintained in the ACOM laboratory at the National Center for Atmospheric Research.
 
+Instructions are provided for both a [demonstration](#install-and-run-test), and for those who wish to [develop](#guide-to-development-in-docker-context) MusicBox within the context of Docker.
+
 # Install and run test
 ## Install [docker](https://www.docker.com/get-started)
 
@@ -41,7 +43,7 @@ docker system prune
 docker rmi music-box-test
 ```
 
-# Configure, install, and run MusicBox
+# Guide to Development in Docker context
 
 ## Get the MusicBox source code
 
