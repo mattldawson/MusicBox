@@ -1,1 +1,1 @@
-This directory needs to have the environmental conditions copied into it and be call env_conditions.nc
+This directory contains environmental conditions and initial conditions.  The default configuration places a file in here that contains both environmental and initial conditions.  Please see the corresponding namelist settings in MusicBox_options.
